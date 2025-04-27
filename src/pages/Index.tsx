@@ -47,13 +47,7 @@ const Index = () => {
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
       <header className="mb-8">
         <UserEmail />
-        <h1 className="text-4xl md:text-5xl font-bold text-center text-theme-vivid-purple mb-2">
-          CONVENÇA AI
-        </h1>
-        <p className="text-center text-theme-soft-purple">
-          Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
-        </p>
-      </header>
+        </header>
       
       {/* PrizeDisplay agora aparece primeiro, antes da IA */}
       <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
