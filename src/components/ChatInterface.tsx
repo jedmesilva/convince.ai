@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "../components/ui/button";
+import { useToast } from "../hooks/use-toast";
 import PaymentPrompt from './PaymentPrompt';
 
 interface Message {
@@ -114,51 +114,51 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-      <div className="flex flex-col h-[400px] md:h-[500px] bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
-        {!isUnlocked ? (
-          <div className="flex-1 flex items-center justify-center p-4">
-            <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
-          </div>
-        ) : (
-          <>
-            <div className="flex-1 px-4 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-theme-purple scrollbar-track-theme-dark-purple">
-              {messages.map(renderMessage)}
-              
-              {isTyping && (
-                <div className="flex justify-start mb-4">
-                  <div className="bg-gray-800 text-white rounded-lg px-4 py-2 border border-theme-purple">
-                    <div className="flex space-x-2">
-                      <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                    </div>
-                  </div>
+      <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
+        <div className="px-4 py-3 overflow-y-auto" style={{ minHeight: '120px', maxHeight: '70vh' }}>
+          {messages.map(renderMessage)}
+          
+          {isTyping && (
+            <div className="flex justify-start mb-4">
+              <div className="bg-gray-800 text-white rounded-lg px-4 py-2 border border-theme-purple">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                 </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-            
-            <div className="border-t border-theme-purple">
-              <div className="relative flex items-center">
-                <textarea
-                  className="flex-1 w-full bg-gray-800 border-0 rounded-b-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500"
-                  placeholder="Digite sua mensagem..."
-                  rows={2}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                />
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={inputValue.trim() === ''}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-theme-purple hover:bg-theme-vivid-purple text-white rounded-full p-2"
-                >
-                  <ArrowUp className="h-5 w-5" />
-                </Button>
               </div>
             </div>
-          </>
+          )}
+          
+          {!isUnlocked && (
+            <div className="mb-4 mt-2">
+              <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+        
+        {isUnlocked && (
+          <div className="border-t border-theme-purple">
+            <div className="relative flex items-center">
+              <textarea
+                className="flex-1 w-full bg-gray-800 border-0 rounded-b-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500"
+                placeholder="Digite sua mensagem..."
+                rows={2}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyPress}
+              />
+              <Button 
+                onClick={handleSendMessage}
+                disabled={inputValue.trim() === ''}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-theme-purple hover:bg-theme-vivid-purple text-white rounded-full p-2"
+              >
+                <ArrowUp className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>

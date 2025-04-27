@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "../components/ui/button";
+import { useToast } from "../hooks/use-toast";
 
 interface PaymentPromptProps {
   onPaymentSuccess: () => void;
@@ -40,25 +40,29 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
   };
   
   return (
-    <div className="bg-theme-dark-purple border-2 border-theme-purple rounded-lg p-6 text-center max-w-md w-full shadow-xl my-2">
-      <h3 className="text-2xl font-bold text-theme-light-purple mb-2">
-        540 pessoas fracassaram com argumentos chulos
-      </h3>
-      <p className="text-theme-soft-purple mb-6">
-        Quer tentar algo melhor que elas?
-      </p>
-      
-      <Button
-        onClick={handlePayment}
-        disabled={isProcessing}
-        className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-bold px-8 py-6 rounded-lg text-lg w-full flex items-center justify-center"
-      >
-        {isProcessing ? "Processando..." : "1$ Convencer"}
-      </Button>
-      
-      <p className="text-sm text-theme-soft-purple mt-4 opacity-75">
-        Pague 1$ para desbloquear uma chance de ganhar!
-      </p>
+    <div className="bg-theme-dark-purple border border-theme-purple rounded-md p-3 text-center w-full shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center">
+        <div className="flex-1 text-left mb-2 md:mb-0 md:mr-4">
+          <h3 className="text-lg font-bold text-theme-light-purple">
+            540 pessoas fracassaram
+          </h3>
+          <p className="text-sm text-theme-soft-purple">
+            Quer tentar algo melhor que elas?
+          </p>
+        </div>
+        <div className="flex-none">
+          <Button
+            onClick={handlePayment}
+            disabled={isProcessing}
+            className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-semibold px-4 py-2 rounded-md w-full md:min-w-[140px] flex items-center justify-center"
+          >
+            {isProcessing ? "Processando..." : "1$ Convencer"}
+          </Button>
+          <p className="text-xs text-theme-soft-purple mt-1 opacity-75">
+            Desbloquear uma chance
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
