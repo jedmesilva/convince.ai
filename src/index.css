@@ -3,14 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilo para o Timer de Borda */
-.border-timer {
-  -webkit-mask-image: radial-gradient(circle at center, transparent 98%, black 99%);
-  mask-image: radial-gradient(circle at center, transparent 98%, black 99%);
-  -webkit-mask-composite: destination-out;
-  mask-composite: exclude;
-}
-
 @layer base {
   :root {
     --background: 240 10% 3.9%;
