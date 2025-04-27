@@ -42,7 +42,8 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
       <Button
         onClick={() => setIsDialogOpen(true)}
         disabled={isProcessing}
-        className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-semibold py-3 rounded-lg w-full flex items-center justify-center"
+        className={`bg-theme-vivid-purple hover:bg-theme-purple text-white font-semibold py-3 rounded-lg w-full flex items-center justify-center
+          ${!isProcessing ? 'animate-payment-button-pulse' : ''}`}
       >
         {isProcessing ? "Processando pagamento..." : "1$ para convencer a IA"}
       </Button>
