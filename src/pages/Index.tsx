@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AiAvatar from '../components/AiAvatar';
 import UserEmail from '../components/UserEmail';
@@ -12,17 +11,17 @@ const Index = () => {
   const [prizeAmount, setPrizeAmount] = useState(5400); // $5400 initial prize
   const [failedAttempts, setFailedAttempts] = useState(540); // 540 initial failed attempts
   const [persuasionLevel, setPersuasionLevel] = useState(0);
-  
+
   const handlePaymentSuccess = () => {
     setIsUnlocked(true);
     // Increase prize amount by 1 dollar
     setPrizeAmount(prevAmount => prevAmount + 1);
   };
-  
+
   const handlePersuasionChange = (level: number) => {
     setPersuasionLevel(level);
   };
-  
+
   const handleAiResponse = (response: string) => {
     // Se o timer acabou, bloqueia o chat novamente
     if (response === 'timer_ended') {
@@ -31,12 +30,12 @@ const Index = () => {
       setPersuasionLevel(0);
       return;
     }
-    
+
     // If the response doesn't indicate winning, increment failed attempts
     if (!response.toLowerCase().includes("parabéns") && !response.toLowerCase().includes("venceu")) {
       setFailedAttempts(prevAttempts => prevAttempts + 1);
     }
-    
+
     // Se a resposta for sobre pagamento, processa o pagamento
     if (response.toLowerCase().includes("pagamento concluído")) {
       handlePaymentSuccess();
@@ -45,25 +44,23 @@ const Index = () => {
 
   return (
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
-      <header className="mb-8">
-        <UserEmail />
-      </header>
-      
-      {/* A IA agora aparece no topo da página */}
-      <div className="flex justify-center items-center mb-12">
-        <AiAvatar persuasionLevel={persuasionLevel} />
-      </div>
-      
-      {/* PrizeDisplay aparece logo abaixo da IA */}
+      {/* PrizeDisplay agora aparece primeiro, antes da IA */}
       <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
-      
+
+      <div className="flex flex-col items-center mb-4">
+        <AiAvatar persuasionLevel={persuasionLevel} />
+        <div className="mt-4">
+          <UserEmail />
+        </div>
+      </div>
+
       <p className="text-center text-theme-soft-purple mt-4 mb-8">
         Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
       </p>
-      
+
       {/* Lista de pessoas que tentaram */}
       <AttemptsList />
-      
+
       <div className="mt-10 max-w-2xl mx-auto relative">
         <ChatInterface 
           isUnlocked={isUnlocked} 
@@ -71,7 +68,7 @@ const Index = () => {
           onPersuasionChange={handlePersuasionChange}
         />
       </div>
-      
+
       <Toaster />
     </div>
   );
