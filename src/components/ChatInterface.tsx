@@ -19,7 +19,7 @@ interface ChatInterfaceProps {
 
 const initialMessage: Message = {
   id: 1,
-  text: "540 pessoas fracassaram com argumentos chulos, quer tentar algo melhor que elas?",
+  text: "540 pessoas tentaram mas falharam! Quer tentar sua sorte?",
   sender: 'ai',
   timestamp: new Date()
 };
