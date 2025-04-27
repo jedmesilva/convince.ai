@@ -40,7 +40,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Só role para o final se o chat estiver expandido
+    if (isChatExpanded) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isChatExpanded]);
+  
+  // Expanda o chat automaticamente quando uma nova mensagem chegar
+  useEffect(() => {
+    if (messages.length > 1 && !isChatExpanded) {
+      setIsChatExpanded(true);
+    }
   }, [messages]);
   
   // Set up WebSocket connection
@@ -199,7 +209,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
       <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
-        <div className="px-4 pt-4 pb-2 relative">
+        <div className="px-4 pt-4 pb-6 relative">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-white/70">Nível de persuasão</span>
             <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
@@ -217,22 +227,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           />
           <Button
             onClick={toggleChatExpansion}
-            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 h-8 w-8 rounded-full bg-theme-dark-purple border border-theme-purple p-0 z-10 shadow-md"
+            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 h-8 w-8 rounded-full bg-theme-dark-purple border border-theme-purple p-0 z-10 shadow-md hover:bg-gray-800 flex items-center justify-center"
             variant="outline"
             size="sm"
+            aria-label={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
+            title={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
           >
             {isChatExpanded ? (
-              <ChevronDown className="h-4 w-4 text-theme-purple" />
+              <ChevronDown className="h-4 w-4 text-theme-light-purple" />
             ) : (
-              <ChevronUp className="h-4 w-4 text-theme-purple" />
+              <ChevronUp className="h-4 w-4 text-theme-light-purple" />
             )}
           </Button>
         </div>
         <div 
-          className={`px-4 py-3 overflow-y-auto transition-all duration-300 ease-in-out ${
-            isChatExpanded ? 'h-auto opacity-100' : 'h-0 opacity-0 invisible'
-          }`} 
-          style={isChatExpanded ? { minHeight: '120px', maxHeight: '50vh' } : {}}>
+          className={`px-4 overflow-y-auto transition-all duration-300 ease-in-out ${
+            isChatExpanded ? 'py-3 max-h-[50vh] opacity-100' : 'max-h-0 py-0 opacity-0'
+          }`}
+        >
           {messages.map(renderMessage)}
           
           {isTyping && (
