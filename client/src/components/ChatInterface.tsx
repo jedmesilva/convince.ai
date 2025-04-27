@@ -121,7 +121,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           </div>
         ) : (
           <>
-            <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-theme-purple scrollbar-track-theme-dark-purple">
+            <div className="flex-1 px-4 py-3 overflow-y-auto scrollbar-thin scrollbar-thumb-theme-purple scrollbar-track-theme-dark-purple">
               {messages.map(renderMessage)}
               
               {isTyping && (
@@ -139,10 +139,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
               <div ref={messagesEndRef} />
             </div>
             
-            <div className="border-t border-theme-purple p-4">
+            <div className="border-t border-theme-purple">
               <div className="relative flex items-center">
                 <textarea
-                  className="flex-1 bg-gray-800 border border-theme-purple rounded-lg px-4 py-2 pr-12 text-white resize-none focus:outline-none focus:ring-2 focus:ring-theme-purple"
+                  className="flex-1 w-full bg-gray-800 border-0 rounded-b-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple"
                   placeholder="Digite sua mensagem..."
                   rows={2}
                   value={inputValue}
