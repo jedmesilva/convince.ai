@@ -40,29 +40,14 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
   };
   
   return (
-    <div className="bg-theme-dark-purple border border-theme-purple rounded-md p-3 text-center w-full shadow-md">
-      <div className="flex flex-col md:flex-row md:items-center">
-        <div className="flex-1 text-left mb-2 md:mb-0 md:mr-4">
-          <h3 className="text-lg font-bold text-theme-light-purple">
-            540 pessoas fracassaram
-          </h3>
-          <p className="text-sm text-theme-soft-purple">
-            Quer tentar algo melhor que elas?
-          </p>
-        </div>
-        <div className="flex-none">
-          <Button
-            onClick={handlePayment}
-            disabled={isProcessing}
-            className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-semibold px-4 py-2 rounded-md w-full md:min-w-[140px] flex items-center justify-center"
-          >
-            {isProcessing ? "Processando..." : "1$ Convencer"}
-          </Button>
-          <p className="text-xs text-theme-soft-purple mt-1 opacity-75">
-            Desbloquear uma chance
-          </p>
-        </div>
-      </div>
+    <div className="w-full">
+      <Button
+        onClick={handlePayment}
+        disabled={isProcessing}
+        className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-semibold py-3 rounded-lg w-full flex items-center justify-center"
+      >
+        {isProcessing ? "Processando pagamento..." : "1$ para convencer"}
+      </Button>
     </div>
   );
 };

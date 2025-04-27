@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import AiAvatar from '@/components/AiAvatar';
-import PrizeDisplay from '@/components/PrizeDisplay';
-import ChatInterface from '@/components/ChatInterface';
-import { Toaster } from "@/components/ui/toaster";
+import AiAvatar from '../components/AiAvatar';
+import PrizeDisplay from '../components/PrizeDisplay';
+import ChatInterface from '../components/ChatInterface';
+import { Toaster } from "../components/ui/toaster";
 
 const Index = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);

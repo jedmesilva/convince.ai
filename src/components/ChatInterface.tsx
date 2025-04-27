@@ -130,20 +130,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
             </div>
           )}
           
-          {!isUnlocked && (
-            <div className="mb-4 mt-2">
-              <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
-            </div>
-          )}
-          
           <div ref={messagesEndRef} />
         </div>
         
-        {isUnlocked && (
-          <div className="border-t border-theme-purple">
+        <div className="border-t border-theme-purple px-4 py-3">
+          {isUnlocked ? (
             <div className="relative flex items-center">
               <textarea
-                className="flex-1 w-full bg-gray-800 border-0 rounded-b-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500"
+                className="flex-1 w-full bg-gray-800 border border-theme-purple rounded-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500"
                 placeholder="Digite sua mensagem..."
                 rows={2}
                 value={inputValue}
@@ -158,8 +152,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
                 <ArrowUp className="h-5 w-5" />
               </Button>
             </div>
-          </div>
-        )}
+          ) : (
+            <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
+          )}
+        </div>
       </div>
     </div>
   );
