@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
+import { Progress } from "../components/ui/progress";
 import PaymentPrompt from './PaymentPrompt';
 
 interface Message {
@@ -28,12 +29,95 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [persuasionLevel, setPersuasionLevel] = useState(0);
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
+  
+  const toggleChatExpansion = () => {
+    setIsChatExpanded(prev => !prev);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // Set up WebSocket connection
+  useEffect(() => {
+    // Function to establish WebSocket connection
+    const connectWebSocket = () => {
+      // Close any existing connection
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+      
+      // Create WebSocket connection
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+      
+      // Handle connection open
+      socket.onopen = () => {
+        console.log('WebSocket connection established');
+        
+        // Get session ID from cookies
+        const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+        const sessionIdCookie = cookies.find(cookie => cookie.startsWith('sessionId='));
+        const sessionId = sessionIdCookie ? sessionIdCookie.split('=')[1] : null;
+        
+        if (sessionId) {
+          // Register with session ID
+          socket.send(JSON.stringify({
+            type: 'register',
+            sessionId
+          }));
+        } else {
+          console.log('No session ID found in cookies');
+        }
+      };
+      
+      // Handle messages from server
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'persuasionUpdate') {
+            setPersuasionLevel(data.level);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+      
+      // Handle errors
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      // Handle connection close
+      socket.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
+        
+        // Try to reconnect after a delay if not closing intentionally
+        if (event.code !== 1000) {
+          setTimeout(connectWebSocket, 3000);
+        }
+      };
+    };
+    
+    // Connect
+    connectWebSocket();
+    
+    // Clean up on component unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
+  }, []);
 
   const handlePaymentSuccess = () => {
     onAiResponse('Pagamento concluído');
@@ -115,7 +199,40 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
       <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
-        <div className="px-4 py-3 overflow-y-auto" style={{ minHeight: '120px', maxHeight: '50vh' }}>
+        <div className="px-4 pt-4 pb-2 relative">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-white/70">Nível de persuasão</span>
+            <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
+          </div>
+          <Progress 
+            value={persuasionLevel} 
+            className="h-2 bg-gray-700 w-full" 
+            indicatorClassName={
+              persuasionLevel < 30 
+                ? "bg-red-500" 
+                : persuasionLevel < 70 
+                  ? "bg-yellow-500" 
+                  : "bg-green-500"
+            }
+          />
+          <Button
+            onClick={toggleChatExpansion}
+            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 h-8 w-8 rounded-full bg-theme-dark-purple border border-theme-purple p-0 z-10 shadow-md"
+            variant="outline"
+            size="sm"
+          >
+            {isChatExpanded ? (
+              <ChevronDown className="h-4 w-4 text-theme-purple" />
+            ) : (
+              <ChevronUp className="h-4 w-4 text-theme-purple" />
+            )}
+          </Button>
+        </div>
+        <div 
+          className={`px-4 py-3 overflow-y-auto transition-all duration-300 ease-in-out ${
+            isChatExpanded ? 'h-auto opacity-100' : 'h-0 opacity-0 invisible'
+          }`} 
+          style={isChatExpanded ? { minHeight: '120px', maxHeight: '50vh' } : {}}>
           {messages.map(renderMessage)}
           
           {isTyping && (

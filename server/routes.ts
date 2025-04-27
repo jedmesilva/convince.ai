@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import { insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import { WebSocketServer, WebSocket } from 'ws';
+
+// Map to store WebSocket connections by session ID
+const connections = new Map<string, WebSocket>();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes
@@ -61,6 +65,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For the demo, increment failed attempts as the AI is not convinced
       await storage.incrementFailedAttempts();
       
+      // Calculate persuasion level based on user message (simple algorithm)
+      let persuasionChange = 0;
+      const lowerCaseMessage = message.toLowerCase();
+      const messageLength = lowerCaseMessage.length;
+      
+      // Longer messages are more persuasive (up to +5 points)
+      if (messageLength > 100) persuasionChange += 5;
+      else if (messageLength > 70) persuasionChange += 4;
+      else if (messageLength > 50) persuasionChange += 3;
+      else if (messageLength > 30) persuasionChange += 2;
+      else if (messageLength > 15) persuasionChange += 1;
+      
+      // Certain persuasive keywords add points
+      if (lowerCaseMessage.includes('porque') || lowerCaseMessage.includes('pois')) persuasionChange += 2;
+      if (lowerCaseMessage.includes('importante') || lowerCaseMessage.includes('necessário')) persuasionChange += 2;
+      if (lowerCaseMessage.includes('benefício') || lowerCaseMessage.includes('vantagem')) persuasionChange += 3;
+      if (lowerCaseMessage.includes('futuro') || lowerCaseMessage.includes('potencial')) persuasionChange += 2;
+      if (lowerCaseMessage.includes('inovação') || lowerCaseMessage.includes('criativo')) persuasionChange += 4;
+      
+      // Send persuasion update through WebSocket if client is connected
+      const connection = connections.get(sessionId);
+      if (connection && connection.readyState === WebSocket.OPEN) {
+        // Get stored level or start with random initial value
+        const storedData = JSON.parse(connection['userData'] || '{"level": 0}');
+        let currentLevel = storedData.level || 0;
+        
+        // Update level
+        currentLevel += persuasionChange;
+        // Cap at 100
+        currentLevel = Math.min(100, currentLevel);
+        
+        // Store updated level with the connection
+        connection['userData'] = JSON.stringify({ level: currentLevel });
+        
+        // Send update to client
+        connection.send(JSON.stringify({
+          type: 'persuasionUpdate',
+          level: currentLevel
+        }));
+        
+        console.log(`Updated persuasion level for ${sessionId}: ${currentLevel}`);
+      }
+      
       res.json({ response: aiResponse });
     } catch (error) {
       console.error("Error in chat endpoint:", error);
@@ -99,6 +146,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
+  
+  // Set up WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    // Handle client messages (receive session ID)
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Store the connection with the session ID
+        if (data.type === 'register' && data.sessionId) {
+          connections.set(data.sessionId, ws);
+          console.log(`Client registered with session ID: ${data.sessionId}`);
+          
+          // Send initial persuasion level (random between 0-20 for new connections)
+          const initialLevel = Math.floor(Math.random() * 20);
+          ws.send(JSON.stringify({ 
+            type: 'persuasionUpdate', 
+            level: initialLevel 
+          }));
+        }
+      } catch (error) {
+        console.error('Error handling WebSocket message:', error);
+      }
+    });
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      
+      // Remove connection from map
+      for (const [sessionId, connection] of connections.entries()) {
+        if (connection === ws) {
+          connections.delete(sessionId);
+          console.log(`Removed connection for session ID: ${sessionId}`);
+          break;
+        }
+      }
+    });
+  });
+  
   return httpServer;
 }
 
