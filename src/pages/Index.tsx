@@ -54,7 +54,7 @@ const Index = () => {
       
       {/* A IA é centralizada no meio da tela com margem vertical maior */}
       <div className="flex justify-center items-center mt-24 mb-16">
-        <AiAvatar />
+        <AiAvatar persuasionLevel={persuasionLevel} />
       </div>
       
       {/* Lista de pessoas que tentaram */}
