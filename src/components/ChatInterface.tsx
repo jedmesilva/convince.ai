@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUp, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
-import { Progress } from "../components/ui/progress";
 import PaymentPrompt from './PaymentPrompt';
 import BorderTimer from './BorderTimer';
 
@@ -16,6 +15,7 @@ interface Message {
 interface ChatInterfaceProps {
   isUnlocked: boolean;
   onAiResponse: (response: string) => void;
+  onPersuasionChange: (level: number) => void;
 }
 
 const initialMessage: Message = {
@@ -25,7 +25,7 @@ const initialMessage: Message = {
   timestamp: new Date()
 };
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse, onPersuasionChange }) => {
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -78,13 +78,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           else persuasionChange = 3;
 
           // Atualize o nível de persuasão, limitando a 100
-          setPersuasionLevel(prev => Math.min(100, prev + persuasionChange));
+          const newPersuasionLevel = Math.min(100, persuasionLevel + persuasionChange);
+          setPersuasionLevel(newPersuasionLevel);
+          
+          // Notifique o componente pai sobre a mudança no nível de persuasão
+          onPersuasionChange(newPersuasionLevel);
         }
       }
     };
 
     handlePersuasionIncrease();
-  }, [messages]);
+  }, [messages, persuasionLevel, onPersuasionChange]);
 
   // Função para lidar com o término do tempo
   const handleTimeEnd = () => {
@@ -192,31 +196,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           />}
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
-          <div className="flex items-center justify-between">
-
-            {/* Grupo 1 - Informações de persuasão (texto, percentual e barra) */}
-            <div className="flex-1 mr-3">
-              {/* Labels de texto e percentual */}
-              <div className="flex justify-between mb-1">
-                <span className="text-xs text-white/70">Nível de persuasão</span>
-                <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
-              </div>
-
-              {/* Barra de Progresso */}
-              <Progress 
-                value={persuasionLevel} 
-                className="h-2 bg-gray-700 w-full" 
-                indicatorClassName={
-                  persuasionLevel < 30 
-                    ? "bg-red-500" 
-                    : persuasionLevel < 70 
-                      ? "bg-yellow-500" 
-                      : "bg-green-500"
-                }
-              />
-            </div>
-
-            {/* Grupo 2 - Botão de Expandir/Recolher */}
+          <div className="flex items-center justify-end">
+            {/* Botão de Expandir/Recolher */}
             <div className="flex items-center justify-center">
               <Button
                 onClick={toggleChatExpansion}
@@ -233,7 +214,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
                 )}
               </Button>
             </div>
-
           </div>
         </div>
         <div 
