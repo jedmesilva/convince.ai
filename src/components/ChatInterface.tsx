@@ -30,7 +30,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   const [isTyping, setIsTyping] = useState(false);
   const [persuasionLevel, setPersuasionLevel] = useState(0);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -85,16 +84,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
 
   const handlePaymentSuccess = () => {
     onAiResponse('Pagamento concluído');
-    setIsTimerRunning(true);
-  };
-
-  const handleTimeUp = () => {
-    setIsTimerRunning(false);
-    toast({
-      title: "Tempo esgotado!",
-      description: "Seu tempo para convencer a IA acabou.",
-      variant: "destructive",
-    });
   };
 
   const renderMessage = (message: Message) => {
@@ -173,12 +162,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="w-full px-4 pb-4" style={{background: 'linear-gradient(to bottom, rgba(26, 31, 44, 0.4) 0%, rgba(15, 15, 16, 0.95) 100%)', backdropFilter: 'blur(8px)'}}>
-        <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden relative">
-          <BorderTimer 
-            isRunning={isTimerRunning && isUnlocked} 
-            duration={120000} // 2 minutos em milissegundos
-            onComplete={handleTimeUp} 
-          />
+        <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
           <div className="flex items-center justify-between">
