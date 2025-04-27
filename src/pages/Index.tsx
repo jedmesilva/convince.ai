@@ -44,15 +44,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
-      {/* PrizeDisplay agora aparece primeiro, antes da IA */}
-      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
-
-      <div className="flex flex-col items-center mb-4">
+      <div className="flex justify-center items-center mb-12">
         <AiAvatar persuasionLevel={persuasionLevel} />
-        <div className="mt-4">
-          <UserEmail />
-        </div>
       </div>
+
+      <div className="mb-8">
+        <UserEmail />
+      </div>
+
+      {/* PrizeDisplay aparece logo abaixo da IA */}
+      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
 
       <p className="text-center text-theme-soft-purple mt-4 mb-8">
         Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
