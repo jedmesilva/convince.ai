@@ -46,7 +46,7 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
   }, []);
   
   // Função de animação usando requestAnimationFrame
-  const animate = (timestamp: number) => {
+  const animate = React.useCallback((timestamp: number) => {
     if (!startTimeRef.current) {
       startTimeRef.current = timestamp;
     }
@@ -66,7 +66,7 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
         onTimeEnd();
       }
     }
-  };
+  }, [duration, onTimeEnd]);
   
   // Iniciar ou parar animação baseado no isActive
   useEffect(() => {
@@ -175,8 +175,7 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
         className="absolute top-0 left-0 h-[3px] bg-theme-vivid-purple shadow-[0_0_8px_rgba(192,90,255,0.8)]"
         style={{ 
           width: `${segments.top.width}px`,
-          display: segments.top.display,
-          transition: 'width 0.05s linear'
+          display: segments.top.display
         }}
       />
       
@@ -185,8 +184,7 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
         className="absolute top-0 right-0 w-[3px] bg-theme-vivid-purple shadow-[0_0_8px_rgba(192,90,255,0.8)]"
         style={{ 
           height: `${segments.right.height}px`,
-          display: segments.right.display,
-          transition: 'height 0.05s linear'
+          display: segments.right.display
         }}
       />
       
@@ -195,8 +193,7 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
         className="absolute bottom-0 right-0 h-[3px] bg-theme-vivid-purple shadow-[0_0_8px_rgba(192,90,255,0.8)]"
         style={{ 
           width: `${segments.bottom.width}px`,
-          display: segments.bottom.display,
-          transition: 'width 0.05s linear'
+          display: segments.bottom.display
         }}
       />
       
@@ -205,8 +202,7 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
         className="absolute bottom-0 left-0 w-[3px] bg-theme-vivid-purple shadow-[0_0_8px_rgba(192,90,255,0.8)]"
         style={{ 
           height: `${segments.left.height}px`,
-          display: segments.left.display,
-          transition: 'height 0.05s linear'
+          display: segments.left.display
         }}
       />
     </div>
