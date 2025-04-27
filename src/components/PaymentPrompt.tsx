@@ -46,7 +46,7 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
         disabled={isProcessing}
         className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-semibold py-3 rounded-lg w-full flex items-center justify-center"
       >
-        {isProcessing ? "Processando pagamento..." : "1$ para convencer"}
+        {isProcessing ? "Processando pagamento..." : "1$ para convencer a IA"}
       </Button>
     </div>
   );
