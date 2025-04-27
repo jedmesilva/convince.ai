@@ -1,26 +1,20 @@
-// Script para iniciar o servidor da aplicação
-// Este script executa o arquivo server/index.ts usando ts-node
-
+// Script para iniciar o servidor combinado
 import { spawn } from 'child_process';
 
-console.log('Iniciando o servidor da aplicação...');
+console.log('Iniciando o servidor combinado...');
 
-// Iniciar o servidor usando ts-node para executar o arquivo TypeScript
-const serverProcess = spawn('npx', ['ts-node', '--esm', 'server/index.ts'], {
+// Iniciar o servidor combinado
+const serverProcess = spawn('node', ['combined-server.js'], {
   stdio: 'inherit',
-  env: {
-    ...process.env,
-    NODE_ENV: 'development'
-  }
 });
 
-// Manipular eventos do processo
+// Gerenciar eventos do processo
 serverProcess.on('error', (err) => {
-  console.error('Erro ao iniciar o servidor:', err);
+  console.error('Erro ao iniciar o servidor combinado:', err);
   process.exit(1);
 });
 
 serverProcess.on('close', (code) => {
-  console.log(`Servidor encerrado com código: ${code}`);
+  console.log(`Servidor combinado encerrado com código: ${code}`);
   process.exit(code);
 });
