@@ -3,6 +3,7 @@ import { Send } from 'lucide-react';
 import { useAIChat } from '@/contexts/AIChatContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import PaymentBanner from './PaymentBanner';
 
 interface Message {
   text: string;
@@ -12,9 +13,13 @@ interface Message {
 
 interface ChatInterfaceProps {
   isLocked: boolean;
+  onTryButtonClick?: () => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ isLocked }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  isLocked,
+  onTryButtonClick = () => {}
+}) => {
   const [inputValue, setInputValue] = useState('');
   const { messages, sendMessage } = useAIChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -45,7 +50,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isLocked }) => {
   };
 
   return (
-    <div className="flex-grow flex flex-col bg-[#0A0A0A] rounded-xl border border-gray-800 overflow-hidden">
+    <div className="flex-grow flex flex-col bg-[#0A0A0A] rounded-xl border border-gray-800 overflow-hidden relative">
       {/* Message Container */}
       <div className="message-container flex-grow overflow-y-auto p-4 space-y-3">
         {messages.map((message, index) => (
@@ -66,7 +71,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isLocked }) => {
       </div>
       
       {/* Chat Input Area */}
-      <div className="chat-input-area border-t border-gray-800 p-3">
+      <div className="chat-input-area border-t border-gray-800 p-3 relative">
         <div className="flex items-center">
           <Input
             type="text"
@@ -86,6 +91,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isLocked }) => {
           </Button>
         </div>
       </div>
+
+      {/* Payment Banner */}
+      {isLocked && (
+        <PaymentBanner 
+          visible={true} 
+          onTryButtonClick={onTryButtonClick}
+          failedAttempts={540}
+        />
+      )}
     </div>
   );
 };

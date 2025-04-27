@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import AIRepresentation from '@/components/AIRepresentation';
 import PrizeDisplay from '@/components/PrizeDisplay';
 import ChatInterface from '@/components/ChatInterface';
-import PaymentBanner from '@/components/PaymentBanner';
 import PaymentModal from '@/components/PaymentModal';
 import { useAIChat } from '@/contexts/AIChatContext';
 
@@ -34,14 +33,10 @@ const Home: React.FC = () => {
       {/* Prize Display */}
       <PrizeDisplay prizeAmount={5401} failedAttempts={540} />
       
-      {/* Chat Interface */}
-      <ChatInterface isLocked={isChatLocked} />
-      
-      {/* Payment Banner (overlay) */}
-      <PaymentBanner
-        visible={isChatLocked}
+      {/* Chat Interface with Payment Banner */}
+      <ChatInterface 
+        isLocked={isChatLocked} 
         onTryButtonClick={handleTryButtonClick}
-        failedAttempts={540}
       />
       
       {/* Payment Modal */}
