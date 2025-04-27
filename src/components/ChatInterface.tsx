@@ -115,7 +115,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
       <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
-        <div className="px-4 py-3 overflow-y-auto" style={{ minHeight: '120px', maxHeight: '70vh' }}>
+        <div className="px-4 py-3 overflow-y-auto" style={{ minHeight: '120px', maxHeight: '50vh' }}>
           {messages.map(renderMessage)}
           
           {isTyping && (
