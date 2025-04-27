@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="192px" height="192px" viewBox="0 0 192 192" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>AI Prize Icon</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#000000" x="0" y="0" width="192" height="192" rx="32"></rect>
+        <path d="M96,40 C122.5,40 144,61.5 144,88 C144,114.5 122.5,136 96,136 C69.5,136 48,114.5 48,88 C48,61.5 69.5,40 96,40 Z" fill="#FFFFFF"></path>
+        <path d="M84,80 L108,80 L108,96 L84,96 L84,80 Z" fill="#000000"></path>
+        <path d="M68,144 L124,144 L124,152 L68,152 L68,144 Z" fill="#FFFFFF"></path>
+    </g>
+</svg>
