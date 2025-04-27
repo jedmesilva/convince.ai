@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import AIRepresentation from '@/components/AIRepresentation';
 import PrizeDisplay from '@/components/PrizeDisplay';
 import ChatInterface from '@/components/ChatInterface';
+import PaymentBanner from '@/components/PaymentBanner';
 import PaymentModal from '@/components/PaymentModal';
 import { useAIChat } from '@/contexts/AIChatContext';
 
 const Home: React.FC = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isPaymentOverlayVisible, setIsPaymentOverlayVisible] = useState(true);
+  const [isChatLocked, setIsChatLocked] = useState(true);
   const { resetChat } = useAIChat();
 
   const handleTryButtonClick = () => {
@@ -15,7 +16,7 @@ const Home: React.FC = () => {
   };
 
   const handlePaymentConfirm = () => {
-    setIsPaymentOverlayVisible(false);
+    setIsChatLocked(false);
     resetChat();
   };
 
@@ -34,10 +35,13 @@ const Home: React.FC = () => {
       <PrizeDisplay prizeAmount={5401} failedAttempts={540} />
       
       {/* Chat Interface */}
-      <ChatInterface 
-        showPaymentOverlay={isPaymentOverlayVisible}
+      <ChatInterface isLocked={isChatLocked} />
+      
+      {/* Payment Banner (overlay) */}
+      <PaymentBanner
+        visible={isChatLocked}
         onTryButtonClick={handleTryButtonClick}
-        onUnlockChat={() => setIsPaymentOverlayVisible(false)}
+        failedAttempts={540}
       />
       
       {/* Payment Modal */}

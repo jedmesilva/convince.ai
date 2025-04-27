@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
-import PaymentOverlay from './PaymentOverlay';
 import { useAIChat } from '@/contexts/AIChatContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,16 +11,10 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  showPaymentOverlay: boolean;
-  onTryButtonClick: () => void;
-  onUnlockChat: () => void;
+  isLocked: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
-  showPaymentOverlay, 
-  onTryButtonClick,
-  onUnlockChat
-}) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ isLocked }) => {
   const [inputValue, setInputValue] = useState('');
   const { messages, sendMessage } = useAIChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,7 +28,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleSendMessage = () => {
-    if (inputValue.trim()) {
+    if (inputValue.trim() && !isLocked) {
       sendMessage(inputValue);
       setInputValue('');
     }
@@ -73,14 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
       
       {/* Chat Input Area */}
-      <div className="chat-input-area border-t border-gray-800 p-3 relative">
-        {showPaymentOverlay && (
-          <PaymentOverlay 
-            onTryButtonClick={onTryButtonClick} 
-            failedAttempts={540}
-          />
-        )}
-        
+      <div className="chat-input-area border-t border-gray-800 p-3">
         <div className="flex items-center">
           <Input
             type="text"
@@ -89,12 +75,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            disabled={showPaymentOverlay}
+            disabled={isLocked}
           />
           <Button 
             onClick={handleSendMessage} 
             className="bg-primary text-white p-2 rounded-l-none"
-            disabled={showPaymentOverlay}
+            disabled={isLocked}
           >
             <Send className="h-5 w-5" />
           </Button>
