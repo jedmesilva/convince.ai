@@ -57,6 +57,10 @@ const Index = () => {
       {/* PrizeDisplay aparece logo abaixo da IA */}
       <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
       
+      <p className="text-center text-theme-soft-purple mt-4 mb-8">
+        Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
+      </p>
+      
       {/* Lista de pessoas que tentaram */}
       <AttemptsList />
       
