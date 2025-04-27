@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUp, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from "../components/ui/button";
@@ -33,7 +32,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   const [isChatExpanded, setIsChatExpanded] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  
+
   const toggleChatExpansion = () => {
     setIsChatExpanded(prev => !prev);
   };
@@ -44,14 +43,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isChatExpanded]);
-  
+
   // Expanda o chat automaticamente quando uma nova mensagem chegar
   useEffect(() => {
     if (messages.length > 1 && !isChatExpanded) {
       setIsChatExpanded(true);
     }
   }, [messages]);
-  
+
   // Simulação da atualização do nível de persuasão (sem WebSocket)
   // Em um cenário real, isso viria de um WebSocket
   useEffect(() => {
@@ -59,13 +58,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
     const handlePersuasionIncrease = () => {
       if (messages.length > 1) {
         const lastMessage = messages[messages.length - 1];
-        
+
         // Apenas incremente após mensagens do usuário
         if (lastMessage.sender === 'user') {
           // Calcule um incremento baseado no tamanho da mensagem
           const messageLength = lastMessage.text.length;
           let persuasionChange = 0;
-          
+
           // Algoritmo simples: mensagens mais longas são mais persuasivas
           if (messageLength > 100) persuasionChange = 15;
           else if (messageLength > 70) persuasionChange = 12;
@@ -73,13 +72,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           else if (messageLength > 30) persuasionChange = 7;
           else if (messageLength > 15) persuasionChange = 5;
           else persuasionChange = 3;
-          
+
           // Atualize o nível de persuasão, limitando a 100
           setPersuasionLevel(prev => Math.min(100, prev + persuasionChange));
         }
       }
     };
-    
+
     handlePersuasionIncrease();
   }, [messages]);
 
@@ -118,21 +117,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
       sender: 'user',
       timestamp: new Date()
     };
-    
+
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setInputValue('');
     setIsTyping(true);
 
     setTimeout(() => {
       const aiResponse = getAiResponse(inputValue);
-      
+
       const aiMessage: Message = {
         id: messages.length + 2,
         text: aiResponse,
         sender: 'ai',
         timestamp: new Date()
       };
-      
+
       setMessages(prevMessages => [...prevMessages, aiMessage]);
       setIsTyping(false);
       onAiResponse(aiResponse);
@@ -141,7 +140,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
 
   const getAiResponse = (userMessage: string): string => {
     const userMessageLower = userMessage.toLowerCase();
-    
+
     if (userMessageLower.includes("por favor") && (userMessageLower.includes("preciso") || userMessageLower.includes("necessito"))) {
       return "Entendo sua situação, mas preciso de argumentos mais convincentes.";
     } else if (userMessageLower.includes("doar") && userMessageLower.includes("caridade")) {
@@ -162,12 +161,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="w-full bg-[#1A1F2C] px-4 pb-4">
+      <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-md px-4 pb-4">
         <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
           <div className="flex items-center justify-between">
-            
+
             {/* Grupo 1 - Informações de persuasão (texto, percentual e barra) */}
             <div className="flex-1 mr-3">
               {/* Labels de texto e percentual */}
@@ -175,7 +174,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
                 <span className="text-xs text-white/70">Nível de persuasão</span>
                 <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
               </div>
-              
+
               {/* Barra de Progresso */}
               <Progress 
                 value={persuasionLevel} 
@@ -189,7 +188,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
                 }
               />
             </div>
-            
+
             {/* Grupo 2 - Botão de Expandir/Recolher */}
             <div className="flex items-center justify-center">
               <Button
@@ -207,7 +206,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
                 )}
               </Button>
             </div>
-            
+
           </div>
         </div>
         <div 
@@ -216,7 +215,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           }`}
         >
           {messages.map(renderMessage)}
-          
+
           {isTyping && (
             <div className="flex justify-start mb-4">
               <div className="bg-gray-800 text-white rounded-lg px-4 py-2 border border-theme-purple">
@@ -228,10 +227,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
-        
+
         <div className="border-t border-theme-purple">
           {isUnlocked ? (
             <div className="relative flex items-center">
@@ -262,4 +261,3 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
 };
 
 export default ChatInterface;
-
