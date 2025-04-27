@@ -12,7 +12,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ prizeAmount, failedAttempts
   const formattedPrize = new Intl.NumberFormat('pt-BR').format(prizeAmount);
   
   return (
-    <div className="w-full max-w-md mx-auto py-2 px-4">
+    <div className="w-full max-w-md mx-auto py-1 px-4">
       <div className="bg-gradient-to-r from-theme-dark-purple via-theme-purple to-theme-dark-purple rounded-xl shadow-lg p-6 border border-theme-purple">
         <div className="flex items-center justify-center mb-2">
           <DollarSign className="h-8 w-8 text-yellow-400 mr-2" />

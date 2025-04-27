@@ -39,7 +39,7 @@ const Index = () => {
         </p>
       </header>
       
-      <div className="flex flex-col items-center mb-4">
+      <div className="flex flex-col items-center mb-2">
         <AiAvatar />
       </div>
       
