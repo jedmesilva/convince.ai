@@ -16,21 +16,29 @@ const BorderTimer: React.FC<BorderTimerProps> = ({ isRunning, duration, onComple
       return;
     }
 
+    let animationFrameId: number;
     const startTime = Date.now();
-    const interval = setInterval(() => {
+
+    const animate = () => {
       const elapsed = Date.now() - startTime;
       const newProgress = (elapsed / duration) * 100;
       
       if (newProgress >= 100) {
         setProgress(100);
-        clearInterval(interval);
         onComplete?.();
       } else {
         setProgress(newProgress);
+        animationFrameId = requestAnimationFrame(animate);
       }
-    }, 16); // ~60fps
+    };
 
-    return () => clearInterval(interval);
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [isRunning, duration, onComplete]);
 
   const gradientDeg = progress * 3.6; // 360 degrees / 100%
