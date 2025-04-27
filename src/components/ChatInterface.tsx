@@ -133,11 +133,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           <div ref={messagesEndRef} />
         </div>
         
-        <div className="border-t border-theme-purple px-4 py-3">
+        <div className="border-t border-theme-purple">
           {isUnlocked ? (
             <div className="relative flex items-center">
               <textarea
-                className="flex-1 w-full bg-gray-800 border border-theme-purple rounded-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500"
+                className="flex-1 w-full bg-gray-800 border-0 rounded-none text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500 px-4 py-3 pr-12"
                 placeholder="Digite sua mensagem..."
                 rows={2}
                 value={inputValue}
