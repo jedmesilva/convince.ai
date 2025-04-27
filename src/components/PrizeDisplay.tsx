@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Trophy } from 'lucide-react';
 
 interface PrizeDisplayProps {
   prizeAmount: number;
@@ -8,8 +8,8 @@ interface PrizeDisplayProps {
 }
 
 const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ prizeAmount, failedAttempts }) => {
-  // Format prize amount with commas for thousands
   const formattedPrize = new Intl.NumberFormat('pt-BR').format(prizeAmount);
+  const lastWinnerPrize = new Intl.NumberFormat('pt-BR').format(5000);
   
   return (
     <div className="w-full max-w-md mx-auto py-6 px-4">
@@ -29,6 +29,15 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ prizeAmount, failedAttempts
             <p className="text-sm text-theme-soft-purple">
               {failedAttempts} pessoas tentaram mas falharam!
             </p>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-theme-purple/30 w-full text-center">
+            <div className="flex items-center justify-center mb-2">
+              <Trophy className="h-4 w-4 text-yellow-400 mr-2" />
+              <p className="text-sm text-theme-soft-purple">
+                Prêmio anterior: <span className="text-theme-bright-purple">Maria</span> ganhou R$ {lastWinnerPrize} ao persuadir a IA com maestria!
+              </p>
+            </div>
           </div>
         </div>
       </div>
