@@ -32,7 +32,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   const [persuasionLevel, setPersuasionLevel] = useState(0);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
   
   const toggleChatExpansion = () => {
@@ -53,81 +52,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
     }
   }, [messages]);
   
-  // Set up WebSocket connection
+  // Simulação da atualização do nível de persuasão (sem WebSocket)
+  // Em um cenário real, isso viria de um WebSocket
   useEffect(() => {
-    // Function to establish WebSocket connection
-    const connectWebSocket = () => {
-      // Close any existing connection
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-      
-      // Create WebSocket connection
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
-      const socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
-      
-      // Handle connection open
-      socket.onopen = () => {
-        console.log('WebSocket connection established');
+    // Simulação de incremento no nível de persuasão quando uma mensagem é enviada
+    const handlePersuasionIncrease = () => {
+      if (messages.length > 1) {
+        const lastMessage = messages[messages.length - 1];
         
-        // Get session ID from cookies
-        const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-        const sessionIdCookie = cookies.find(cookie => cookie.startsWith('sessionId='));
-        const sessionId = sessionIdCookie ? sessionIdCookie.split('=')[1] : null;
-        
-        if (sessionId) {
-          // Register with session ID
-          socket.send(JSON.stringify({
-            type: 'register',
-            sessionId
-          }));
-        } else {
-          console.log('No session ID found in cookies');
-        }
-      };
-      
-      // Handle messages from server
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
+        // Apenas incremente após mensagens do usuário
+        if (lastMessage.sender === 'user') {
+          // Calcule um incremento baseado no tamanho da mensagem
+          const messageLength = lastMessage.text.length;
+          let persuasionChange = 0;
           
-          if (data.type === 'persuasionUpdate') {
-            setPersuasionLevel(data.level);
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          // Algoritmo simples: mensagens mais longas são mais persuasivas
+          if (messageLength > 100) persuasionChange = 15;
+          else if (messageLength > 70) persuasionChange = 12;
+          else if (messageLength > 50) persuasionChange = 10;
+          else if (messageLength > 30) persuasionChange = 7;
+          else if (messageLength > 15) persuasionChange = 5;
+          else persuasionChange = 3;
+          
+          // Atualize o nível de persuasão, limitando a 100
+          setPersuasionLevel(prev => Math.min(100, prev + persuasionChange));
         }
-      };
-      
-      // Handle errors
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-      
-      // Handle connection close
-      socket.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-        
-        // Try to reconnect after a delay if not closing intentionally
-        if (event.code !== 1000) {
-          setTimeout(connectWebSocket, 3000);
-        }
-      };
-    };
-    
-    // Connect
-    connectWebSocket();
-    
-    // Clean up on component unmount
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
       }
     };
-  }, []);
+    
+    handlePersuasionIncrease();
+  }, [messages]);
 
   const handlePaymentSuccess = () => {
     onAiResponse('Pagamento concluído');
@@ -209,36 +163,51 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
       <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
-        <div className="px-4 pt-4 pb-6 relative">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-white/70">Nível de persuasão</span>
-            <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
+        <div className="px-4 pt-4 pb-2 relative">
+          {/* Container Pai - Segura todos os elementos */}
+          <div className="flex items-center justify-between">
+            
+            {/* Grupo 1 - Informações de persuasão (texto, percentual e barra) */}
+            <div className="flex-1 mr-3">
+              {/* Labels de texto e percentual */}
+              <div className="flex justify-between mb-1">
+                <span className="text-xs text-white/70">Nível de persuasão</span>
+                <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
+              </div>
+              
+              {/* Barra de Progresso */}
+              <Progress 
+                value={persuasionLevel} 
+                className="h-2 bg-gray-700 w-full" 
+                indicatorClassName={
+                  persuasionLevel < 30 
+                    ? "bg-red-500" 
+                    : persuasionLevel < 70 
+                      ? "bg-yellow-500" 
+                      : "bg-green-500"
+                }
+              />
+            </div>
+            
+            {/* Grupo 2 - Botão de Expandir/Recolher */}
+            <div className="flex items-center justify-center">
+              <Button
+                onClick={toggleChatExpansion}
+                className="h-6 w-6 rounded-full bg-theme-dark-purple border border-theme-purple p-0 shadow-md hover:bg-gray-800 flex items-center justify-center"
+                variant="outline"
+                size="sm"
+                aria-label={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
+                title={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
+              >
+                {isChatExpanded ? (
+                  <ChevronDown className="h-3 w-3 text-theme-light-purple" />
+                ) : (
+                  <ChevronUp className="h-3 w-3 text-theme-light-purple" />
+                )}
+              </Button>
+            </div>
+            
           </div>
-          <Progress 
-            value={persuasionLevel} 
-            className="h-2 bg-gray-700 w-full" 
-            indicatorClassName={
-              persuasionLevel < 30 
-                ? "bg-red-500" 
-                : persuasionLevel < 70 
-                  ? "bg-yellow-500" 
-                  : "bg-green-500"
-            }
-          />
-          <Button
-            onClick={toggleChatExpansion}
-            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 h-8 w-8 rounded-full bg-theme-dark-purple border border-theme-purple p-0 z-10 shadow-md hover:bg-gray-800 flex items-center justify-center"
-            variant="outline"
-            size="sm"
-            aria-label={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
-            title={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
-          >
-            {isChatExpanded ? (
-              <ChevronDown className="h-4 w-4 text-theme-light-purple" />
-            ) : (
-              <ChevronUp className="h-4 w-4 text-theme-light-purple" />
-            )}
-          </Button>
         </div>
         <div 
           className={`px-4 overflow-y-auto transition-all duration-300 ease-in-out ${

@@ -1,8 +1,6 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema } from "@shared/schema";
-import { z } from "zod";
 import { randomUUID } from "crypto";
 import { WebSocketServer, WebSocket } from 'ws';
 
