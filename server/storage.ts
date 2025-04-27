@@ -62,8 +62,12 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id };
+    const id = randomUUID();
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      created_at: new Date() 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -78,7 +82,7 @@ export class MemStorage implements IStorage {
 
   async getMessagesBySessionId(sessionId: string): Promise<Message[]> {
     return Array.from(this.messagesData.values())
-      .filter(message => message.sessionId === sessionId)
+      .filter(message => message.session_id === sessionId)
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 
@@ -103,7 +107,7 @@ export class MemStorage implements IStorage {
 
   async getPaymentsBySessionId(sessionId: string): Promise<Payment[]> {
     return Array.from(this.paymentsData.values())
-      .filter(payment => payment.sessionId === sessionId)
+      .filter(payment => payment.session_id === sessionId)
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 
@@ -136,9 +140,10 @@ export class MemStorage implements IStorage {
     const timestamp = new Date();
     const payment = { 
       id, 
-      sessionId, 
+      session_id: sessionId,
+      user_id: null, 
       amount, 
-      status: "pending" as const,
+      status: "pending",
       method: method || null, 
       timestamp
     } as Payment;
@@ -148,4 +153,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { SupabaseStorage } from "./supabase-storage";
+
+// Modificar esta linha para usar o SupabaseStorage em vez do MemStorage
+export const storage = new SupabaseStorage();
