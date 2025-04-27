@@ -19,6 +19,13 @@ const Index = () => {
   };
   
   const handleAiResponse = (response: string) => {
+    // Se o timer acabou, bloqueia o chat novamente
+    if (response === 'timer_ended') {
+      setIsUnlocked(false);
+      setFailedAttempts(prevAttempts => prevAttempts + 1);
+      return;
+    }
+    
     // If the response doesn't indicate winning, increment failed attempts
     if (!response.toLowerCase().includes("parabéns") && !response.toLowerCase().includes("venceu")) {
       setFailedAttempts(prevAttempts => prevAttempts + 1);
