@@ -14,22 +14,28 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
   const handlePayment = () => {
     setIsProcessing(true);
     
-    // Simulate payment processing
-    toast({
+    // Armazenar a referência do toast para poder removê-lo depois
+    const { dismiss } = toast({
       title: "Processando pagamento...",
       description: "Por favor, aguarde...",
-      variant: "default", // Use default variant instead of non-existent "success"
+      variant: "default",
     });
     
     // Simulate payment success after 1.5 seconds
     setTimeout(() => {
-      setIsProcessing(false);
-      toast({
-        title: "Pagamento aprovado!",
-        description: "Agora você pode tentar me convencer!",
-        variant: "default", // Use default variant
-      });
-      onPaymentSuccess();
+      // Primeiro, remover o toast de processamento
+      dismiss();
+      
+      // Aguardar um pequeno intervalo para evitar sobreposição
+      setTimeout(() => {
+        setIsProcessing(false);
+        toast({
+          title: "Pagamento aprovado!",
+          description: "Agora você pode tentar me convencer!",
+          variant: "default",
+        });
+        onPaymentSuccess();
+      }, 100);
     }, 1500);
   };
   
