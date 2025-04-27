@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import AiAvatar from '@/components/AiAvatar';
 import PrizeDisplay from '@/components/PrizeDisplay';
 import ChatInterface from '@/components/ChatInterface';
+import AttemptsList from '@/components/AttemptsList';
 import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
@@ -29,9 +30,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen container mx-auto py-8 px-4 pb-[500px]">
+    <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
       <header className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold text-center text-gradient mb-2">
+        <h1 className="text-4xl md:text-5xl font-bold text-center text-theme-vivid-purple mb-2">
           Convença a IA
         </h1>
         <p className="text-center text-theme-soft-purple">
@@ -42,24 +43,20 @@ const Index = () => {
       {/* PrizeDisplay agora aparece primeiro, antes da IA */}
       <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
       
-      {/* A IA é centralizada no meio da tela com margem vertical */}
-      <div className="flex justify-center items-center my-12">
+      {/* A IA é centralizada no meio da tela com margem vertical maior */}
+      <div className="flex justify-center items-center mt-24 mb-16">
         <AiAvatar />
       </div>
       
-      <div className="mt-8 max-w-2xl mx-auto relative">
+      {/* Lista de pessoas que tentaram */}
+      <AttemptsList />
+      
+      <div className="mt-10 max-w-2xl mx-auto relative">
         <ChatInterface 
           isUnlocked={isUnlocked} 
           onAiResponse={handleAiResponse} 
         />
       </div>
-      
-      <footer className="mt-16 text-center text-sm text-gray-500">
-        <p>© 2025 Convince AI - Uma chance de $1 para ganhar tudo!</p>
-        <p className="mt-2">
-          Esta é apenas uma demonstração - Nenhuma transação real é processada
-        </p>
-      </footer>
       
       <Toaster />
     </div>
