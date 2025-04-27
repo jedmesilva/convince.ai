@@ -192,8 +192,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
           />}
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
-          <div className="flex items-center justify-end">
-            {/* Botão de Expandir/Recolher */}
+          <div className="flex items-center justify-between">
+
+            {/* Grupo 1 - Informações de persuasão (texto, percentual e barra) */}
+            <div className="flex-1 mr-3">
+              {/* Labels de texto e percentual */}
+              <div className="flex justify-between mb-1">
+                <span className="text-xs text-white/70">Nível de persuasão</span>
+                <span className="text-xs text-white/70 font-medium">{persuasionLevel}%</span>
+              </div>
+
+              {/* Barra de Progresso */}
+              <Progress 
+                value={persuasionLevel} 
+                className="h-2 bg-gray-700 w-full" 
+                indicatorClassName={
+                  persuasionLevel < 30 
+                    ? "bg-red-500" 
+                    : persuasionLevel < 70 
+                      ? "bg-yellow-500" 
+                      : "bg-green-500"
+                }
+              />
+            </div>
+
+            {/* Grupo 2 - Botão de Expandir/Recolher */}
             <div className="flex items-center justify-center">
               <Button
                 onClick={toggleChatExpansion}
