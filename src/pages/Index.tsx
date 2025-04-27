@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import AiAvatar from '../components/AiAvatar';
+import UserEmail from '../components/UserEmail';
 import PrizeDisplay from '../components/PrizeDisplay';
 import ChatInterface from '../components/ChatInterface';
 import AttemptsList from '../components/AttemptsList';
@@ -32,6 +33,7 @@ const Index = () => {
   return (
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
       <header className="mb-8">
+        <UserEmail />
         <h1 className="text-4xl md:text-5xl font-bold text-center text-theme-vivid-purple mb-2">
           CONVENÇA AI
         </h1>
