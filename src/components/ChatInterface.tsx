@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
 import { Progress } from "../components/ui/progress";
 import PaymentPrompt from './PaymentPrompt';
+import BorderTimer from './BorderTimer';
 
 interface Message {
   id: number;
@@ -30,6 +31,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   const [isTyping, setIsTyping] = useState(false);
   const [persuasionLevel, setPersuasionLevel] = useState(0);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  // Duração do cronômetro em segundos (2 minutos = 120 segundos)
+  const timerDuration = 120; 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -82,8 +86,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
     handlePersuasionIncrease();
   }, [messages]);
 
+  // Função para lidar com o término do tempo
+  const handleTimeEnd = () => {
+    toast({
+      title: "Tempo esgotado!",
+      description: "Seu tempo para convencer a IA acabou. Tente novamente.",
+      variant: "destructive",
+    });
+    setIsTimerActive(false);
+  };
+  
+  // Quando o pagamento for bem-sucedido, inicie o timer
   const handlePaymentSuccess = () => {
     onAiResponse('Pagamento concluído');
+    setIsTimerActive(true);
   };
 
   const renderMessage = (message: Message) => {
@@ -162,7 +178,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="w-full px-4 pb-4" style={{background: 'linear-gradient(to bottom, rgba(26, 31, 44, 0.4) 0%, rgba(15, 15, 16, 0.95) 100%)', backdropFilter: 'blur(8px)'}}>
-        <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
+        <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden relative">
+          {/* BorderTimer - Cronômetro visual nas bordas */}
+          {isUnlocked && <BorderTimer 
+            isActive={isTimerActive} 
+            duration={timerDuration} 
+            onTimeEnd={handleTimeEnd}
+          />}
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
           <div className="flex items-center justify-between">
