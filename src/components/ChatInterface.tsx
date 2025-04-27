@@ -4,7 +4,6 @@ import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
 import { Progress } from "../components/ui/progress";
 import PaymentPrompt from './PaymentPrompt';
-import BorderTimer from './BorderTimer';
 
 interface Message {
   id: number;
@@ -47,6 +46,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isChatExpanded]);
+  
+  /*
+   * Efeito para controlar o progresso do timer visual na borda do chat
+   * 
+   * O timer funciona usando um gradiente cônico (conic-gradient) que percorre a borda
+   * do componente no sentido horário, começando do topo esquerdo e fazendo um loop completo.
+   *
+   * Utilizamos o mesmo valor de persuasionLevel para atualizar tanto a barra de progresso 
+   * quanto o gradiente do timer. O timer completa 100% do seu circuito independentemente
+   * da duração (configurada em timerDuration).
+   */
+  useEffect(() => {
+    if (!isTimerActive) {
+      setPersuasionLevel(0); // Reinicia o progresso quando o timer não está ativo
+      return;
+    }
+    
+    const startTime = Date.now();
+    const totalDuration = timerDuration * 1000;
+    
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
+      
+      setPersuasionLevel(newProgress);
+      
+      if (newProgress >= 100) {
+        clearInterval(intervalId);
+        handleTimeEnd();
+      }
+    }, 16); // ~60fps para animação suave
+    
+    return () => clearInterval(intervalId);
+  }, [isTimerActive, timerDuration]);
 
   // Expanda o chat automaticamente quando uma nova mensagem chegar
   useEffect(() => {
@@ -179,12 +213,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="w-full px-4 pb-4" style={{background: 'linear-gradient(to bottom, rgba(26, 31, 44, 0.4) 0%, rgba(15, 15, 16, 0.95) 100%)', backdropFilter: 'blur(8px)'}}>
         <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden relative">
-          {/* BorderTimer - Cronômetro visual nas bordas */}
-          {isUnlocked && <BorderTimer 
-            isActive={isTimerActive} 
-            duration={timerDuration} 
-            onTimeEnd={handleTimeEnd}
-          />}
+          {/* 
+            Timer visual nas bordas do componente
+            - Posicionado absolutamente para cobrir exatamente as bordas
+            - Usa gradiente cônico para criar o efeito de "percorrer" as bordas
+            - A classe border-timer aplica a máscara que mostra apenas a borda
+            - O valor de persuasionLevel controla o progresso (0-100%)
+          */}
+          {isUnlocked && isTimerActive && (
+            <div 
+              className="absolute inset-[-1px] rounded-lg z-10 pointer-events-none border-timer"
+              style={{
+                background: `conic-gradient(
+                  #c05aff ${persuasionLevel}%, 
+                  transparent ${persuasionLevel}%, 
+                  transparent 100%
+                )`,
+                boxShadow: '0 0 8px rgba(192, 90, 255, 0.8)'
+              }}
+            />
+          )}
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
           <div className="flex items-center justify-between">
