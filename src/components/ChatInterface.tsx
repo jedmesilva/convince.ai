@@ -48,8 +48,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
         <div 
           className={`max-w-[80%] rounded-lg px-4 py-2 ${
             message.sender === 'user' 
-              ? 'bg-theme-purple text-white' 
-              : 'bg-gray-800 text-theme-light-purple border border-theme-purple'
+              ? 'bg-purple-500 text-white' 
+              : 'bg-gray-800 text-purple-200 border border-purple-500'
           }`}
         >
           <p>{message.text}</p>
