@@ -23,38 +23,23 @@ const AiAvatar: React.FC<AiAvatarProps> = ({ persuasionLevel }) => {
         
         {/* Circular Progress Bar (Persuasion Level) */}
         {persuasionLevel > 0 && (
-          <div className="absolute inset-0 z-20 pointer-events-none">
-            <svg className="w-full h-full" viewBox="0 0 100 100">
-              <circle 
-                cx="50" 
-                cy="50" 
-                r="48" 
-                fill="none" 
-                strokeWidth="4" 
-                stroke="rgba(40, 40, 45, 0.6)" 
-                className="opacity-70"
-              />
-              <circle 
-                cx="50" 
-                cy="50" 
-                r="48" 
-                fill="none" 
-                strokeWidth="4" 
-                stroke={
-                  persuasionLevel < 30 
-                    ? "#ef4444" // red-500
-                    : persuasionLevel < 70 
-                      ? "#eab308" // yellow-500
-                      : "#22c55e" // green-500
-                }
-                strokeDasharray="302"
-                strokeDashoffset={302 - (302 * persuasionLevel / 100)}
-                strokeLinecap="round"
-                className="transform -rotate-90 origin-center transition-all duration-300 ease-out"
-                style={{ filter: "drop-shadow(0 0 8px rgba(192, 90, 255, 0.5))" }}
-              />
-            </svg>
-          </div>
+          <div 
+            className="absolute rounded-full z-20 border-4 border-transparent"
+            style={{
+              top: -4,
+              left: -4,
+              right: -4,
+              bottom: -4,
+              borderTopColor: persuasionLevel < 30 
+                ? "#ef4444" // red-500
+                : persuasionLevel < 70 
+                  ? "#eab308" // yellow-500
+                  : "#22c55e", // green-500
+              transform: `rotate(${persuasionLevel * 3.6}deg)`,
+              transition: 'transform 0.3s ease',
+              filter: "drop-shadow(0 0 8px rgba(192, 90, 255, 0.5))"
+            }}
+          />
         )}
       </div>
       
