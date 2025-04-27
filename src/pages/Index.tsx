@@ -44,7 +44,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
-      <div className="flex justify-center items-center mb-12">
+      <div className="flex justify-center items-center mb-4">
         <AiAvatar persuasionLevel={persuasionLevel} />
       </div>
 

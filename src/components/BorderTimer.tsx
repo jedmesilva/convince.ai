@@ -14,6 +14,8 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
   const [progress, setProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const startTimeRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   
   // Obtenha as dimensões do container quando ele for montado ou redimensionado
   useEffect(() => {
@@ -43,61 +45,102 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
     };
   }, []);
   
-  useEffect(() => {
-    if (!isActive) {
-      setProgress(0);
-      return;
+  // Função de animação usando requestAnimationFrame
+  const animate = (timestamp: number) => {
+    if (!startTimeRef.current) {
+      startTimeRef.current = timestamp;
     }
     
-    const startTime = Date.now();
+    const elapsed = timestamp - startTimeRef.current;
     const totalDuration = duration * 1000;
+    const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
     
-    const intervalId = setInterval(() => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
-      
-      setProgress(newProgress);
-      
-      if (newProgress >= 100) {
-        clearInterval(intervalId);
-        if (onTimeEnd) onTimeEnd();
+    setProgress(newProgress);
+    
+    if (newProgress < 100) {
+      // Continuar animação
+      animationFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      // Timer completo
+      if (onTimeEnd) {
+        onTimeEnd();
       }
-    }, 16); // ~60fps para animação suave
-    
-    return () => clearInterval(intervalId);
-  }, [isActive, duration, onTimeEnd]);
+    }
+  };
   
-  // Calcula o tamanho e posição dos segmentos de borda
+  // Iniciar ou parar animação baseado no isActive
+  useEffect(() => {
+    if (isActive && !animationFrameRef.current) {
+      // Iniciar animação apenas se não estiver já em execução
+      startTimeRef.current = null; // Resetar o tempo de início
+      animationFrameRef.current = requestAnimationFrame(animate);
+    } else if (!isActive) {
+      // Parar animação se não estiver ativo
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      setProgress(0);
+    }
+    
+    // Cleanup na desmontagem
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]); // Dependência apenas de isActive para impedir re-renders desnecessários
+  
+  // Calcula o tamanho e posição dos segmentos de borda para o percurso completo
   const calculateSegments = () => {
     const { width, height } = dimensions;
     const perimeter = 2 * (width + height);
     
-    // Calcule quanto do caminho total já foi percorrido
+    // Calcule a distância total percorrida em pixels
     const progressDistance = (perimeter * progress) / 100;
     
-    // Segmento superior (da esquerda para a direita)
-    const topSegmentDistance = Math.min(progressDistance, width);
-    const topWidth = topSegmentDistance;
-    
-    // Segmento direito (de cima para baixo)
-    const rightSegmentDistance = progressDistance > width 
-      ? Math.min(progressDistance - width, height) 
-      : 0;
-    const rightHeight = rightSegmentDistance;
-    
-    // Segmento inferior (da direita para a esquerda)
-    // Parte inferior percorre da direita para a esquerda
+    // Inicialize valores para cada segmento
+    let topWidth = 0;
+    let rightHeight = 0;
     let bottomWidth = 0;
-    if (progressDistance > (width + height)) {
-      const progress = Math.min(progressDistance - (width + height), width);
-      bottomWidth = progress; // Largura aumenta da direita para a esquerda
-    }
-    
-    // Segmento esquerdo (de baixo para cima)
     let leftHeight = 0;
-    if (progressDistance > (2 * width + height)) {
-      leftHeight = Math.min(progressDistance - (2 * width + height), height);
+    
+    // Segmento 1: Superior (da esquerda para a direita)
+    if (progressDistance <= width) {
+      // Apenas a parte superior está visível
+      topWidth = progressDistance;
+    } else {
+      // A parte superior está totalmente visível
+      topWidth = width;
+      
+      // Segmento 2: Lateral direita (de cima para baixo)
+      if (progressDistance <= width + height) {
+        // Apenas parte do lado direito está visível
+        rightHeight = progressDistance - width;
+      } else {
+        // O lado direito está totalmente visível
+        rightHeight = height;
+        
+        // Segmento 3: Inferior (da direita para a esquerda)
+        if (progressDistance <= 2 * width + height) {
+          // Apenas parte do lado inferior está visível
+          bottomWidth = progressDistance - (width + height);
+        } else {
+          // O lado inferior está totalmente visível
+          bottomWidth = width;
+          
+          // Segmento 4: Lateral esquerda (de baixo para cima)
+          if (progressDistance <= 2 * width + 2 * height) {
+            // Apenas parte do lado esquerdo está visível
+            leftHeight = progressDistance - (2 * width + height);
+          } else {
+            // O percurso completo está visível
+            leftHeight = height;
+          }
+        }
+      }
     }
     
     return {
@@ -149,11 +192,10 @@ const BorderTimer: React.FC<BorderTimerProps> = ({
       
       {/* Segmento inferior - da direita para a esquerda */}
       <div 
-        className="absolute bottom-0 h-[3px] bg-theme-vivid-purple shadow-[0_0_8px_rgba(192,90,255,0.8)]"
+        className="absolute bottom-0 right-0 h-[3px] bg-theme-vivid-purple shadow-[0_0_8px_rgba(192,90,255,0.8)]"
         style={{ 
           width: `${segments.bottom.width}px`,
           display: segments.bottom.display,
-          right: '0px', // Ancorado à direita
           transition: 'width 0.05s linear'
         }}
       />

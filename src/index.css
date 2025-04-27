@@ -133,3 +133,20 @@
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
 }
+
+/* Efeito de brilho para o temporizador */
+.shadow-glow-sm {
+  box-shadow: 0 0 8px rgba(192, 90, 255, 0.5);
+}
+
+/* Animação para o temporizador piscar nos últimos segundos */
+@keyframes timer-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+.animate-timer-blink {
+  animation: timer-blink 0.5s ease-in-out infinite;
+  text-shadow: 0 0 5px rgba(255, 50, 50, 0.7);
+}

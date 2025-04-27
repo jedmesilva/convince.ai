@@ -33,7 +33,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
   const [isChatExpanded, setIsChatExpanded] = useState(true);
   const [isTimerActive, setIsTimerActive] = useState(false);
   // Duração do cronômetro em segundos (2 minutos = 120 segundos)
-  const timerDuration = 120; 
+  const timerDuration = 120;
+  // Estado para o tempo restante em segundos
+  const [timeRemaining, setTimeRemaining] = useState(timerDuration);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -89,6 +91,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
 
     handlePersuasionIncrease();
   }, [messages, persuasionLevel, onPersuasionChange]);
+
+  // Efeito para atualizar o tempo restante quando o timer estiver ativo
+  useEffect(() => {
+    if (!isTimerActive) {
+      setTimeRemaining(timerDuration);
+      return;
+    }
+    
+    // Reset do tempo restante quando o timer é iniciado
+    setTimeRemaining(timerDuration);
+    
+    const interval = setInterval(() => {
+      setTimeRemaining(prev => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          clearInterval(interval);
+          // Garante que o temporizador nunca seja negativo
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isTimerActive, timerDuration]);
 
   // Função para lidar com o término do tempo
   const handleTimeEnd = () => {
@@ -183,6 +210,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
       handleSendMessage();
     }
   };
+  
+  // Função para formatar o tempo no formato MM:SS
+  const formatTime = (timeInSeconds: number): string => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = timeInSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
@@ -196,9 +230,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
           />}
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
-          <div className="flex items-center justify-end">
-            {/* Botão de Expandir/Recolher */}
-            <div className="flex items-center justify-center">
+          <div className="flex items-center justify-between">
+            {/* Temporizador digital - Exibido apenas quando está ativo */}
+            <div className="flex-1">
+              {isUnlocked && isTimerActive && (
+                <div className={`
+                  font-mono font-medium text-sm opacity-80 inline-block
+                  ${timeRemaining <= 10 ? 'text-red-400 animate-timer-blink' : 'text-theme-vivid-purple'}
+                `}>
+                  {formatTime(timeRemaining)}
+                </div>
+              )}
+            </div>
+            
+            {/* Botão de Expandir/Recolher - sempre à direita */}
+            <div className="flex items-center justify-end">
               <Button
                 onClick={toggleChatExpansion}
                 className="h-6 w-6 rounded-full bg-theme-dark-purple border border-theme-purple p-0 shadow-md hover:bg-gray-800 flex items-center justify-center"
