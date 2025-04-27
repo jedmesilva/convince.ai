@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { DollarSign } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,7 +47,6 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
         disabled={isProcessing}
         className="bg-theme-vivid-purple hover:bg-theme-purple text-white font-bold px-8 py-6 rounded-lg text-lg w-full flex items-center justify-center"
       >
-        <DollarSign className="h-6 w-6 mr-2" />
         {isProcessing ? "Processando..." : "1$ Convencer"}
       </Button>
       

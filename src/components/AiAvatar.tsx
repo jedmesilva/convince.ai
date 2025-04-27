@@ -16,8 +16,6 @@ const AiAvatar = () => {
         {/* Animated pulse ring */}
         <div className="absolute inset-0 border-4 border-theme-purple rounded-full animate-ping opacity-30"></div>
       </div>
-      <h2 className="text-xl md:text-2xl font-bold text-theme-light-purple">Convença a IA</h2>
-      <p className="text-sm text-theme-soft-purple opacity-80">Será que você consegue?</p>
     </div>
   );
 };
