@@ -128,8 +128,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
     // Reset do estado quando o tempo acabar
     setMessages([initialMessage]);
     setInputValue('');
-    setPersuasionLevel(0);
-    onAiResponse('timer_ended'); // Sinaliza para o componente pai que o timer acabou
+    
+    // Notificar o componente pai que o timer terminou para bloquear o chat
+    onAiResponse('timer_ended');
+    
+    // Resetar o nível de persuasão
+    onPersuasionChange(0);
   };
   
   // Quando o pagamento for bem-sucedido, inicie o timer
