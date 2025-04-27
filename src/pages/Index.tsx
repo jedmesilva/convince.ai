@@ -33,10 +33,10 @@ const Index = () => {
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
       <header className="mb-8">
         <h1 className="text-4xl md:text-5xl font-bold text-center text-theme-vivid-purple mb-2">
-          Convença a IA
+          CONVENÇA AI
         </h1>
         <p className="text-center text-theme-soft-purple">
-          Ganhe todo o prêmio acumulado se conseguir persuadir nossa IA!
+          Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
         </p>
       </header>
       
