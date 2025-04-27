@@ -48,10 +48,6 @@ const Index = () => {
         <AiAvatar persuasionLevel={persuasionLevel} />
       </div>
 
-      <div className="mb-8">
-        <UserEmail />
-      </div>
-
       {/* PrizeDisplay aparece logo abaixo da IA */}
       <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
 

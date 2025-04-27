@@ -1,5 +1,6 @@
 
 import React from 'react';
+import UserEmail from './UserEmail';
 
 interface AiAvatarProps {
   persuasionLevel: number;
@@ -76,7 +77,12 @@ const AiAvatar: React.FC<AiAvatarProps> = ({ persuasionLevel }) => {
       )}
       
       <h2 className="text-xl md:text-2xl font-bold text-theme-light-purple">Convença a IA</h2>
-      <p className="text-sm text-theme-soft-purple opacity-80">Será que você consegue?</p>
+      <div className="flex flex-col items-center">
+        <p className="text-sm text-theme-soft-purple opacity-80 mb-2">
+          Será que você consegue?
+        </p>
+        <UserEmail />
+      </div>
     </div>
   );
 };

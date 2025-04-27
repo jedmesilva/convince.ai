@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react';
 
 const UserEmail = () => {
   const [isPressed, setIsPressed] = useState(false);
-  const userEmail = "user@example.com";
+  const userEmail = "Lucas@email.com";
 
   return (
     <div 
