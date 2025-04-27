@@ -160,8 +160,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-      <div className="p-4" style={{background: 'linear-gradient(to bottom, rgba(26, 31, 44, 0.5) 0%, rgba(15, 15, 16, 0.95) 100%)', backdropFilter: 'blur(8px)'}}>
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-md px-4 pb-4">
         <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden">
         <div className="px-4 pt-4 pb-2 relative">
           {/* Container Pai - Segura todos os elementos */}
