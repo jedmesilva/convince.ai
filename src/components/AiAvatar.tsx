@@ -76,7 +76,7 @@ const AiAvatar: React.FC<AiAvatarProps> = ({ persuasionLevel }) => {
       )}
       
       <h2 className="text-xl md:text-2xl font-bold text-theme-light-purple">Convença a IA</h2>
-      <p className="text-sm text-theme-soft-purple opacity-80">Será que você consegue? {userEmail}</p>
+      <p className="text-sm text-theme-soft-purple opacity-80">Será que você consegue?</p>
     </div>
   );
 };
