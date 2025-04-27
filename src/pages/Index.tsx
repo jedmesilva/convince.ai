@@ -47,15 +47,15 @@ const Index = () => {
     <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
       <header className="mb-8">
         <UserEmail />
-        </header>
+      </header>
       
-      {/* PrizeDisplay agora aparece primeiro, antes da IA */}
-      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
-      
-      {/* A IA é centralizada no meio da tela com margem vertical maior */}
-      <div className="flex justify-center items-center mt-24 mb-16">
+      {/* A IA agora aparece no topo da página */}
+      <div className="flex justify-center items-center mb-12">
         <AiAvatar persuasionLevel={persuasionLevel} />
       </div>
+      
+      {/* PrizeDisplay aparece logo abaixo da IA */}
+      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
       
       {/* Lista de pessoas que tentaram */}
       <AttemptsList />
