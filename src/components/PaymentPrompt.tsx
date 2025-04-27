@@ -40,7 +40,7 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
   };
   
   return (
-    <div className="w-full">
+    <div className="w-full px-4 py-3">
       <Button
         onClick={handlePayment}
         disabled={isProcessing}
