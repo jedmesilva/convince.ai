@@ -1,107 +1,169 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
-import { useAIChat } from '@/contexts/AIChatContext';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import PaymentBanner from './PaymentBanner';
+import { ArrowUp } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import PaymentPrompt from './PaymentPrompt';
 
 interface Message {
+  id: number;
   text: string;
-  isUser: boolean;
-  timestamp: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
 }
 
 interface ChatInterfaceProps {
-  isLocked: boolean;
-  onTryButtonClick?: () => void;
+  isUnlocked: boolean;
+  onAiResponse: (response: string) => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
-  isLocked,
-  onTryButtonClick = () => {}
-}) => {
+const initialMessage: Message = {
+  id: 1,
+  text: "540 pessoas fracassaram com argumentos chulos, quer tentar algo melhor que elas?",
+  sender: 'ai',
+  timestamp: new Date()
+};
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse }) => {
+  const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [inputValue, setInputValue] = useState('');
-  const { messages, sendMessage } = useAIChat();
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const handlePaymentSuccess = () => {
+    onAiResponse('Pagamento concluído');
+  };
+
+  const renderMessage = (message: Message) => {
+    return (
+      <div 
+        key={message.id}
+        className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+      >
+        <div 
+          className={`max-w-[80%] rounded-lg px-4 py-2 ${
+            message.sender === 'user' 
+              ? 'bg-theme-purple text-white' 
+              : 'bg-gray-800 text-theme-light-purple border border-theme-purple'
+          }`}
+        >
+          <p>{message.text}</p>
+          <div className="text-xs opacity-70 mt-1">
+            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const handleSendMessage = () => {
-    if (inputValue.trim() && !isLocked) {
-      sendMessage(inputValue);
-      setInputValue('');
+    if (inputValue.trim() === '') return;
+
+    const userMessage: Message = {
+      id: messages.length + 1,
+      text: inputValue,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setInputValue('');
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const aiResponse = getAiResponse(inputValue);
+      
+      const aiMessage: Message = {
+        id: messages.length + 2,
+        text: aiResponse,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      
+      setMessages(prevMessages => [...prevMessages, aiMessage]);
+      setIsTyping(false);
+      onAiResponse(aiResponse);
+    }, 2000);
+  };
+
+  const getAiResponse = (userMessage: string): string => {
+    const userMessageLower = userMessage.toLowerCase();
+    
+    if (userMessageLower.includes("por favor") && (userMessageLower.includes("preciso") || userMessageLower.includes("necessito"))) {
+      return "Entendo sua situação, mas preciso de argumentos mais convincentes.";
+    } else if (userMessageLower.includes("doar") && userMessageLower.includes("caridade")) {
+      return "Nobre da sua parte pensar em caridade, mas preciso de um motivo realmente excepcional.";
+    } else if (userMessageLower.includes("investir") && (userMessageLower.includes("negócio") || userMessageLower.includes("startup"))) {
+      return "Uma ideia de negócio interessante, mas muitos antes de você já tentaram esse argumento.";
+    } else {
+      return "Hmm, não estou convencida. Tente novamente com um argumento mais original e persuasivo!";
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
-    <div className="flex-grow flex flex-col bg-[#0A0A0A] rounded-xl border border-gray-800 overflow-hidden relative">
-      {/* Message Container */}
-      <div className="message-container flex-grow overflow-y-auto p-4 space-y-3">
-        {messages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`
-              ${message.isUser 
-                ? 'bg-primary bg-opacity-20 rounded-lg p-3 max-w-[85%] ml-auto' 
-                : 'bg-gray-800 rounded-lg p-3 max-w-[85%]'
-              }
-            `}
-          >
-            <p className="text-sm">{message.text}</p>
-            <span className="text-xs text-gray-400 mt-1 block">{formatTime(message.timestamp)}</span>
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
+      <div className="flex flex-col h-[400px] md:h-[500px] bg-theme-dark-purple border border-theme-purple rounded-lg shadow-lg overflow-hidden">
+        {!isUnlocked ? (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
           </div>
-        ))}
-        <div ref={messagesEndRef} />
+        ) : (
+          <>
+            <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-theme-purple scrollbar-track-theme-dark-purple">
+              {messages.map(renderMessage)}
+              
+              {isTyping && (
+                <div className="flex justify-start mb-4">
+                  <div className="bg-gray-800 text-white rounded-lg px-4 py-2 border border-theme-purple">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+            
+            <div className="border-t border-theme-purple p-4">
+              <div className="relative flex items-center">
+                <textarea
+                  className="flex-1 bg-gray-800 border border-theme-purple rounded-lg px-4 py-2 pr-12 text-white resize-none focus:outline-none focus:ring-2 focus:ring-theme-purple"
+                  placeholder="Digite sua mensagem..."
+                  rows={2}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                />
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={inputValue.trim() === ''}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-theme-purple hover:bg-theme-vivid-purple text-white rounded-full p-2"
+                >
+                  <ArrowUp className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-      
-      {/* Chat Input Area */}
-      <div className="chat-input-area border-t border-gray-800 p-3 relative">
-        <div className="flex items-center">
-          <Input
-            type="text"
-            placeholder="Digite sua mensagem..."
-            className="w-full bg-gray-800 text-white rounded-r-none focus:outline-none focus:ring-1 focus:ring-primary"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isLocked}
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            className="bg-primary text-white p-2 rounded-l-none"
-            disabled={isLocked}
-          >
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Payment Banner */}
-      {isLocked && (
-        <PaymentBanner 
-          visible={true} 
-          onTryButtonClick={onTryButtonClick}
-          failedAttempts={540}
-        />
-      )}
     </div>
   );
 };
 
 export default ChatInterface;
+
