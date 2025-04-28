@@ -113,6 +113,12 @@ export interface PaymentData {
 // Registrar um novo usuário usando o Supabase Auth
 export async function registerUser(userData: UserRegistrationData) {
   try {
+    console.log("Iniciando registro de usuário:", { 
+      name: userData.name, 
+      email: userData.email,
+      password: userData.password ? "****" : "não fornecida" 
+    });
+    
     // Registrar no Supabase Auth (auth.users)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
@@ -124,24 +130,48 @@ export async function registerUser(userData: UserRegistrationData) {
       }
     });
 
+    console.log("Resultado de registro no Supabase Auth:", { 
+      success: !authError, 
+      userId: authData?.user?.id 
+    });
+
     if (authError) throw authError;
 
     // Registrar no esquema público também (public.users)
     if (authData.user) {
-      const { data: publicUser, error: publicError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: authData.user.id,
-            username: userData.name,
-            email: userData.email,
-            status: 'active'
-          }
-        ])
-        .select()
-        .single();
-
-      if (publicError) throw publicError;
+      // Gerando um hash simples para simular um password hash
+      const passwordHash = btoa(userData.password + "_salt_" + new Date().getTime());
+      
+      console.log("Tentando inserir usuário na tabela public.users", {
+        id: authData.user.id,
+        username: userData.name
+      });
+      
+      try {
+        const { data: publicUser, error: publicError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: authData.user.id,
+              username: userData.name,
+              password: passwordHash,
+              created_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
+  
+        console.log("Resultado da inserção na tabela public.users:", {
+          success: !publicError,
+          data: publicUser ? "dados recebidos" : "sem dados",
+          error: publicError ? publicError.message : null
+        });
+  
+        if (publicError) throw publicError;
+      } catch (insertError) {
+        console.error("Erro detalhado ao inserir na tabela users:", insertError);
+        throw insertError;
+      }
 
       return {
         auth: authData,

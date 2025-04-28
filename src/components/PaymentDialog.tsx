@@ -9,7 +9,14 @@ import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { processPaymentAndRegister, processPaymentForExistingUser, UserRegistrationData, UserLoginData, PaymentData } from '@/lib/supabase-auth';
+import { 
+  processPaymentAndRegister, 
+  processPaymentForExistingUser, 
+  getCurrentUser, 
+  UserRegistrationData, 
+  UserLoginData, 
+  PaymentData 
+} from '@/lib/supabase-auth';
 
 interface PaymentDialogProps {
   isOpen: boolean;
@@ -24,6 +31,10 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"checkout" | "login">("checkout");
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("payment");
+  
+  // User authentication state
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "pix">("credit");
@@ -41,6 +52,31 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   const [loginPassword, setLoginPassword] = useState("");
   
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Verifica se o usuário já está logado ao abrir o diálogo
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      if (isOpen) {
+        setIsCheckingAuth(true);
+        try {
+          const user = await getCurrentUser();
+          setCurrentUser(user);
+          
+          // Se o usuário já está logado, preenche o email com o email do usuário
+          if (user?.email) {
+            setLoginEmail(user.email);
+          }
+        } catch (error) {
+          console.warn("Erro ao verificar status de autenticação:", error);
+          setCurrentUser(null);
+        } finally {
+          setIsCheckingAuth(false);
+        }
+      }
+    };
+    
+    checkAuthStatus();
+  }, [isOpen]);
 
   const isPaymentFormValid = () => {
     if (paymentMethod === "credit") {
@@ -57,6 +93,70 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     return loginEmail.includes('@') && loginPassword.length > 0;
   };
 
+  // Função para processar pagamento diretamente quando usuário já está logado
+  const handleDirectPayment = async () => {
+    if (!isPaymentFormValid()) {
+      toast({
+        title: "Informações incompletas",
+        description: "Por favor, preencha todos os campos de pagamento",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setCheckoutStep("processing");
+    setIsLoading(true);
+    
+    try {
+      // Prepara dados de pagamento (sem precisar login/cadastro)
+      const paymentData: PaymentData = {
+        amount: 1,
+        sessionId,
+        method: paymentMethod,
+        status: "completed"
+      };
+      
+      // Faz requisição simples de pagamento sem autenticação adicional
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          amount: paymentData.amount,
+          method: paymentData.method,
+          status: paymentData.status
+        }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao processar pagamento');
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: "Pagamento realizado!",
+        description: "Seu pagamento foi processado com sucesso.",
+        variant: "default"
+      });
+      
+      setIsLoading(false);
+      onPaymentSuccess();
+    } catch (error) {
+      console.error("Erro ao processar pagamento direto:", error);
+      toast({
+        title: "Erro no pagamento",
+        description: "Houve um problema ao processar seu pagamento. Tente novamente.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      setCheckoutStep("payment");
+    }
+  };
+
   const handlePaymentSubmit = () => {
     if (!isPaymentFormValid()) {
       toast({
@@ -66,7 +166,14 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       });
       return;
     }
-    setCheckoutStep("account");
+    
+    // Se o usuário já está logado, processa o pagamento diretamente
+    if (currentUser && currentUser.email) {
+      handleDirectPayment();
+    } else {
+      // Caso contrário, continua para a etapa de cadastro
+      setCheckoutStep("account");
+    }
   };
   
   const handleAccountSubmit = async () => {
@@ -312,8 +419,17 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           onClick={handlePaymentSubmit} 
           className="w-full bg-theme-vivid-purple hover:bg-theme-purple"
         >
-          Continuar para Criação de Conta
+          {currentUser && currentUser.email ? 
+            "Finalizar Pagamento" : 
+            "Continuar para Criação de Conta"
+          }
         </Button>
+        
+        {currentUser && currentUser.email && (
+          <div className="text-xs text-center mt-2 text-muted-foreground">
+            Você está logado como {currentUser.email}
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
@@ -435,22 +551,55 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           <DialogTitle className="text-theme-vivid-purple">Pagamento</DialogTitle>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "checkout" | "login")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="checkout" disabled={isLoading}>Checkout</TabsTrigger>
-            <TabsTrigger value="login" disabled={isLoading}>Login</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="checkout">
-            {checkoutStep === "payment" && renderPaymentSection()}
-            {checkoutStep === "account" && renderAccountSection()}
-            {checkoutStep === "processing" && renderProcessingSection()}
-          </TabsContent>
-          
-          <TabsContent value="login">
-            {renderLoginSection()}
-          </TabsContent>
-        </Tabs>
+        {isCheckingAuth ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-theme-vivid-purple" />
+            <span className="ml-2">Verificando status de login...</span>
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "checkout" | "login")} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="checkout" disabled={isLoading}>Checkout</TabsTrigger>
+              {currentUser && currentUser.email ? (
+                <TabsTrigger value="login" disabled={true} className="opacity-50">
+                  Já Conectado
+                </TabsTrigger>
+              ) : (
+                <TabsTrigger value="login" disabled={isLoading}>Login</TabsTrigger>
+              )}
+            </TabsList>
+            
+            <TabsContent value="checkout">
+              {checkoutStep === "payment" && renderPaymentSection()}
+              {checkoutStep === "account" && renderAccountSection()}
+              {checkoutStep === "processing" && renderProcessingSection()}
+            </TabsContent>
+            
+            <TabsContent value="login">
+              {currentUser && currentUser.email ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Usuário Conectado</CardTitle>
+                    <CardDescription>Você já está logado como {currentUser.email}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center py-4">
+                    <p>Você pode finalizar seu pagamento diretamente na aba de Checkout.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      onClick={() => setActiveTab("checkout")}
+                      className="w-full bg-theme-vivid-purple hover:bg-theme-purple"
+                    >
+                      Ir para o Checkout
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ) : (
+                renderLoginSection()
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );
