@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   processPaymentAndRegister, 
@@ -46,10 +46,12 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   
@@ -255,10 +257,8 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     if (currentUser && currentUser.email) {
       handleDirectPayment();
     } else {
-      // Para teste, vamos direto para pagamento simulado
-      handleDirectPayment();
-      // Original: continua para a etapa de cadastro
-      // setCheckoutStep("account");
+      // Mostrar a etapa de cadastro
+      setCheckoutStep("account");
     }
   };
   
@@ -546,12 +546,23 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         </div>
         <div className="space-y-2">
           <Label>Senha</Label>
-          <Input 
-            placeholder="••••••••" 
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <Input 
+              placeholder="••••••••" 
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -602,13 +613,25 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         </div>
         <div className="space-y-2">
           <Label>Senha</Label>
-          <Input 
-            placeholder="••••••••" 
-            type="password"
-            value={loginPassword}
-            onChange={(e) => setLoginPassword(e.target.value)}
-            disabled={isLoading}
-          />
+          <div className="relative">
+            <Input 
+              placeholder="••••••••" 
+              type={showLoginPassword ? "text" : "password"}
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              disabled={isLoading}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowLoginPassword(!showLoginPassword)}
+              disabled={isLoading}
+            >
+              {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       </CardContent>
       <CardFooter>
