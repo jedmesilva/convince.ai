@@ -9,16 +9,15 @@ import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { processPaymentAndRegister, processPaymentForExistingUser } from '@/lib/supabase-auth';
+import { processPaymentAndRegister, processPaymentForExistingUser, UserRegistrationData, UserLoginData, PaymentData } from '@/lib/supabase-auth';
 
 interface PaymentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onPaymentSuccess: () => void;
-  sessionId: string; // ID da sessão atual para associar ao pagamento
+  sessionId: string;
 }
 
-// Estados possíveis do checkout
 type CheckoutStep = "payment" | "account" | "processing";
 
 const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymentSuccess, sessionId }) => {
@@ -26,30 +25,28 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   const [activeTab, setActiveTab] = useState<"checkout" | "login">("checkout");
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("payment");
   
-  // Estado para os dados de pagamento
+  // Payment state
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "pix">("credit");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   
-  // Estado para os dados de registro
+  // Account state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
-  // Estado para os dados de login
+  // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   
-  // Estado de loading
   const [isLoading, setIsLoading] = useState(false);
 
-  // Validação básica de formulário
   const isPaymentFormValid = () => {
     if (paymentMethod === "credit") {
       return cardNumber.length > 0 && expiry.length > 0 && cvv.length > 0;
     }
-    return true; // Para PIX consideramos válido sem campos adicionais
+    return true;
   };
   
   const isAccountFormValid = () => {
@@ -60,10 +57,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     return loginEmail.includes('@') && loginPassword.length > 0;
   };
 
-  // Manipuladores de eventos
   const handlePaymentSubmit = () => {
-    console.log("Iniciando handlePaymentSubmit");
-    
     if (!isPaymentFormValid()) {
       toast({
         title: "Informações incompletas",
@@ -72,11 +66,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       });
       return;
     }
-    
-    console.log("Formulário de pagamento válido, mudando para etapa 'account'");
-    // Definir diretamente o estado
     setCheckoutStep("account");
-    console.log("Estado alterado para:", "account");
   };
   
   const handleAccountSubmit = async () => {
@@ -93,33 +83,33 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     setIsLoading(true);
     
     try {
-      // Processar pagamento e registro
-      await processPaymentAndRegister(
-        {
-          amount: 1, // Valor fixo de $1
-          sessionId,
-          method: paymentMethod,
-          status: "completed"
-        },
-        {
-          name,
-          email,
-          password
-        }
-      );
+      const paymentData: PaymentData = {
+        amount: 1,
+        sessionId,
+        method: paymentMethod,
+        status: "completed"
+      };
+
+      const userData: UserRegistrationData = {
+        name,
+        email,
+        password
+      };
+
+      const result = await processPaymentAndRegister(paymentData, userData);
       
       toast({
-        title: "Pagamento realizado!",
-        description: "Sua conta foi criada e o pagamento foi processado com sucesso.",
+        title: "Sucesso!",
+        description: "Sua conta foi criada e o pagamento foi processado.",
       });
       
       setIsLoading(false);
       onPaymentSuccess();
     } catch (error) {
-      console.error("Erro ao processar pagamento:", error);
+      console.error("Erro ao processar:", error);
       toast({
         title: "Erro no processamento",
-        description: "Ocorreu um erro ao processar seu pagamento. Tente novamente.",
+        description: "Ocorreu um erro. Tente novamente.",
         variant: "destructive"
       });
       setIsLoading(false);
@@ -130,7 +120,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   const handleLoginSubmit = async () => {
     if (!isLoginFormValid()) {
       toast({
-        title: "Informações de login incompletas",
+        title: "Informações incompletas",
         description: "Por favor, forneça um email válido e senha",
         variant: "destructive"
       });
@@ -140,39 +130,38 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     setIsLoading(true);
     
     try {
-      // Processar pagamento para usuário existente
-      await processPaymentForExistingUser(
-        {
-          amount: 1, // Valor fixo de $1
-          sessionId,
-          method: "login_payment",
-          status: "completed"
-        },
-        {
-          email: loginEmail,
-          password: loginPassword
-        }
-      );
+      const paymentData: PaymentData = {
+        amount: 1,
+        sessionId,
+        method: "login_payment",
+        status: "completed"
+      };
+
+      const loginData: UserLoginData = {
+        email: loginEmail,
+        password: loginPassword
+      };
+
+      await processPaymentForExistingUser(paymentData, loginData);
       
       toast({
-        title: "Pagamento realizado!",
-        description: "Login efetuado e pagamento processado com sucesso.",
+        title: "Sucesso!",
+        description: "Login efetuado e pagamento processado.",
       });
       
       setIsLoading(false);
       onPaymentSuccess();
     } catch (error) {
-      console.error("Erro ao fazer login e processar pagamento:", error);
+      console.error("Erro ao processar:", error);
       toast({
         title: "Erro no processamento",
-        description: "Falha ao fazer login ou processar pagamento. Verifique suas credenciais.",
+        description: "Falha ao fazer login ou processar pagamento.",
         variant: "destructive"
       });
       setIsLoading(false);
     }
   };
 
-  // Resetar o estado quando o modal é fechado
   const handleClose = () => {
     if (!isLoading) {
       setCheckoutStep("payment");
@@ -180,12 +169,6 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     }
   };
 
-  // Disparado quando o componente é renderizado
-  useEffect(() => {
-    console.log("PaymentDialog renderizado com checkoutStep:", checkoutStep);
-  }, [checkoutStep]);
-  
-  // Seção de pagamento (passo 1)
   const renderPaymentSection = () => (
     <Card>
       <CardHeader>
@@ -250,7 +233,6 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     </Card>
   );
 
-  // Seção de criação de conta (passo 2)
   const renderAccountSection = () => (
     <Card>
       <CardHeader>
@@ -302,7 +284,6 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     </Card>
   );
 
-  // Seção de processamento (passo 3)
   const renderProcessingSection = () => (
     <Card>
       <CardHeader>
@@ -315,7 +296,6 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     </Card>
   );
 
-  // Seção de login
   const renderLoginSection = () => (
     <Card>
       <CardHeader>
@@ -369,11 +349,6 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         <DialogHeader>
           <DialogTitle className="text-theme-vivid-purple">Pagamento</DialogTitle>
         </DialogHeader>
-        
-        <div className="bg-gray-100 text-xs p-2 mb-2 rounded">
-          <p>Status do checkout: {checkoutStep}</p>
-          <p>Aba ativa: {activeTab}</p>
-        </div>
         
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "checkout" | "login")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
