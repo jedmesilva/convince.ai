@@ -29,12 +29,12 @@ async function apiRequest(method: string, url: string, data?: any) {
   }
 
   const response = await fetch(url, options);
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(errorData.message || `Request failed with status ${response.status}`);
   }
-  
+
   return response;
 }
 
@@ -74,15 +74,20 @@ export async function registerUser(userData: UserRegistrationData) {
 
     // Registrar no esquema público também (public.users)
     if (authData.user) {
-      // Criar usuário na tabela public.users
-      const insertUserData: Partial<InsertUser> = {
-        id: authData.user.id,
-        username: userData.name,
-        password: "auth_managed", // Como a senha é gerenciada pelo Auth, usamos um placeholder
-      };
+      const { data: publicUser, error: publicError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: authData.user.id,
+            username: userData.name,
+            email: userData.email,
+            status: 'active'
+          }
+        ])
+        .select()
+        .single();
 
-      const response = await apiRequest("POST", "/api/register", insertUserData);
-      const publicUser = await response.json();
+      if (publicError) throw publicError;
 
       return {
         auth: authData,
@@ -119,7 +124,7 @@ export async function logoutUser() {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    
+
     // Também chamar o endpoint de logout da API para limpar sessões do servidor
     await apiRequest("POST", "/api/logout");
   } catch (error) {
@@ -148,7 +153,7 @@ export async function processPaymentAndRegister(
   try {
     // 1. Registrar o usuário primeiro
     const userData_result = await registerUser(userData);
-    
+
     // 2. Processar o pagamento
     const paymentRequest = {
       amount: paymentData.amount,
@@ -157,10 +162,10 @@ export async function processPaymentAndRegister(
       status: paymentData.status,
       user_id: userData_result.auth.user?.id
     };
-    
+
     const response = await apiRequest("POST", "/api/payments", paymentRequest);
     const payment = await response.json();
-    
+
     return {
       user: userData_result,
       payment
@@ -179,7 +184,7 @@ export async function processPaymentForExistingUser(
   try {
     // 1. Fazer login do usuário
     const userData = await loginUser(loginData);
-    
+
     // 2. Processar o pagamento
     const paymentRequest = {
       amount: paymentData.amount,
@@ -188,10 +193,10 @@ export async function processPaymentForExistingUser(
       status: paymentData.status,
       user_id: userData.user?.id
     };
-    
+
     const response = await apiRequest("POST", "/api/payments", paymentRequest);
     const payment = await response.json();
-    
+
     return {
       user: userData,
       payment
