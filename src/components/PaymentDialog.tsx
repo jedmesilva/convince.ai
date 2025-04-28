@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -31,28 +30,30 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"checkout" | "login">("checkout");
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("payment");
-  
+
   // User authentication state
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
-  
+
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "pix">("credit");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
-  
+
   // Account state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Verifica se o usuário já está logado ao abrir o diálogo
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -61,7 +62,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         try {
           const user = await getCurrentUser();
           setCurrentUser(user);
-          
+
           // Se o usuário já está logado, preenche o email com o email do usuário
           if (user?.email) {
             setLoginEmail(user.email);
@@ -74,7 +75,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         }
       }
     };
-    
+
     checkAuthStatus();
   }, [isOpen]);
 
@@ -84,11 +85,11 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     }
     return true;
   };
-  
+
   const isAccountFormValid = () => {
     return name.length > 0 && email.includes('@') && password.length >= 6;
   };
-  
+
   const isLoginFormValid = () => {
     return loginEmail.includes('@') && loginPassword.length > 0;
   };
@@ -106,10 +107,10 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       return;
     }
     */
-    
+
     setCheckoutStep("processing");
     setIsLoading(true);
-    
+
     try {
       // Prepara dados de pagamento (sem precisar login/cadastro)
       const paymentData: PaymentData = {
@@ -118,13 +119,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         method: paymentMethod,
         status: "completed"
       };
-      
+
       // Faz requisição simples de pagamento sem autenticação adicional
       // Como o servidor Express não está rodando, vamos implementar uma simulação local
       // para permitir que o fluxo de pagamento continue funcionando
       const simulatePayment = async () => {
         console.log("Simulando pagamento localmente");
-        
+
         // Simulamos a resposta que viria do servidor
         return {
           ok: true,
@@ -141,17 +142,17 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           }))
         };
       };
-      
+
       // Tentar usar a API se disponível, caso contrário usar simulação local
       const useSimulation = true; // Forçar simulação já que sabemos que a API não está funcionando
       const apiUrl = '/api/payment';
-      
+
       // Função de fetch personalizada que usa simulação se necessário
       const fetchWithFallback = async (url, options) => {
         if (useSimulation) {
           return simulatePayment();
         }
-        
+
         try {
           const response = await fetch(url, options);
           return response;
@@ -167,7 +168,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         status: paymentData.status,
         user_id: currentUser?.id
       });
-      
+
       try {
         const response = await fetchWithFallback(apiUrl, {
           method: 'POST',
@@ -183,15 +184,15 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           }),
           credentials: 'include'
         });
-        
+
         const responseText = await response.text();
         console.log(`Resposta da API de pagamentos (${response.status}):`, responseText);
-        
+
         if (!response.ok) {
           // Se falhar, ainda assim mostramos o toast de sucesso
           // e permitimos prosseguir, apenas logando o erro no console
           console.error("Erro na API de pagamentos:", responseText);
-          
+
           toast({
             title: "Pagamento simulado com sucesso!",
             description: "Continuando para o próximo passo mesmo com erro na API.",
@@ -202,28 +203,28 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         }
       } catch (fetchError) {
         console.error("Erro ao fazer fetch para API de pagamentos:", fetchError);
-        
+
         toast({
           title: "Erro de conexão",
           description: "Não foi possível conectar ao servidor de pagamentos. Tentando prosseguir mesmo assim.",
           variant: "destructive"
         });
-        
+
         setIsLoading(false);
         onPaymentSuccess();
         return;
       }
-      
+
       // Já tratamos a resposta como texto antes
       // const data = await response.json(); // Isso vai gerar erro de JSON
       console.log("Pagamento processado com sucesso!");
-      
+
       toast({
         title: "Pagamento realizado!",
         description: "Seu pagamento foi processado com sucesso.",
         variant: "default"
       });
-      
+
       setIsLoading(false);
       onPaymentSuccess();
     } catch (error) {
@@ -250,7 +251,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       return;
     }
     */
-    
+
     // Se o usuário já está logado, processa o pagamento diretamente
     if (currentUser && currentUser.email) {
       handleDirectPayment();
@@ -261,7 +262,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       // setCheckoutStep("account");
     }
   };
-  
+
   const handleAccountSubmit = async () => {
     if (!isAccountFormValid()) {
       toast({
@@ -271,10 +272,10 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       });
       return;
     }
-    
+
     setCheckoutStep("processing");
     setIsLoading(true);
-    
+
     try {
       const paymentData: PaymentData = {
         amount: 1,
@@ -292,14 +293,14 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       // Executa a operação de registro e pagamento
       try {
         const result = await processPaymentAndRegister(paymentData, userData);
-        
+
         // Se chegou aqui, foi um sucesso
         toast({
           title: "Sucesso!",
           description: "Sua conta foi criada e o pagamento foi processado.",
           variant: "default"
         });
-        
+
         // Garante que estado é atualizado corretamente
         setIsLoading(false);
         // Prossegue com ação de sucesso mesmo que haja algum erro no toast
@@ -309,9 +310,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         const errorMsg = processingError instanceof Error 
           ? processingError.message 
           : "Erro desconhecido";
-        
+
         console.error("Erro ao processar pagamento/registro:", processingError);
-        
+
         // Se o usuário foi autenticado mas houve erro no pagamento
         // ainda permitimos avançar para não bloquear o usuário
         if (errorMsg.includes("pagamento") && !errorMsg.includes("autenticação")) {
@@ -320,13 +321,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
             description: "Sua conta foi criada mas houve um problema com o pagamento. Você pode continuar mesmo assim.",
             variant: "default"
           });
-          
+
           // Permite que o usuário prossiga mesmo com erro de pagamento
           setIsLoading(false);
           onPaymentSuccess();
           return;
         }
-        
+
         // Se foi erro de autenticação, mostra mensagem específica
         toast({
           title: "Erro no processamento",
@@ -348,7 +349,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       setCheckoutStep("payment");
     }
   };
-  
+
   const handleLoginSubmit = async () => {
     if (!isLoginFormValid()) {
       toast({
@@ -358,9 +359,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const paymentData: PaymentData = {
         amount: 1,
@@ -378,14 +379,14 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       try {
         // Tenta o login e pagamento
         await processPaymentForExistingUser(paymentData, loginData);
-        
+
         // Se chegou aqui, tudo deu certo
         toast({
           title: "Sucesso!",
           description: "Login efetuado e pagamento processado.",
           variant: "default"
         });
-        
+
         setIsLoading(false);
         onPaymentSuccess();
       } catch (processingError) {
@@ -393,9 +394,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         const errorMsg = processingError instanceof Error 
           ? processingError.message 
           : "Erro desconhecido";
-        
+
         console.error("Erro específico login/pagamento:", processingError);
-        
+
         // Verifica se o usuário foi autenticado mas houve erro no pagamento
         if (errorMsg.includes("pagamento") && !errorMsg.includes("login") && !errorMsg.includes("autenticação")) {
           // Se o erro foi só no pagamento mas o login deu certo
@@ -404,23 +405,23 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
             description: "Seu login foi realizado mas houve um problema com o pagamento. Você pode continuar mesmo assim.",
             variant: "default"
           });
-          
+
           // Permite que o usuário prossiga mesmo com erro de pagamento
           setIsLoading(false);
           onPaymentSuccess();
           return;
         }
-        
+
         // Se o erro foi na autenticação, mostra a mensagem específica
         let errorDescription = "Falha ao fazer login ou processar pagamento.";
-        
+
         // Mensagens específicas para erros comuns
         if (errorMsg.includes("senha") || errorMsg.includes("password")) {
           errorDescription = "Senha incorreta. Verifique seus dados e tente novamente.";
         } else if (errorMsg.includes("usuário") || errorMsg.includes("user") || errorMsg.includes("email")) {
           errorDescription = "Usuário não encontrado. Verifique seu email ou registre-se.";
         }
-        
+
         toast({
           title: "Erro ao entrar",
           description: errorDescription,
@@ -468,7 +469,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
             <Label htmlFor="pix">PIX</Label>
           </div>
         </RadioGroup>
-        
+
         {paymentMethod === "credit" && (
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
@@ -510,7 +511,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
             "Continuar para Criação de Conta"
           }
         </Button>
-        
+
         {currentUser && currentUser.email && (
           <div className="text-xs text-center mt-2 text-muted-foreground">
             Você está logado como {currentUser.email}
@@ -548,10 +549,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           <Label>Senha</Label>
           <Input 
             placeholder="••••••••" 
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <button onClick={() => setShowPassword(!showPassword)} className="text-xs">
+            {showPassword ? 'Ocultar' : 'Mostrar'}
+          </button>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -604,11 +608,14 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           <Label>Senha</Label>
           <Input 
             placeholder="••••••••" 
-            type="password"
+            type={showLoginPassword ? 'text' : 'password'}
             value={loginPassword}
             onChange={(e) => setLoginPassword(e.target.value)}
             disabled={isLoading}
           />
+          <button onClick={() => setShowLoginPassword(!showLoginPassword)} className="text-xs">
+            {showLoginPassword ? 'Ocultar' : 'Mostrar'}
+          </button>
         </div>
       </CardContent>
       <CardFooter>
@@ -636,7 +643,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         <DialogHeader>
           <DialogTitle className="text-theme-vivid-purple">Pagamento</DialogTitle>
         </DialogHeader>
-        
+
         {isCheckingAuth ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-theme-vivid-purple" />
@@ -654,13 +661,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
                 <TabsTrigger value="login" disabled={isLoading}>Login</TabsTrigger>
               )}
             </TabsList>
-            
+
             <TabsContent value="checkout">
               {checkoutStep === "payment" && renderPaymentSection()}
               {checkoutStep === "account" && renderAccountSection()}
               {checkoutStep === "processing" && renderProcessingSection()}
             </TabsContent>
-            
+
             <TabsContent value="login">
               {currentUser && currentUser.email ? (
                 <Card>
