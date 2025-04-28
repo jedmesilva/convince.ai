@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Button } from "./ui/button";
@@ -44,8 +44,6 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   // Estado de loading
   const [isLoading, setIsLoading] = useState(false);
 
-  /* Removido useEffect para simplificar */
-
   // Validação básica de formulário
   const isPaymentFormValid = () => {
     if (paymentMethod === "credit") {
@@ -64,7 +62,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
 
   // Manipuladores de eventos
   const handlePaymentSubmit = () => {
-    console.log("Chamando handlePaymentSubmit, validação:", isPaymentFormValid());
+    console.log("Iniciando handlePaymentSubmit");
     
     if (!isPaymentFormValid()) {
       toast({
@@ -75,12 +73,10 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       return;
     }
     
-    console.log("Mudando passo para account");
-    // Usando setTimeout para garantir que a mudança de estado seja processada corretamente
-    setTimeout(() => {
-      setCheckoutStep("account");
-      console.log("Checkout step alterado para account");
-    }, 50);
+    console.log("Formulário de pagamento válido, mudando para etapa 'account'");
+    // Definir diretamente o estado
+    setCheckoutStep("account");
+    console.log("Estado alterado para:", "account");
   };
   
   const handleAccountSubmit = async () => {
@@ -184,13 +180,187 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
     }
   };
 
-  // Para depuração - mostra o estado atual do checkoutStep no topo
-  const renderDebugInfo = () => (
-    <div className="bg-gray-100 p-2 mb-2 text-xs">
-      <p>Debug: checkoutStep = {checkoutStep}</p>
-      <p>isPaymentFormValid: {isPaymentFormValid() ? "true" : "false"}</p>
-      <p>activeTab: {activeTab}</p>
-    </div>
+  // Disparado quando o componente é renderizado
+  useEffect(() => {
+    console.log("PaymentDialog renderizado com checkoutStep:", checkoutStep);
+  }, [checkoutStep]);
+  
+  // Seção de pagamento (passo 1)
+  const renderPaymentSection = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Método de Pagamento</CardTitle>
+        <CardDescription>Escolha como deseja pagar $1</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <RadioGroup 
+          value={paymentMethod} 
+          onValueChange={(value) => setPaymentMethod(value as "credit" | "pix")}
+          className="space-y-4"
+        >
+          <div className="flex items-center space-x-4 rounded-lg border p-4">
+            <RadioGroupItem value="credit" id="credit" />
+            <Label htmlFor="credit">Cartão de Crédito</Label>
+          </div>
+          <div className="flex items-center space-x-4 rounded-lg border p-4">
+            <RadioGroupItem value="pix" id="pix" />
+            <Label htmlFor="pix">PIX</Label>
+          </div>
+        </RadioGroup>
+        
+        {paymentMethod === "credit" && (
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Número do Cartão</Label>
+              <Input 
+                placeholder="1234 5678 9012 3456" 
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Validade</Label>
+                <Input 
+                  placeholder="MM/AA" 
+                  value={expiry}
+                  onChange={(e) => setExpiry(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>CVV</Label>
+                <Input 
+                  placeholder="123" 
+                  value={cvv}
+                  onChange={(e) => setCvv(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Button 
+          onClick={handlePaymentSubmit} 
+          className="w-full bg-theme-vivid-purple hover:bg-theme-purple"
+        >
+          Continuar para Criação de Conta
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+
+  // Seção de criação de conta (passo 2)
+  const renderAccountSection = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Crie sua conta</CardTitle>
+        <CardDescription>Crie uma conta para concluir o pagamento</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Nome</Label>
+          <Input 
+            placeholder="Seu nome" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Email</Label>
+          <Input 
+            placeholder="seu@email.com" 
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Senha</Label>
+          <Input 
+            placeholder="••••••••" 
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button 
+          variant="outline" 
+          onClick={() => setCheckoutStep("payment")}
+        >
+          Voltar
+        </Button>
+        <Button 
+          onClick={handleAccountSubmit}
+          className="bg-theme-vivid-purple hover:bg-theme-purple"
+        >
+          Finalizar Pagamento
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+
+  // Seção de processamento (passo 3)
+  const renderProcessingSection = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Processando</CardTitle>
+        <CardDescription>Por favor, aguarde enquanto processamos seu pagamento</CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-theme-vivid-purple" />
+      </CardContent>
+    </Card>
+  );
+
+  // Seção de login
+  const renderLoginSection = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Login</CardTitle>
+        <CardDescription>Entre com sua conta existente</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Email</Label>
+          <Input 
+            placeholder="seu@email.com" 
+            type="email"
+            value={loginEmail}
+            onChange={(e) => setLoginEmail(e.target.value)}
+            disabled={isLoading}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Senha</Label>
+          <Input 
+            placeholder="••••••••" 
+            type="password"
+            value={loginPassword}
+            onChange={(e) => setLoginPassword(e.target.value)}
+            disabled={isLoading}
+          />
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button 
+          className="w-full bg-theme-vivid-purple hover:bg-theme-purple"
+          onClick={handleLoginSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processando
+            </>
+          ) : (
+            "Entrar e Pagar"
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 
   return (
@@ -200,7 +370,10 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           <DialogTitle className="text-theme-vivid-purple">Pagamento</DialogTitle>
         </DialogHeader>
         
-        {renderDebugInfo()}
+        <div className="bg-gray-100 text-xs p-2 mb-2 rounded">
+          <p>Status do checkout: {checkoutStep}</p>
+          <p>Aba ativa: {activeTab}</p>
+        </div>
         
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "checkout" | "login")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -209,179 +382,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
           </TabsList>
           
           <TabsContent value="checkout">
-            {checkoutStep === "payment" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Método de Pagamento</CardTitle>
-                  <CardDescription>Escolha como deseja pagar $1</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup 
-                    value={paymentMethod} 
-                    onValueChange={(value) => setPaymentMethod(value as "credit" | "pix")}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center space-x-4 rounded-lg border p-4">
-                      <RadioGroupItem value="credit" id="credit" />
-                      <Label htmlFor="credit">Cartão de Crédito</Label>
-                    </div>
-                    <div className="flex items-center space-x-4 rounded-lg border p-4">
-                      <RadioGroupItem value="pix" id="pix" />
-                      <Label htmlFor="pix">PIX</Label>
-                    </div>
-                  </RadioGroup>
-                  
-                  {paymentMethod === "credit" && (
-                    <div className="space-y-4 mt-4">
-                      <div className="space-y-2">
-                        <Label>Número do Cartão</Label>
-                        <Input 
-                          placeholder="1234 5678 9012 3456" 
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Validade</Label>
-                          <Input 
-                            placeholder="MM/AA" 
-                            value={expiry}
-                            onChange={(e) => setExpiry(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>CVV</Label>
-                          <Input 
-                            placeholder="123" 
-                            value={cvv}
-                            onChange={(e) => setCvv(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    onClick={handlePaymentSubmit} 
-                    className="w-full bg-theme-vivid-purple hover:bg-theme-purple"
-                  >
-                    Continuar
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-            
-            {checkoutStep === "account" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Crie sua conta</CardTitle>
-                  <CardDescription>Crie uma conta para concluir o pagamento</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Nome</Label>
-                    <Input 
-                      placeholder="Seu nome" 
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input 
-                      placeholder="seu@email.com" 
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Senha</Label>
-                    <Input 
-                      placeholder="••••••••" 
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setCheckoutStep("payment")}
-                  >
-                    Voltar
-                  </Button>
-                  <Button 
-                    onClick={handleAccountSubmit}
-                    className="bg-theme-vivid-purple hover:bg-theme-purple"
-                  >
-                    Finalizar Pagamento
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-            
-            {checkoutStep === "processing" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Processando</CardTitle>
-                  <CardDescription>Por favor, aguarde enquanto processamos seu pagamento</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-theme-vivid-purple" />
-                </CardContent>
-              </Card>
-            )}
+            {checkoutStep === "payment" && renderPaymentSection()}
+            {checkoutStep === "account" && renderAccountSection()}
+            {checkoutStep === "processing" && renderProcessingSection()}
           </TabsContent>
           
           <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>Entre com sua conta existente</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Email</Label>
-                  <Input 
-                    placeholder="seu@email.com" 
-                    type="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Senha</Label>
-                  <Input 
-                    placeholder="••••••••" 
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full bg-theme-vivid-purple hover:bg-theme-purple"
-                  onClick={handleLoginSubmit}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando
-                    </>
-                  ) : (
-                    "Entrar e Pagar"
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+            {renderLoginSection()}
           </TabsContent>
         </Tabs>
       </DialogContent>
