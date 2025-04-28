@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { logoutUser } from '../lib/supabase-auth';
 import { 
   Card, 
   CardContent, 
@@ -37,6 +38,7 @@ const Account = () => {
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState<boolean>(false);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch prize amount and payment history when component mounts
@@ -150,7 +152,7 @@ const Account = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
         <Link 
           to="/" 
           className="flex items-center text-theme-soft-purple hover:text-theme-bright-purple transition-colors"
@@ -158,6 +160,24 @@ const Account = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           <span>Voltar para o início</span>
         </Link>
+        <Button
+          onClick={async () => {
+            try {
+              await logoutUser();
+              navigate('/');
+            } catch (error) {
+              toast({
+                title: "Erro ao sair",
+                description: "Não foi possível fazer logout.",
+                variant: "destructive"
+              });
+            }
+          }}
+          variant="outline"
+          className="text-theme-soft-purple hover:text-theme-bright-purple"
+        >
+          Sair
+        </Button>
       </div>
       
       <h1 className="text-3xl font-bold mb-8 text-theme-light-purple">Minha Conta</h1>
