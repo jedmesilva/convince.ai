@@ -67,6 +67,7 @@
     "embla-carousel-react": "^8.3.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "http-proxy-middleware": "^3.0.5",
     "input-otp": "^1.2.4",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.462.0",
