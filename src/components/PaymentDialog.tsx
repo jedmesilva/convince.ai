@@ -101,6 +101,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       toast({
         title: "Sucesso!",
         description: "Sua conta foi criada e o pagamento foi processado.",
+        variant: "default"
       });
       
       setIsLoading(false);
@@ -147,6 +148,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
       toast({
         title: "Sucesso!",
         description: "Login efetuado e pagamento processado.",
+        variant: "default"
       });
       
       setIsLoading(false);

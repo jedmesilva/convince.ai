@@ -15,6 +15,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: "default" | "destructive"
 }
 
 const actionTypes = {
@@ -141,7 +142,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ variant = "default", ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -155,6 +156,7 @@ function toast({ ...props }: Toast) {
     type: "ADD_TOAST",
     toast: {
       ...props,
+      variant,
       id,
       open: true,
       onOpenChange: (open) => {
