@@ -147,27 +147,34 @@ export async function registerUser(userData: UserRegistrationData) {
         username: userData.name
       });
       
+      let publicUser = null;
       try {
-        const { data: publicUser, error: publicError } = await supabase
+        const insertResult = await supabase
           .from('users')
           .insert([
             {
               id: authData.user.id,
               username: userData.name,
               password: passwordHash,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              email: userData.email,
+              status: 'active'
             }
           ])
           .select()
           .single();
+        
+        if (insertResult.error) {
+          throw insertResult.error;
+        }
+        
+        publicUser = insertResult.data;
   
         console.log("Resultado da inserção na tabela public.users:", {
-          success: !publicError,
-          data: publicUser ? "dados recebidos" : "sem dados",
-          error: publicError ? publicError.message : null
+          success: !insertResult.error,
+          data: publicUser ? "dados recebidos" : "sem dados"
         });
   
-        if (publicError) throw publicError;
       } catch (insertError) {
         console.error("Erro detalhado ao inserir na tabela users:", insertError);
         throw insertError;

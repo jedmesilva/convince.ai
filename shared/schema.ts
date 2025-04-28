@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   created_at: timestamp("created_at").notNull().defaultNow(),
+  email: text("email"),
+  status: text("status").default("active"),
 });
 
 export const prizePool = pgTable("prize_pools", {
