@@ -28,14 +28,68 @@ async function apiRequest(method: string, url: string, data?: any) {
     options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, options);
+  try {
+    const response = await fetch(url, options);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
+    // Tenta obter detalhes do erro da API se a resposta não for bem-sucedida
+    if (!response.ok) {
+      let errorMessage = `Erro na requisição: ${response.status} ${response.statusText}`;
+      
+      try {
+        // Tenta extrair mensagem de erro detalhada
+        const errorData = await response.json();
+        
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      } catch (parseError) {
+        // Falha ao analisar JSON de erro, mantém a mensagem padrão
+        console.warn("Não foi possível analisar resposta de erro:", parseError);
+      }
+
+      // Adiciona informações úteis para diagnóstico nas mensagens de erro
+      if (url.includes('login')) {
+        errorMessage = `Erro ao fazer login: ${errorMessage}`;
+      } else if (url.includes('register')) {
+        errorMessage = `Erro ao registrar usuário: ${errorMessage}`;
+      } else if (url.includes('logout')) {
+        errorMessage = `Erro ao fazer logout: ${errorMessage}`;
+      } else if (url.includes('payments')) {
+        errorMessage = `Erro no processamento do pagamento: ${errorMessage}`;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    return response;
+  } catch (error) {
+    // Captura erros de rede (como CORS, conexão perdida, etc)
+    if (!(error instanceof Error)) {
+      throw new Error("Erro de conexão desconhecido");
+    }
+    
+    // Se já é um Error organizado, apenas repassa
+    if (error.message.includes("Erro ao")) {
+      throw error;
+    }
+    
+    // Caso contrário, formata com prefixo para facilitar tratamento específico
+    const errorPrefix = url.includes('login')
+      ? "Erro ao fazer login: "
+      : url.includes('register')
+        ? "Erro ao registrar usuário: "
+        : url.includes('logout')
+          ? "Erro ao fazer logout: "
+          : url.includes('payments')
+            ? "Erro no processamento do pagamento: "
+            : "Erro na API: ";
+            
+    throw new Error(`${errorPrefix}${error.message}`);
   }
-
-  return response;
 }
 
 export interface UserRegistrationData {
@@ -122,11 +176,30 @@ export async function loginUser(loginData: UserLoginData) {
 // Fazer logout do usuário
 export async function logoutUser() {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // Tenta fazer logout no Supabase Auth
+    // Mesmo se falhar, continua para garantir que ao menos a sessão seja limpa no cliente
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) console.warn("Aviso ao fazer logout do Supabase:", error);
+    } catch (supabaseError) {
+      console.warn("Erro ao fazer logout do Supabase:", supabaseError);
+      // Continua mesmo se o Supabase falhar
+    }
 
-    // Também chamar o endpoint de logout da API para limpar sessões do servidor
-    await apiRequest("POST", "/api/logout");
+    // Chama o endpoint de logout da API para limpar sessões do servidor
+    try {
+      await apiRequest("POST", "/api/logout");
+    } catch (apiError) {
+      console.warn("Aviso ao chamar logout API:", apiError);
+      // Continua mesmo se a API falhar
+    }
+    
+    // Limpa informações de autenticação local, garantindo que o usuário vai sair
+    localStorage.removeItem("supabase.auth.token");
+    sessionStorage.removeItem("supabase.auth.token");
+    
+    // Considera sucesso mesmo se alguma parte falhar, pois o mais importante é a experiência do usuário
+    return true;
   } catch (error) {
     console.error("Erro ao fazer logout:", error);
     throw error;

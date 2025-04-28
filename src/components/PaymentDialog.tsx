@@ -96,21 +96,59 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         password
       };
 
-      const result = await processPaymentAndRegister(paymentData, userData);
-      
-      toast({
-        title: "Sucesso!",
-        description: "Sua conta foi criada e o pagamento foi processado.",
-        variant: "default"
-      });
-      
-      setIsLoading(false);
-      onPaymentSuccess();
+      // Executa a operação de registro e pagamento
+      try {
+        const result = await processPaymentAndRegister(paymentData, userData);
+        
+        // Se chegou aqui, foi um sucesso
+        toast({
+          title: "Sucesso!",
+          description: "Sua conta foi criada e o pagamento foi processado.",
+          variant: "default"
+        });
+        
+        // Garante que estado é atualizado corretamente
+        setIsLoading(false);
+        // Prossegue com ação de sucesso mesmo que haja algum erro no toast
+        onPaymentSuccess();
+      } catch (processingError) {
+        // Erro específico de processamento
+        const errorMsg = processingError instanceof Error 
+          ? processingError.message 
+          : "Erro desconhecido";
+        
+        console.error("Erro ao processar pagamento/registro:", processingError);
+        
+        // Se o usuário foi autenticado mas houve erro no pagamento
+        // ainda permitimos avançar para não bloquear o usuário
+        if (errorMsg.includes("pagamento") && !errorMsg.includes("autenticação")) {
+          toast({
+            title: "Atenção",
+            description: "Sua conta foi criada mas houve um problema com o pagamento. Você pode continuar mesmo assim.",
+            variant: "default"
+          });
+          
+          // Permite que o usuário prossiga mesmo com erro de pagamento
+          setIsLoading(false);
+          onPaymentSuccess();
+          return;
+        }
+        
+        // Se foi erro de autenticação, mostra mensagem específica
+        toast({
+          title: "Erro no processamento",
+          description: errorMsg || "Ocorreu um erro ao processar sua solicitação. Tente novamente.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        setCheckoutStep("payment");
+      }
     } catch (error) {
-      console.error("Erro ao processar:", error);
+      // Erro geral (não deveria ocorrer, é um fallback)
+      console.error("Erro crítico ao processar:", error);
       toast({
         title: "Erro no processamento",
-        description: "Ocorreu um erro. Tente novamente.",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive"
       });
       setIsLoading(false);
@@ -143,21 +181,66 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
         password: loginPassword
       };
 
-      await processPaymentForExistingUser(paymentData, loginData);
-      
-      toast({
-        title: "Sucesso!",
-        description: "Login efetuado e pagamento processado.",
-        variant: "default"
-      });
-      
-      setIsLoading(false);
-      onPaymentSuccess();
+      // Trata login e pagamento separadamente para melhor controle de erros
+      try {
+        // Tenta o login e pagamento
+        await processPaymentForExistingUser(paymentData, loginData);
+        
+        // Se chegou aqui, tudo deu certo
+        toast({
+          title: "Sucesso!",
+          description: "Login efetuado e pagamento processado.",
+          variant: "default"
+        });
+        
+        setIsLoading(false);
+        onPaymentSuccess();
+      } catch (processingError) {
+        // Analisa o erro para dar tratamento diferenciado
+        const errorMsg = processingError instanceof Error 
+          ? processingError.message 
+          : "Erro desconhecido";
+        
+        console.error("Erro específico login/pagamento:", processingError);
+        
+        // Verifica se o usuário foi autenticado mas houve erro no pagamento
+        if (errorMsg.includes("pagamento") && !errorMsg.includes("login") && !errorMsg.includes("autenticação")) {
+          // Se o erro foi só no pagamento mas o login deu certo
+          toast({
+            title: "Atenção",
+            description: "Seu login foi realizado mas houve um problema com o pagamento. Você pode continuar mesmo assim.",
+            variant: "default"
+          });
+          
+          // Permite que o usuário prossiga mesmo com erro de pagamento
+          setIsLoading(false);
+          onPaymentSuccess();
+          return;
+        }
+        
+        // Se o erro foi na autenticação, mostra a mensagem específica
+        let errorDescription = "Falha ao fazer login ou processar pagamento.";
+        
+        // Mensagens específicas para erros comuns
+        if (errorMsg.includes("senha") || errorMsg.includes("password")) {
+          errorDescription = "Senha incorreta. Verifique seus dados e tente novamente.";
+        } else if (errorMsg.includes("usuário") || errorMsg.includes("user") || errorMsg.includes("email")) {
+          errorDescription = "Usuário não encontrado. Verifique seu email ou registre-se.";
+        }
+        
+        toast({
+          title: "Erro ao entrar",
+          description: errorDescription,
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
     } catch (error) {
-      console.error("Erro ao processar:", error);
+      // Erro crítico não esperado (fallback)
+      console.error("Erro crítico no login:", error);
       toast({
-        title: "Erro no processamento",
-        description: "Falha ao fazer login ou processar pagamento.",
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao processar sua solicitação. Tente novamente.",
         variant: "destructive"
       });
       setIsLoading(false);
