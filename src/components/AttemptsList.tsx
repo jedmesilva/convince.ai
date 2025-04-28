@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { useRecentAttempts } from '@/hooks/use-supabase-realtime';
+import { Loader2 } from 'lucide-react';
 
 // Interface para cada tentativa
 interface Attempt {
@@ -9,7 +11,17 @@ interface Attempt {
   timestamp: Date;
 }
 
-// Dados de exemplo para popular a lista
+// Nomes para selecionar aleatoriamente para simular tentativas
+const randomNames = [
+  "Miguel", "Sophia", "Arthur", "Helena", "Bernardo", 
+  "Valentina", "Heitor", "Laura", "Davi", "Isabella", 
+  "Lorenzo", "Manuela", "Théo", "Júlia", "Gabriel", 
+  "Alice", "Pedro", "Giovanna", "Benjamin", "Beatriz",
+  "Lucas", "Maria", "João", "Ana", "Carlos",
+  "Mariana", "Ricardo", "Fernanda", "Diego", "Camila"
+];
+
+// Dados iniciais para popular a lista
 const initialAttempts: Attempt[] = [
   { id: 1, name: "Lucas", timestamp: new Date(Date.now() - 10000) }, // 10 segundos atrás
   { id: 2, name: "Maria", timestamp: new Date(Date.now() - 1 * 60000) }, // 1 minuto atrás
@@ -23,23 +35,27 @@ const initialAttempts: Attempt[] = [
   { id: 10, name: "Carla", timestamp: new Date(Date.now() - 24 * 60 * 60000) }, // 24 horas atrás
 ];
 
-// Nomes para selecionar aleatoriamente quando novos usuários "tentam"
-const randomNames = [
-  "Miguel", "Sophia", "Arthur", "Helena", "Bernardo", 
-  "Valentina", "Heitor", "Laura", "Davi", "Isabella", 
-  "Lorenzo", "Manuela", "Théo", "Júlia", "Gabriel", 
-  "Alice", "Pedro", "Giovanna", "Benjamin", "Beatriz",
-  "Lucas", "Maria", "João", "Ana", "Carlos",
-  "Mariana", "Ricardo", "Fernanda", "Diego", "Camila"
-];
+// Componente de carregamento
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center py-8">
+    <Loader2 className="h-6 w-6 animate-spin text-theme-purple" />
+    <span className="ml-2 text-theme-light-purple">Carregando tentativas...</span>
+  </div>
+);
 
 const AttemptsList: React.FC = () => {
   const [attempts, setAttempts] = useState<Attempt[]>(initialAttempts);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  
   // Contador para o número de tentativas total
   const [attemptCount, setAttemptCount] = useState<number>(540); // Começamos com 540 tentativas
-
+  
   // Adiciona uma nova tentativa aleatória a cada 15-45 segundos
   useEffect(() => {
+    // Simulação inicial concluída
+    setLoading(false);
+    
     const addRandomAttempt = () => {
       const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
       // Incrementa o contador de tentativas
@@ -76,6 +92,8 @@ const AttemptsList: React.FC = () => {
   // Função para formatar a mensagem com base no tempo decorrido
   const formatTimestamp = (timestamp: Date) => {
     try {
+      if (!timestamp) return 'recentemente';
+      
       const distance = formatDistanceToNow(timestamp, { 
         locale: pt,
         addSuffix: false 
@@ -87,9 +105,43 @@ const AttemptsList: React.FC = () => {
       
       return `há ${distance}`;
     } catch (error) {
+      console.error('Erro ao formatar timestamp:', error);
       return 'recentemente';
     }
   };
+
+  // Renderizar o loading state
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  // Renderizar mensagem de erro, se houver
+  if (error) {
+    return (
+      <div className="mt-12 mb-12 max-w-xl mx-auto bg-theme-dark-purple bg-opacity-50 rounded-lg p-4 border border-red-500">
+        <h3 className="text-red-400 text-center text-lg font-semibold mb-2">
+          Erro ao carregar tentativas
+        </h3>
+        <p className="text-sm text-red-300 text-center">
+          {error.message || 'Tente novamente mais tarde'}
+        </p>
+      </div>
+    );
+  }
+
+  // Renderizar quando não há tentativas
+  if (!attempts || attempts.length === 0) {
+    return (
+      <div className="mt-12 mb-12 max-w-xl mx-auto bg-theme-dark-purple bg-opacity-50 rounded-lg p-4 border border-theme-purple">
+        <h3 className="text-theme-light-purple text-center text-lg font-semibold mb-2">
+          Tentativas Recentes
+        </h3>
+        <p className="text-sm text-theme-light-purple text-center italic">
+          Nenhuma tentativa registrada ainda
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-12 mb-12 max-w-xl mx-auto bg-theme-dark-purple bg-opacity-50 rounded-lg p-4 backdrop-blur-sm border border-theme-purple">
@@ -111,7 +163,9 @@ const AttemptsList: React.FC = () => {
                 {attemptCount - index}°
               </span>
               <span className="text-theme-light-purple font-medium">
-                <strong className="text-theme-bright-purple">{attempt.name}</strong> tentou {formatTimestamp(attempt.timestamp)}, mas fracassou!
+                <strong className="text-theme-bright-purple">
+                  {attempt.name}
+                </strong> tentou {formatTimestamp(attempt.timestamp)}, mas fracassou!
               </span>
             </div>
           </div>

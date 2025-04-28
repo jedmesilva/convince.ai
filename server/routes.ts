@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
 import { WebSocketServer, WebSocket } from 'ws';
-import { setupAuth } from "./auth";
 import cookieParser from "cookie-parser";
 
 // Map to store WebSocket connections by session ID
@@ -12,9 +11,6 @@ const connections = new Map<string, WebSocket>();
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configurar cookie parser
   app.use(cookieParser());
-
-  // Configurar autenticação
-  setupAuth(app);
   
   // API Routes
   const apiRouter = express.Router();
@@ -227,6 +223,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Adicionar as rotas de autenticação que utilizam o Supabase Auth
+  
+  // Rota para obter usuário atual
+  // Como estamos usando apenas Supabase Auth, o frontend será responsável 
+  // por verificar a autenticação diretamente com o Supabase
+  apiRouter.get("/user", (req, res) => {
+    return res.status(401).json({ message: "Use Supabase Auth diretamente no frontend" });
+  });
+  
   // Use API router with /api prefix
   app.use("/api", apiRouter);
 

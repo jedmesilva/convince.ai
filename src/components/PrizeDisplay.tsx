@@ -1,15 +1,107 @@
 
-import React from 'react';
-import { DollarSign, Trophy } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { DollarSign, Trophy, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface PrizeDisplayProps {
-  prizeAmount: number;
-  failedAttempts: number;
+  initialPrizeAmount?: number;
+  initialFailedAttempts?: number;
 }
 
-const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ prizeAmount, failedAttempts }) => {
+const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ 
+  initialPrizeAmount,
+  initialFailedAttempts
+}) => {
+  const [prizeAmount, setPrizeAmount] = useState<number>(10000);
+  const [failedAttempts, setFailedAttempts] = useState<number>(540);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Função para criar um registro inicial no prize_pool se não existir
+  const createInitialPrize = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('prize_pools')
+        .insert([{ amount: 10000 }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Erro ao criar prêmio inicial:", error);
+        // Continua usando o valor padrão em caso de erro
+      } else if (data) {
+        setPrizeAmount(data.amount);
+      }
+    } catch (err) {
+      console.error("Erro ao criar prêmio inicial:", err);
+    }
+  };
+  
+  // Buscar dados reais do banco de dados
+  useEffect(() => {
+    const fetchPrizeData = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Tentar obter o prêmio atual
+        const { data: prizeData, error: prizeError } = await supabase
+          .from('prize_pools')
+          .select('amount')
+          .order('id', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (prizeError) {
+          console.error("Erro ao buscar prêmio:", prizeError);
+          
+          // Se for um erro de "nenhum registro encontrado", tenta criar um registro inicial
+          if (prizeError.message.includes("no rows") || prizeError.details?.includes("0 rows")) {
+            console.log("Nenhum registro de prêmio encontrado, criando um novo...");
+            await createInitialPrize();
+          }
+        } else if (prizeData) {
+          setPrizeAmount(prizeData.amount);
+        }
+        
+        // Contar tentativas falhas
+        const { count, error: countError } = await supabase
+          .from('persuasion_attempts')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'failed');
+        
+        if (countError) {
+          console.error("Erro ao contar tentativas falhas:", countError);
+        } else if (count !== null) {
+          setFailedAttempts(count);
+        }
+        
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPrizeData();
+    
+    // Atualizar a UI com pequenos incrementos para dar sensação de dinamismo
+    const prizeIncreaseInterval = setInterval(() => {
+      setPrizeAmount(current => current + Math.floor(Math.random() * 40) + 10);
+    }, 6000);
+    
+    return () => {
+      clearInterval(prizeIncreaseInterval);
+    };
+  }, []);
+  
   const formattedPrize = new Intl.NumberFormat('pt-BR').format(prizeAmount);
-  const lastWinnerPrize = new Intl.NumberFormat('pt-BR').format(5000);
+  
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-md mx-auto py-2 px-4 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-theme-purple" />
+      </div>
+    );
+  }
   
   return (
     <div className="w-full max-w-md mx-auto py-2 px-4">
@@ -35,7 +127,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ prizeAmount, failedAttempts
             <div className="flex items-center justify-center mb-2">
               <Trophy className="h-4 w-4 text-yellow-400 mr-2" />
               <p className="text-sm text-theme-soft-purple">
-                Prêmio anterior: <span className="text-theme-bright-purple">Maria</span> ganhou R$ {lastWinnerPrize} ao persuadir a IA com maestria!
+                Seja o primeiro a ganhar o prêmio!
               </p>
             </div>
           </div>
