@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Button } from "./ui/button";
@@ -44,10 +44,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({ isOpen, onClose, onPaymen
   // Estado de loading
   const [isLoading, setIsLoading] = useState(false);
 
-  // Efeito para monitorar mudanças no estado checkoutStep
-  useEffect(() => {
-    console.log("checkoutStep mudou para:", checkoutStep);
-  }, [checkoutStep]);
+  /* Removido useEffect para simplificar */
 
   // Validação básica de formulário
   const isPaymentFormValid = () => {
