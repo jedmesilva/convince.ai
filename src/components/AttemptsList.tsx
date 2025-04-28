@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { useRecentAttempts } from '@/hooks/use-supabase-realtime';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 // Interface para cada tentativa
 interface Attempt {
@@ -11,7 +12,7 @@ interface Attempt {
   timestamp: Date;
 }
 
-// Nomes para selecionar aleatoriamente para simular tentativas
+// Lista de nomes para tentativas anônimas (quando não há usuário autenticado)
 const randomNames = [
   "Miguel", "Sophia", "Arthur", "Helena", "Bernardo", 
   "Valentina", "Heitor", "Laura", "Davi", "Isabella", 
@@ -19,20 +20,6 @@ const randomNames = [
   "Alice", "Pedro", "Giovanna", "Benjamin", "Beatriz",
   "Lucas", "Maria", "João", "Ana", "Carlos",
   "Mariana", "Ricardo", "Fernanda", "Diego", "Camila"
-];
-
-// Dados iniciais para popular a lista
-const initialAttempts: Attempt[] = [
-  { id: 1, name: "Lucas", timestamp: new Date(Date.now() - 10000) }, // 10 segundos atrás
-  { id: 2, name: "Maria", timestamp: new Date(Date.now() - 1 * 60000) }, // 1 minuto atrás
-  { id: 3, name: "João", timestamp: new Date(Date.now() - 3 * 60000) }, // 3 minutos atrás
-  { id: 4, name: "Camila", timestamp: new Date(Date.now() - 10 * 60000) }, // 10 minutos atrás
-  { id: 5, name: "Pedro", timestamp: new Date(Date.now() - 30 * 60000) }, // 30 minutos atrás
-  { id: 6, name: "Ana", timestamp: new Date(Date.now() - 1 * 60 * 60000) }, // 1 hora atrás
-  { id: 7, name: "Rafael", timestamp: new Date(Date.now() - 3 * 60 * 60000) }, // 3 horas atrás
-  { id: 8, name: "Clara", timestamp: new Date(Date.now() - 12 * 60 * 60000) }, // 12 horas atrás
-  { id: 9, name: "Bruno", timestamp: new Date(Date.now() - 18 * 60 * 60000) }, // 18 horas atrás
-  { id: 10, name: "Carla", timestamp: new Date(Date.now() - 24 * 60 * 60000) }, // 24 horas atrás
 ];
 
 // Componente de carregamento
@@ -44,40 +31,111 @@ const LoadingSpinner = () => (
 );
 
 const AttemptsList: React.FC = () => {
-  const [attempts, setAttempts] = useState<Attempt[]>(initialAttempts);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   
   // Contador para o número de tentativas total
-  const [attemptCount, setAttemptCount] = useState<number>(540); // Começamos com 540 tentativas
+  const [attemptCount, setAttemptCount] = useState<number>(0);
   
-  // Adiciona uma nova tentativa aleatória a cada 15-45 segundos
+  // Buscar tentativas recentes e contar total
   useEffect(() => {
-    // Simulação inicial concluída
-    setLoading(false);
-    
-    const addRandomAttempt = () => {
-      const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
-      // Incrementa o contador de tentativas
-      setAttemptCount(prevCount => prevCount + 1);
+    const fetchAttempts = async () => {
+      setLoading(true);
       
-      const newAttempt = {
-        id: Date.now(),
-        name: randomName,
-        timestamp: new Date()
-      };
-
-      // Manter apenas as 10 tentativas mais recentes
-      setAttempts(prevAttempts => [newAttempt, ...prevAttempts.slice(0, 9)]);
+      try {
+        // Obter o número total de tentativas - se falhar, mantém como 0
+        try {
+          const { count, error } = await supabase
+            .from('persuasion_attempts')
+            .select('*', { count: 'exact', head: true });
+          
+          if (!error && count !== null) {
+            setAttemptCount(count);
+          }
+        } catch (err) {
+          console.error("Erro ao contar tentativas:", err);
+          // Mantém o contador como 0
+        }
+        
+        // Obter as 10 tentativas mais recentes - se falhar, a lista fica vazia
+        try {
+          const { data, error } = await supabase
+            .from('persuasion_attempts')
+            .select('id, created_at, session_id')
+            .order('created_at', { ascending: false })
+            .limit(10);
+          
+          if (!error && data && data.length > 0) {
+            // Transformar os dados para o formato exigido
+            const formattedAttempts: Attempt[] = data.map((attempt) => {
+              // Usar nomes consistentes baseados na hash da session_id
+              const sessionHash = hashCode(attempt.session_id);
+              const nameIndex = Math.abs(sessionHash) % randomNames.length;
+              
+              return {
+                id: attempt.id,
+                name: randomNames[nameIndex],
+                timestamp: new Date(attempt.created_at)
+              };
+            });
+            
+            setAttempts(formattedAttempts);
+          }
+        } catch (err) {
+          console.error("Erro ao buscar tentativas:", err);
+          // Lista permanece vazia
+        }
+      } catch (err: any) {
+        console.error("Erro ao buscar tentativas:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setLoading(false);
+      }
     };
-
-    // Define um intervalo aleatório entre 15 e 45 segundos
-    const randomInterval = Math.floor(Math.random() * (45000 - 15000) + 15000);
-    const intervalId = setInterval(addRandomAttempt, randomInterval);
-
-    return () => clearInterval(intervalId);
+    
+    fetchAttempts();
+    
+    // Tenta configurar assinatura para atualizações em tempo real
+    try {
+      const channel = supabase
+        .channel('public:persuasion_attempts')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'persuasion_attempts' },
+          (payload) => {
+            // Apenas incrementa o contador se a payload for válida
+            if (payload && payload.new) {
+              // Incrementa o contador
+              setAttemptCount(prev => prev + 1);
+              
+              // Adiciona novo item apenas se tivermos dados válidos
+              if (payload.new.id && payload.new.session_id && payload.new.created_at) {
+                const newAttempt: Attempt = {
+                  id: payload.new.id,
+                  name: randomNames[Math.abs(hashCode(payload.new.session_id)) % randomNames.length],
+                  timestamp: new Date(payload.new.created_at)
+                };
+                
+                // Adiciona à lista mantendo no máximo 10 items
+                setAttempts(prev => [newAttempt, ...prev.slice(0, 9)]);
+              }
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log("Status da inscrição em tentativas recentes:", status);
+        });
+      
+      return () => {
+        console.log("Cancelando inscrição em tentativas recentes");
+        channel.unsubscribe();
+      };
+    } catch (err) {
+      console.error("Erro ao configurar inscrição em tempo real:", err);
+      return () => {}; // Nada para limpar
+    }
   }, []);
-
+  
   // Para garantir que os timestamps sejam atualizados a cada 30 segundos
   const [timeUpdate, setTimeUpdate] = useState(0);
   
@@ -88,6 +146,17 @@ const AttemptsList: React.FC = () => {
     
     return () => clearInterval(intervalId);
   }, []);
+  
+  // Função simples para gerar um hash de uma string
+  const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+  };
   
   // Função para formatar a mensagem com base no tempo decorrido
   const formatTimestamp = (timestamp: Date) => {

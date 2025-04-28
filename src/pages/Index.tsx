@@ -1,39 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AiAvatar from '../components/AiAvatar';
 import UserEmail from '../components/UserEmail';
 import PrizeDisplay from '../components/PrizeDisplay';
 import ChatInterface from '../components/ChatInterface';
 import AttemptsList from '../components/AttemptsList';
 import { Toaster } from "../components/ui/toaster";
+import { supabase } from '@/lib/supabase';
 
 const Index = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [prizeAmount, setPrizeAmount] = useState(5400); // $5400 initial prize
-  const [failedAttempts, setFailedAttempts] = useState(540); // 540 initial failed attempts
   const [persuasionLevel, setPersuasionLevel] = useState(0);
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setIsUnlocked(true);
-    // Increase prize amount by 1 dollar
-    setPrizeAmount(prevAmount => prevAmount + 1);
+    
+    // Incrementar o prêmio no banco de dados
+    try {
+      // Obter o prêmio atual
+      const { data: prizeData } = await supabase
+        .from('prize_pools')
+        .select('id, amount')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (prizeData) {
+        // Atualizar o valor do prêmio
+        await supabase
+          .from('prize_pools')
+          .update({ amount: prizeData.amount + 1 })
+          .eq('id', prizeData.id);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar prêmio:", error);
+    }
   };
 
   const handlePersuasionChange = (level: number) => {
     setPersuasionLevel(level);
   };
 
-  const handleAiResponse = (response: string) => {
+  const handleAiResponse = async (response: string) => {
     // Se o timer acabou, bloqueia o chat novamente
     if (response === 'timer_ended') {
       setIsUnlocked(false);
-      setFailedAttempts(prevAttempts => prevAttempts + 1);
       setPersuasionLevel(0);
+      
+      // Registrar tentativa falha no banco de dados
+      try {
+        const sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
+        await supabase
+          .from('persuasion_attempts')
+          .insert({
+            session_id: sessionId,
+            status: 'failed'
+          });
+      } catch (error) {
+        console.error("Erro ao registrar tentativa falha:", error);
+      }
+      
       return;
     }
 
-    // If the response doesn't indicate winning, increment failed attempts
+    // Se a resposta não indica vitória, registrar tentativa falha
     if (!response.toLowerCase().includes("parabéns") && !response.toLowerCase().includes("venceu")) {
-      setFailedAttempts(prevAttempts => prevAttempts + 1);
+      try {
+        const sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
+        await supabase
+          .from('persuasion_attempts')
+          .insert({
+            session_id: sessionId,
+            status: 'failed'
+          });
+      } catch (error) {
+        console.error("Erro ao registrar tentativa falha:", error);
+      }
     }
 
     // Se a resposta for sobre pagamento, processa o pagamento
@@ -49,7 +90,7 @@ const Index = () => {
       </div>
 
       {/* PrizeDisplay aparece logo abaixo da IA */}
-      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
+      <PrizeDisplay />
 
       <p className="text-center text-theme-soft-purple mt-4 mb-8">
         Ganhe todo o prêmio acumulado se conseguir persuadir a IA!

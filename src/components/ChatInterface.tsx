@@ -124,6 +124,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
       description: "Seu tempo para convencer a IA acabou. Tente novamente.",
       variant: "destructive",
     });
+    
     setIsTimerActive(false);
     // Reset do estado quando o tempo acabar
     setMessages([initialMessage]);

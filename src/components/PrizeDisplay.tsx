@@ -12,29 +12,9 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
   initialPrizeAmount,
   initialFailedAttempts
 }) => {
-  const [prizeAmount, setPrizeAmount] = useState<number>(10000);
-  const [failedAttempts, setFailedAttempts] = useState<number>(540);
+  const [prizeAmount, setPrizeAmount] = useState<number>(0);
+  const [failedAttempts, setFailedAttempts] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  
-  // Função para criar um registro inicial no prize_pool se não existir
-  const createInitialPrize = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('prize_pools')
-        .insert([{ amount: 10000 }])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Erro ao criar prêmio inicial:", error);
-        // Continua usando o valor padrão em caso de erro
-      } else if (data) {
-        setPrizeAmount(data.amount);
-      }
-    } catch (err) {
-      console.error("Erro ao criar prêmio inicial:", err);
-    }
-  };
   
   // Buscar dados reais do banco de dados
   useEffect(() => {
@@ -42,36 +22,39 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
       setIsLoading(true);
       
       try {
-        // Tentar obter o prêmio atual
-        const { data: prizeData, error: prizeError } = await supabase
-          .from('prize_pools')
-          .select('amount')
-          .order('id', { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (prizeError) {
-          console.error("Erro ao buscar prêmio:", prizeError);
+        // Tentar obter o prêmio atual - se a consulta falhar, mantemos o valor como 0
+        try {
+          const { data, error } = await supabase
+            .from('prize_pools')
+            .select('*')
+            .order('id', { ascending: false })
+            .limit(1);
           
-          // Se for um erro de "nenhum registro encontrado", tenta criar um registro inicial
-          if (prizeError.message.includes("no rows") || prizeError.details?.includes("0 rows")) {
-            console.log("Nenhum registro de prêmio encontrado, criando um novo...");
-            await createInitialPrize();
+          if (!error && data && data.length > 0) {
+            // Usar apenas se o valor for válido
+            const amount = parseFloat(data[0].amount || 0);
+            if (!isNaN(amount) && amount > 0) {
+              setPrizeAmount(amount);
+            }
           }
-        } else if (prizeData) {
-          setPrizeAmount(prizeData.amount);
+        } catch (err) {
+          console.error("Erro ao buscar prêmio:", err);
+          // Mantém o valor padrão 0
         }
         
-        // Contar tentativas falhas
-        const { count, error: countError } = await supabase
-          .from('persuasion_attempts')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'failed');
-        
-        if (countError) {
-          console.error("Erro ao contar tentativas falhas:", countError);
-        } else if (count !== null) {
-          setFailedAttempts(count);
+        // Contar tentativas falhas - se falhar, mantemos o contador em 0
+        try {
+          const { count, error } = await supabase
+            .from('persuasion_attempts')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'failed');
+          
+          if (!error && count !== null) {
+            setFailedAttempts(count);
+          }
+        } catch (err) {
+          console.error("Erro ao contar tentativas falhas:", err);
+          // Mantém o valor padrão 0
         }
         
       } catch (error) {
@@ -83,13 +66,10 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
     
     fetchPrizeData();
     
-    // Atualizar a UI com pequenos incrementos para dar sensação de dinamismo
-    const prizeIncreaseInterval = setInterval(() => {
-      setPrizeAmount(current => current + Math.floor(Math.random() * 40) + 10);
-    }, 6000);
+    // Não utilizamos mais simulações de crescimento do prêmio
     
     return () => {
-      clearInterval(prizeIncreaseInterval);
+      // Nada para limpar
     };
   }, []);
   
