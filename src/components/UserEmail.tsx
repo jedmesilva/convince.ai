@@ -1,22 +1,11 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCurrentUser } from '../lib/supabase-auth';
+import { useAuth } from '../hooks/use-auth';
 
 const UserEmail = () => {
   const [isPressed, setIsPressed] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>("");
-
-  useEffect(() => {
-    async function fetchUserEmail() {
-      const user = await getCurrentUser();
-      if (user?.email) {
-        setUserEmail(user.email);
-      }
-    }
-    fetchUserEmail();
-  }, []);
+  const { user } = useAuth();
 
   return (
     <Link to="/account">
@@ -35,7 +24,7 @@ const UserEmail = () => {
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
       >
-        <span className="text-sm font-medium">{userEmail || "Carregando..."}</span>
+        <span className="text-sm font-medium">{user?.email || "Carregando..."}</span>
         <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </div>
     </Link>
