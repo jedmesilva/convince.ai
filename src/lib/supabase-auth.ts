@@ -149,16 +149,22 @@ export async function registerUser(userData: UserRegistrationData) {
       
       let publicUser = null;
       try {
+        console.log("Dados do usuário para inserir em public.users:", {
+          id: authData.user.id,
+          name: userData.name,
+          email: userData.email
+        });
+        
+        // Inserir SOMENTE os campos que queremos na tabela public.users (id, name, email, status)
         const insertResult = await supabase
           .from('users')
           .insert([
             {
-              id: authData.user.id,
-              username: userData.name,
-              password: passwordHash,
-              created_at: new Date().toISOString(),
-              email: userData.email,
-              status: 'active'
+              id: authData.user.id,   // ID do usuário autenticado
+              name: userData.name,     // Nome fornecido pelo usuário
+              email: userData.email,   // Email fornecido pelo usuário
+              status: 'active'         // Status inicial é 'active'
+              // NÃO incluímos username, password ou outros campos
             }
           ])
           .select()
