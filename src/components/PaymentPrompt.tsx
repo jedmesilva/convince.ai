@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
 import PaymentDialog from './PaymentDialog';
+import { v4 as uuidv4 } from 'uuid';
 
 interface PaymentPromptProps {
   onPaymentSuccess: () => void;
@@ -11,7 +12,22 @@ interface PaymentPromptProps {
 const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [sessionId, setSessionId] = useState("");
   const { toast } = useToast();
+
+  // Inicializar ou recuperar o ID de sessão para o usuário atual
+  useEffect(() => {
+    // Tenta obter o ID de sessão do armazenamento local
+    let existingSessionId = localStorage.getItem('session_id');
+    
+    // Se não existir, cria um novo
+    if (!existingSessionId) {
+      existingSessionId = uuidv4();
+      localStorage.setItem('session_id', existingSessionId);
+    }
+    
+    setSessionId(existingSessionId);
+  }, []);
 
   const handlePaymentSuccess = () => {
     setIsProcessing(true);
@@ -23,6 +39,7 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
       variant: "default",
     });
     
+    // Reduzimos o timeout já que o processamento real agora acontece no diálogo
     setTimeout(() => {
       dismiss();
       setTimeout(() => {
@@ -34,7 +51,7 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
         });
         onPaymentSuccess();
       }, 100);
-    }, 1500);
+    }, 500);
   };
   
   return (
@@ -52,6 +69,7 @@ const PaymentPrompt: React.FC<PaymentPromptProps> = ({ onPaymentSuccess }) => {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onPaymentSuccess={handlePaymentSuccess}
+        sessionId={sessionId}
       />
     </div>
   );

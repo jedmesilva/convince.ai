@@ -3,11 +3,19 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { randomUUID } from "crypto";
 import { WebSocketServer, WebSocket } from 'ws';
+import { setupAuth } from "./auth";
+import cookieParser from "cookie-parser";
 
 // Map to store WebSocket connections by session ID
 const connections = new Map<string, WebSocket>();
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configurar cookie parser
+  app.use(cookieParser());
+
+  // Configurar autenticação
+  setupAuth(app);
+  
   // API Routes
   const apiRouter = express.Router();
   
@@ -46,8 +54,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store user message
       await storage.createMessage({
         text: message,
-        isUser: true,
-        sessionId
+        is_user: true,
+        session_id: sessionId
       });
       
       // Generate AI response based on user input
@@ -56,8 +64,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store AI response
       await storage.createMessage({
         text: aiResponse,
-        isUser: false,
-        sessionId
+        is_user: false,
+        session_id: sessionId
       });
       
       // For the demo, increment failed attempts as the AI is not convinced
@@ -113,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payment simulation endpoint
+  // Payment simulation endpoint (versão antiga, mantida para compatibilidade)
   apiRouter.post("/payment", async (req, res) => {
     try {
       // Get or create session ID from cookies
@@ -125,9 +133,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Record the payment (this is a simulation, so always successful)
       await storage.createPayment({
-        sessionId,
+        session_id: sessionId,
         amount: 1, // $1 payment
-        status: "successful"
+        status: "successful",
+        user_id: null,
+        method: "card"
       });
       
       res.json({ 
@@ -137,6 +147,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing payment:", error);
       res.status(500).json({ message: "Failed to process payment" });
+    }
+  });
+  
+  // Nova API para processamento de pagamentos com dados do usuário
+  apiRouter.post("/payments", async (req, res) => {
+    try {
+      const { session_id, amount, method, status, user_id } = req.body;
+      
+      if (!session_id || !amount) {
+        return res.status(400).json({ message: "session_id e amount são obrigatórios" });
+      }
+      
+      // Criar o registro de pagamento
+      const payment = await storage.createPayment({
+        session_id,
+        amount,
+        status: status || "completed",
+        method: method || "credit_card",
+        user_id: user_id || null
+      });
+      
+      console.log("Pagamento processado:", payment);
+      
+      res.status(201).json(payment);
+    } catch (error) {
+      console.error("Erro ao processar pagamento:", error);
+      res.status(500).json({ message: "Falha ao processar pagamento" });
     }
   });
 
