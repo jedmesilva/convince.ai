@@ -92,30 +92,47 @@ const AttemptsList: React.FC = () => {
   };
 
   return (
-    <div className="mt-12 mb-12 max-w-xl mx-auto bg-theme-dark-purple bg-opacity-50 rounded-lg p-4 backdrop-blur-sm border border-theme-purple">
-      <h3 className="text-theme-light-purple text-center text-lg font-semibold mb-3">
-        Tentativas Recentes
-      </h3>
-      <div className="space-y-2">
+    <div className="bg-theme-dark-purple bg-opacity-50 rounded-xl p-5 backdrop-blur-sm border border-theme-purple shadow-lg">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-theme-light-purple text-lg font-semibold">
+          Tentativas Recentes
+        </h3>
+        <div className="text-sm text-theme-soft-purple bg-theme-purple bg-opacity-20 px-2 py-1 rounded-full">
+          {attemptCount} total
+        </div>
+      </div>
+      
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
         {attempts.map((attempt, index) => (
           <div 
             key={attempt.id}
             className={`p-3 rounded-lg transition-all duration-300 ${
               index === 0 
-                ? 'bg-theme-purple bg-opacity-30 border-l-4 border-theme-vivid-purple animate-pulse-slow' 
+                ? 'bg-theme-purple bg-opacity-30 border-l-4 border-theme-vivid-purple animate-pulse-slow shadow-md' 
                 : 'bg-theme-dark-bg bg-opacity-60 hover:bg-opacity-80 border-l-4 border-theme-purple border-opacity-40'
             }`}
           >
-            <div className="text-sm flex items-center">
-              <span className="mr-2 text-theme-bright-purple font-bold flex items-center justify-center min-w-[35px]">
-                {attemptCount - index}°
-              </span>
-              <span className="text-theme-light-purple font-medium">
-                <strong className="text-theme-bright-purple">{attempt.name}</strong> tentou {formatTimestamp(attempt.timestamp)}, mas fracassou!
-              </span>
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-theme-bright-purple font-bold text-sm">
+                  #{attemptCount - index}
+                </span>
+                <span className="text-xs text-theme-soft-purple">
+                  {formatTimestamp(attempt.timestamp)}
+                </span>
+              </div>
+              <div className="text-sm text-theme-light-purple">
+                <strong className="text-theme-bright-purple">{attempt.name}</strong> tentou persuadir, mas fracassou!
+              </div>
             </div>
           </div>
         ))}
+      </div>
+      
+      <div className="mt-4 pt-3 border-t border-theme-purple border-opacity-30">
+        <p className="text-xs text-center text-theme-soft-purple">
+          Lista atualizada em tempo real
+        </p>
       </div>
     </div>
   );

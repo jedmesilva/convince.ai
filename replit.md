@@ -81,7 +81,8 @@ This is a React-based web application that implements an interactive AI persuasi
 - Port 8081: Additional development port
 
 ## Changelog
-- June 27, 2025. Initial setup
+- June 27, 2025: Initial setup
+- June 27, 2025: Layout UX/UI improvements - Reorganized layout structure with improved grid system, enhanced chat interface with better visual hierarchy, optimized AttemptsList as side panel, improved PrizeDisplay with better visual emphasis, and enhanced responsive design for both desktop and mobile
 
 ## User Preferences
 

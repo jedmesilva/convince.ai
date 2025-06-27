@@ -43,27 +43,47 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen container mx-auto py-8 px-4 pb-[550px]">
-      <div className="flex justify-center items-center mb-4">
-        <AiAvatar persuasionLevel={persuasionLevel} />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Header Section */}
+      <div className="container mx-auto px-4 py-6">
+        {/* Top section with AI Avatar and Prize */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* AI Avatar - Central focus */}
+          <div className="lg:col-span-2 flex flex-col items-center justify-center">
+            <div className="mb-6">
+              <AiAvatar persuasionLevel={persuasionLevel} />
+            </div>
+            <p className="text-center text-theme-soft-purple text-lg max-w-md">
+              Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
+            </p>
+          </div>
 
-      {/* PrizeDisplay aparece logo abaixo da IA */}
-      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
+          {/* Prize Display - Side panel on desktop, below on mobile */}
+          <div className="lg:col-span-1 flex flex-col justify-center">
+            <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
+          </div>
+        </div>
 
-      <p className="text-center text-theme-soft-purple mt-4 mb-8">
-        Ganhe todo o prêmio acumulado se conseguir persuadir a IA!
-      </p>
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {/* Attempts List - Side panel */}
+          <div className="xl:col-span-1 order-2 xl:order-1">
+            <div className="sticky top-6">
+              <AttemptsList />
+            </div>
+          </div>
 
-      {/* Lista de pessoas que tentaram */}
-      <AttemptsList />
-
-      <div className="mt-10 max-w-2xl mx-auto relative">
-        <ChatInterface 
-          isUnlocked={isUnlocked} 
-          onAiResponse={handleAiResponse}
-          onPersuasionChange={handlePersuasionChange}
-        />
+          {/* Chat Interface - Main content */}
+          <div className="xl:col-span-3 order-1 xl:order-2">
+            <div className="max-w-4xl mx-auto">
+              <ChatInterface 
+                isUnlocked={isUnlocked} 
+                onAiResponse={handleAiResponse}
+                onPersuasionChange={handlePersuasionChange}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <Toaster />

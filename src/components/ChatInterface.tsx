@@ -146,18 +146,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
     return (
       <div 
         key={message.id}
-        className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+        className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
       >
-        <div 
-          className={`max-w-[80%] rounded-lg px-4 py-2 ${
+        <div className={`flex items-start space-x-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+          {/* Avatar */}
+          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
             message.sender === 'user' 
               ? 'bg-theme-purple text-white' 
-              : 'bg-gray-800 text-theme-light-purple border border-theme-purple'
-          }`}
-        >
-          <p>{message.text}</p>
-          <div className="text-xs opacity-70 mt-1">
-            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              : 'bg-theme-dark-purple border border-theme-purple text-theme-light-purple'
+          }`}>
+            {message.sender === 'user' ? 'U' : 'AI'}
+          </div>
+
+          {/* Message Bubble */}
+          <div 
+            className={`rounded-xl px-4 py-3 ${
+              message.sender === 'user' 
+                ? 'bg-theme-purple text-white rounded-tr-sm' 
+                : 'bg-gray-800 text-theme-light-purple border border-theme-purple rounded-tl-sm'
+            }`}
+          >
+            <p className="text-sm leading-relaxed">{message.text}</p>
+            <div className={`text-xs mt-2 ${message.sender === 'user' ? 'text-white/70' : 'text-theme-soft-purple'}`}>
+              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
           </div>
         </div>
       </div>
@@ -223,94 +235,107 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse,
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="w-full px-4 pb-4" style={{background: 'linear-gradient(to bottom, rgba(26, 31, 44, 0.4) 0%, rgba(15, 15, 16, 0.95) 100%)', backdropFilter: 'blur(8px)'}}>
-        <div className="flex flex-col bg-theme-dark-purple border border-theme-purple rounded-lg shadow-xl overflow-hidden relative">
+    <div className="w-full">
+      <div className="bg-theme-dark-purple bg-opacity-80 backdrop-blur-sm border border-theme-purple rounded-xl shadow-2xl overflow-hidden relative">
+        <div className="flex flex-col">
           {/* BorderTimer - Cronômetro visual nas bordas */}
           {isUnlocked && <BorderTimer 
             isActive={isTimerActive} 
             duration={timerDuration} 
             onTimeEnd={handleTimeEnd}
           />}
-        <div className="px-4 pt-4 pb-2 relative">
-          {/* Container Pai - Segura todos os elementos */}
-          <div className="flex items-center justify-between">
-            {/* Temporizador digital - Exibido apenas quando está ativo */}
-            <div className="flex-1">
-              {isUnlocked && isTimerActive && (
-                <div className={`
-                  font-mono font-medium text-sm opacity-80 inline-block
-                  ${timeRemaining <= 10 ? 'text-red-400 animate-timer-blink' : 'text-theme-vivid-purple'}
-                `}>
-                  {formatTime(timeRemaining)}
-                </div>
-              )}
-            </div>
-            
-            {/* Botão de Expandir/Recolher - sempre à direita */}
-            <div className="flex items-center justify-end">
+          {/* Header do Chat */}
+          <div className="px-6 py-4 bg-theme-purple bg-opacity-20 border-b border-theme-purple border-opacity-30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <h3 className="text-lg font-semibold text-theme-light-purple">Chat com IA</h3>
+                {isUnlocked && isTimerActive && (
+                  <div className={`
+                    font-mono text-sm px-3 py-1 rounded-full bg-theme-dark-purple border
+                    ${timeRemaining <= 10 ? 'text-red-400 border-red-400 animate-pulse' : 'text-theme-vivid-purple border-theme-purple'}
+                  `}>
+                    {formatTime(timeRemaining)}
+                  </div>
+                )}
+              </div>
+              
               <Button
                 onClick={toggleChatExpansion}
-                className="h-6 w-6 rounded-full bg-theme-dark-purple border border-theme-purple p-0 shadow-md hover:bg-gray-800 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg-theme-dark-purple border border-theme-purple p-0 shadow-md hover:bg-gray-800 flex items-center justify-center"
                 variant="outline"
                 size="sm"
                 aria-label={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
-                title={isChatExpanded ? "Recolher histórico" : "Expandir histórico"}
               >
                 {isChatExpanded ? (
-                  <ChevronDown className="h-3 w-3 text-theme-light-purple" />
+                  <ChevronDown className="h-4 w-4 text-theme-light-purple" />
                 ) : (
-                  <ChevronUp className="h-3 w-3 text-theme-light-purple" />
+                  <ChevronUp className="h-4 w-4 text-theme-light-purple" />
                 )}
               </Button>
             </div>
           </div>
-        </div>
-        <div 
-          className={`px-4 overflow-y-auto transition-all duration-300 ease-in-out ${
-            isChatExpanded ? 'py-3 max-h-[50vh] opacity-100' : 'max-h-0 py-0 opacity-0'
-          }`}
-        >
-          {messages.map(renderMessage)}
+          {/* Área de Mensagens */}
+          <div 
+            className={`px-6 overflow-y-auto transition-all duration-300 ease-in-out custom-scrollbar ${
+              isChatExpanded ? 'py-4 max-h-96 opacity-100' : 'max-h-0 py-0 opacity-0'
+            }`}
+          >
+            <div className="space-y-4">
+              {messages.map(renderMessage)}
 
-          {isTyping && (
-            <div className="flex justify-start mb-4">
-              <div className="bg-gray-800 text-white rounded-lg px-4 py-2 border border-theme-purple">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-800 text-white rounded-xl px-4 py-3 border border-theme-purple max-w-xs">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-theme-soft-purple">IA está digitando</span>
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-theme-purple rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Area */}
+          <div className="border-t border-theme-purple border-opacity-30 bg-theme-dark-purple bg-opacity-30">
+            {isUnlocked ? (
+              <div className="p-4">
+                <div className="relative flex items-end space-x-3">
+                  <div className="flex-1">
+                    <textarea
+                      className="w-full bg-gray-800 border border-theme-purple border-opacity-50 rounded-xl text-white resize-none focus:outline-none focus:ring-2 focus:ring-theme-purple focus:border-theme-purple transition-all duration-200 placeholder:text-gray-400 px-4 py-3 text-sm"
+                      placeholder="Digite sua mensagem para persuadir a IA..."
+                      rows={2}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleSendMessage}
+                    disabled={inputValue.trim() === ''}
+                    className="bg-theme-purple hover:bg-theme-vivid-purple disabled:bg-gray-600 disabled:opacity-50 text-white rounded-xl p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <ArrowUp className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="mt-2 text-xs text-theme-soft-purple text-center">
+                  Pressione Enter para enviar, Shift+Enter para nova linha
                 </div>
               </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="border-t border-theme-purple">
-          {isUnlocked ? (
-            <div className="relative flex items-center">
-              <textarea
-                className="flex-1 w-full bg-gray-800 border-0 rounded-none text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500 px-4 py-3 pr-12"
-                placeholder="Digite sua mensagem..."
-                rows={2}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyPress}
-              />
-              <Button 
-                onClick={handleSendMessage}
-                disabled={inputValue.trim() === ''}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-theme-purple hover:bg-theme-vivid-purple text-white rounded-full p-2"
-              >
-                <ArrowUp className="h-5 w-5" />
-              </Button>
-            </div>
-          ) : (
-            <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
-          )}
-        </div>
+            ) : (
+              <div className="p-4">
+                <PaymentPrompt onPaymentSuccess={handlePaymentSuccess} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
