@@ -162,10 +162,16 @@ const AttemptCard: React.FC<{ attempt: Attempt; index: number }> = ({ attempt, i
   );
 };
 
-// Demo component melhorado
-const Demo = () => {
-  const [currentPrize, setCurrentPrize] = useState(5400);
-  const [attempts, setAttempts] = useState(540);
+// Componente principal que aceita props e exibe o conteúdo completo
+const PrizeDisplayComponent: React.FC<PrizeDisplayProps> = ({ 
+  prizeAmount, 
+  failedAttempts, 
+  winners = 1,
+  className = '',
+  onShowChat 
+}) => {
+  const [currentPrize, setCurrentPrize] = useState(prizeAmount);
+  const [attempts, setAttempts] = useState(failedAttempts);
   
   const recentAttempts: Attempt[] = [
     { id: 540, name: "Lucas", time: "agora mesmo", status: "fracassou" },
@@ -191,15 +197,21 @@ const Demo = () => {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Atualiza os valores quando as props mudam
+  useEffect(() => {
+    setCurrentPrize(prizeAmount);
+    setAttempts(failedAttempts);
+  }, [prizeAmount, failedAttempts]);
   
   return (
     <div className="min-h-screen bg-gray-900">
       <PrizeDisplay 
         prizeAmount={currentPrize} 
         failedAttempts={attempts}
-        winners={1}
+        winners={winners}
         className="shadow-2xl border-b border-violet-500"
-        onShowChat={() => console.log('Show chat clicked')}
+        onShowChat={onShowChat}
       />
       
       {/* Área de conteúdo */}
@@ -221,4 +233,4 @@ const Demo = () => {
   );
 };
 
-export default Demo;
+export default PrizeDisplayComponent;
