@@ -422,7 +422,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
                 <span>1$ para desbloquear chat</span>
               </button>
             </DialogTrigger>
-            <DialogContent className="p-0 w-screen h-screen sm:w-auto sm:h-auto sm:max-w-5xl sm:max-h-[80vh] overflow-y-auto bg-transparent border-none">
+            <DialogContent className="p-0 w-[95vw] max-w-6xl h-auto min-h-[400px] max-h-[90vh] overflow-hidden bg-transparent border-none">
               <div className="sr-only">
                 <h2>Checkout - Finalizar Compra</h2>
                 <p>Complete seu pagamento para desbloquear o chat</p>

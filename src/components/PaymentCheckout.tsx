@@ -119,12 +119,12 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen sm:min-h-fit">
-      {/* Layout Responsivo */}
-      <div className="flex flex-col sm:flex-row min-h-screen sm:min-h-fit">
+    <div className="bg-gray-900 w-full h-full">
+      {/* Layout Responsivo com scroll interno */}
+      <div className="flex flex-col lg:flex-row w-full h-full overflow-y-auto">
         
         {/* Sidebar do Resumo - Desktop à esquerda, Mobile no topo */}
-        <div className="sm:w-2/5 bg-gradient-to-br from-slate-800 via-violet-500/20 to-slate-800 relative overflow-hidden flex-shrink-0">
+        <div className="lg:w-2/5 lg:min-w-[320px] bg-gradient-to-br from-slate-800 via-violet-500/20 to-slate-800 relative overflow-hidden flex-shrink-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(139,92,246,0.3),transparent_70%)]" />
           
           <div className="relative p-3 sm:p-6 md:p-8">
@@ -193,8 +193,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
         </div>
 
         {/* Área do Formulário - Desktop à direita, Mobile abaixo */}
-        <div className="sm:w-3/5 bg-gray-900 sm:flex sm:items-center flex-grow">
-          <div className="p-3 sm:p-6 md:p-8 w-full sm:max-w-lg sm:mx-auto">
+        <div className="lg:w-3/5 bg-gray-900 flex items-center justify-center flex-grow">
+          <div className="p-4 sm:p-6 lg:p-8 w-full max-w-md lg:max-w-lg">
             
             {/* Etapa 1: Email */}
             {currentStep === 'email' && (
