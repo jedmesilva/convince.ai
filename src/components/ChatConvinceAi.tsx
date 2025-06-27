@@ -415,7 +415,13 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
         ) : (
           <div 
             className="bg-slate-700 rounded-3xl p-4 cursor-text"
-            onClick={() => textareaRef.current?.focus()}
+            onClick={(e) => {
+              // Só foca se não clicou no email ou em seus elementos filhos
+              const target = e.target as HTMLElement;
+              if (!target?.closest || !target.closest('[data-user-email]')) {
+                textareaRef.current?.focus();
+              }
+            }}
           >
             <textarea
               ref={textareaRef}

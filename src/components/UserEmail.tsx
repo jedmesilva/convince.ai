@@ -17,6 +17,7 @@ const UserEmail: React.FC<UserEmailProps> = ({
 
   return (
     <div 
+      data-user-email
       className={`
         flex items-center gap-2 
         text-violet-300/80 
@@ -32,7 +33,11 @@ const UserEmail: React.FC<UserEmailProps> = ({
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick?.();
+      }}
     >
       <User className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} text-violet-400`} />
       <span className="font-medium truncate max-w-24">{email}</span>
