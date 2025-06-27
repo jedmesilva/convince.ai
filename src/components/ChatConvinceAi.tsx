@@ -387,7 +387,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-slate-400 font-normal leading-none">Chat com</span>
+              <span className="text-xs text-slate-400 font-normal leading-none">Chat con</span>
               <h1 className="font-semibold text-lg leading-tight">Vince</h1>
             </div>
           </div>
