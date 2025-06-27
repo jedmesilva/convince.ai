@@ -438,9 +438,10 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim()}
-                className="bg-slate-900 hover:bg-black p-2 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative bg-violet-400 hover:bg-violet-300 text-white p-2 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
                 <ArrowUp className="w-4 h-4 text-white" />
+                <div className="absolute inset-0 bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
             </div>
           </div>
