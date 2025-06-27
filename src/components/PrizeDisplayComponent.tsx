@@ -204,7 +204,7 @@ const Demo = () => {
             Tentativas Recentes
           </h2>
           
-          <div className="space-y-3 max-h-[600px] overflow-y-auto py-4">
+          <div className="space-y-3 py-4">
             {recentAttempts.map((attempt, index) => (
               <AttemptCard key={attempt.id} attempt={attempt} index={index} />
             ))}
