@@ -156,16 +156,15 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
             <div className="text-center sm:text-left mb-4 sm:mb-6">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-violet-100 mb-4 flex items-center justify-center sm:justify-start gap-3">
                 <div className="bg-violet-500/20 p-2 rounded-lg">
-                  <ShoppingCart className="h-6 w-6 text-violet-300" />
+                  <Clock className="h-6 w-6 text-violet-300" />
                 </div>
-                Finalizar Compra
+                Quantas tentativas você deseja?
               </h1>
             </div>
             
             {/* Seletor de tentativas */}
             <div className="bg-slate-700/30 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/20 mb-6">
               <div className="text-center mb-4">
-                <p className="text-violet-300 text-sm mb-3">Quantas tentativas você deseja?</p>
                 <div className="flex items-center justify-center gap-4">
                   <button 
                     onClick={() => adjustAttempts(false)}
@@ -193,26 +192,19 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
             {/* Resumo detalhado */}
             <div className="space-y-4">
               <div className="bg-slate-600/20 rounded-lg p-4 border border-violet-500/10">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-violet-400" />
-                    <span className="text-violet-300 text-sm">Tempo total</span>
-                  </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-violet-300 text-sm">Tempo total</span>
                   <span className="text-violet-200 font-bold text-lg">{formatTime(totalTime)}</span>
                 </div>
-                <p className="text-violet-400 text-xs">Você terá esse tempo para convencer a IA</p>
-              </div>
-              
-              <div className="bg-slate-600/20 rounded-lg p-4 border border-violet-500/10">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-violet-400" />
-                    <span className="text-violet-300 text-sm">Valor total</span>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-violet-300 text-sm">Valor total</span>
                   <span className="text-violet-200 font-bold text-2xl">${totalPrice}</span>
                 </div>
-                <p className="text-violet-400 text-xs">${pricePerAttempt} por tentativa</p>
               </div>
+              
+              <p className="text-violet-400 text-xs text-center">
+                Cada tentativa custa ${pricePerAttempt} e tem duração de {minutesPerAttempt} minutos.
+              </p>
             </div>
           </div>
         </div>
