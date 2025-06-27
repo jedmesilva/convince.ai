@@ -8,7 +8,7 @@ const Index = () => {
     <div className="h-dvh w-screen overflow-hidden">
       <div className="h-full w-full flex flex-col md:flex-row">
         {/* PrizeDisplayComponent - à esquerda no desktop, em cima no mobile */}
-        <div className="flex-1 md:flex-none md:w-1/2 overflow-auto">
+        <div className="flex-1 md:flex-none md:w-3/5 overflow-auto">
           <PrizeDisplayComponent 
             prizeAmount={5400} 
             failedAttempts={540}
@@ -17,7 +17,7 @@ const Index = () => {
         </div>
         
         {/* ChatConvinceAi - à direita no desktop, embaixo no mobile */}
-        <div className="flex-1 md:flex-none md:w-1/2 overflow-hidden">
+        <div className="flex-1 md:flex-none md:w-2/5 overflow-hidden">
           <ChatConvinceAi />
         </div>
       </div>
