@@ -47,7 +47,7 @@ const Index = () => {
     <div className="h-dvh w-screen overflow-hidden">
       <div className="h-full w-full flex flex-col md:flex-row">
         {/* PrizeDisplayComponent - à esquerda no desktop, visível no mobile quando activeComponent === 'prize' */}
-        <div className={`flex-1 md:flex-none md:w-3/5 overflow-hidden ${
+        <div className={`flex-1 md:flex-none md:w-3/5 overflow-y-auto scrollbar-hide ${
           activeComponent === 'prize' ? 'block' : 'hidden md:block'
         }`}>
           <PrizeDisplayComponent 

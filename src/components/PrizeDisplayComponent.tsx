@@ -205,7 +205,7 @@ const PrizeDisplayComponent: React.FC<PrizeDisplayProps> = ({
   }, [prizeAmount, failedAttempts]);
   
   return (
-    <div className="min-h-screen bg-gray-900 scrollbar-hide overflow-hidden">
+    <div className="min-h-screen bg-gray-900 scrollbar-hide overflow-y-auto">
       <PrizeDisplay 
         prizeAmount={currentPrize} 
         failedAttempts={attempts}
