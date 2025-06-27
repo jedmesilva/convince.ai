@@ -429,7 +429,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
                 className="w-full bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl"
               >
                 <Lock className="w-5 h-5" />
-                <span>1$ para desbloquear chat</span>
+                <span>Desbloquear chat</span>
               </button>
             </DialogTrigger>
             <DialogContent className="!p-0 !m-0 !gap-0 w-[95vw] max-w-6xl h-auto min-h-[300px] max-h-[95dvh] sm:min-h-[400px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-transparent border-none !top-[50%] sm:!top-[50%] !rounded-2xl">
