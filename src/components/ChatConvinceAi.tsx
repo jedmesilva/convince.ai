@@ -381,7 +381,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-slate-700">
               <img 
-                src="/Vince_wht.png" 
+                src="/Vince_wht.svg" 
                 alt="Vince" 
                 className="w-7 h-7"
               />
