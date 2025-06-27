@@ -351,7 +351,7 @@ export default function MobileChat() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white w-full">
+    <div className="flex flex-col h-full bg-slate-900 text-white w-full border-l border-slate-700">
       <style>{`
         @keyframes scale-pulse {
           0%, 100% { transform: scale(1); }
@@ -363,14 +363,14 @@ export default function MobileChat() {
       `}</style>
       
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-slate-800 border-b border-slate-700">
         <div className="flex items-center justify-between p-4">
           <div>
             <h1 className="font-semibold">Vince</h1>
           </div>
           <button
             onClick={handleGoToPrize}
-            className="p-2 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
+            className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors duration-200"
             title="Ver prêmios disponíveis"
           >
             <Trophy className="w-5 h-5 text-purple-400" />
@@ -398,7 +398,7 @@ export default function MobileChat() {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-gray-800 border-t border-gray-700">
+      <div className="p-4 bg-slate-800 border-t border-slate-700">
         {!isUnlocked ? (
           <button
             onClick={handlePayToUnlock}
@@ -409,7 +409,7 @@ export default function MobileChat() {
           </button>
         ) : (
           <div 
-            className="bg-gray-700 rounded-3xl p-4 cursor-text"
+            className="bg-slate-700 rounded-3xl p-4 cursor-text"
             onClick={() => textareaRef.current?.focus()}
           >
             <textarea
@@ -434,7 +434,7 @@ export default function MobileChat() {
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim()}
-                className="bg-gray-900 hover:bg-black p-2 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-slate-900 hover:bg-black p-2 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ArrowUp className="w-4 h-4 text-white" />
               </button>
