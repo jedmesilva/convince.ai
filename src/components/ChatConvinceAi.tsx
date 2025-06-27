@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy } from 'lucide-react';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
 
 const TIMER_DURATION = 30;
 const INITIAL_CONVINCEMENT = 15;
@@ -423,10 +423,9 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
               </button>
             </DialogTrigger>
             <DialogContent className="!p-0 !m-0 !gap-0 w-[95vw] max-w-6xl h-auto min-h-[300px] max-h-[95dvh] sm:min-h-[400px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-transparent border-none !top-[50%] sm:!top-[50%] !rounded-2xl">
-              <div className="sr-only">
-                <h2>Checkout - Finalizar Compra</h2>
-                <p>Complete seu pagamento para desbloquear o chat</p>
-              </div>
+              <DialogTitle className="sr-only">
+                Checkout - Finalizar Compra
+              </DialogTitle>
               <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} />
             </DialogContent>
           </Dialog>
