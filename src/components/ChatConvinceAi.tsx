@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy } from 'lucide-react';
+import UserEmail from './UserEmail';
 
 const TIMER_DURATION = 30;
 const INITIAL_CONVINCEMENT = 15;
@@ -434,7 +435,12 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
                 minHeight: '24px'
               }}
             />
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <UserEmail 
+                email="lucas@email.com" 
+                compact={true}
+                onClick={() => console.log('Clicou no email do usuário')}
+              />
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim()}

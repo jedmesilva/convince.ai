@@ -1,29 +1,40 @@
 
 import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ArrowUpRight, User } from 'lucide-react';
 
-const UserEmail = () => {
-  const [isPressed, setIsPressed] = useState(false);
-  const userEmail = "Lucas@email.com";
+interface UserEmailProps {
+  email?: string;
+  compact?: boolean;
+  onClick?: () => void;
+}
+
+const UserEmail: React.FC<UserEmailProps> = ({ 
+  email = "Lucas@email.com", 
+  compact = false,
+  onClick 
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div 
       className={`
-        flex items-center justify-center gap-2 
-        text-theme-soft-purple 
-        hover:text-theme-bright-purple 
+        flex items-center gap-2 
+        text-violet-300/80 
+        hover:text-violet-200 
         transition-all duration-200 
-        cursor-pointer mb-4
-        transform hover:scale-105
-        active:scale-95
-        ${isPressed ? 'scale-95' : ''}
+        cursor-pointer
+        ${compact ? 'text-xs' : 'text-sm'}
+        ${compact ? 'py-1 px-2' : 'py-2 px-3'}
+        rounded-lg hover:bg-violet-500/10
+        group
       `}
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseLeave={() => setIsPressed(false)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
     >
-      <span className="text-sm font-medium">{userEmail}</span>
-      <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      <User className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} text-violet-400`} />
+      <span className="font-medium truncate max-w-24">{email}</span>
+      <ArrowUpRight className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} transition-transform ${isHovered ? 'translate-x-0.5 -translate-y-0.5' : ''}`} />
     </div>
   );
 };
