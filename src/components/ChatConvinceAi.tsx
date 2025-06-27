@@ -386,7 +386,10 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
                 className="w-full h-full object-cover rounded-xl"
               />
             </div>
-            <h1 className="font-semibold">Chat Convince</h1>
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-400 font-normal leading-none">Chat com</span>
+              <h1 className="font-semibold text-lg leading-tight">Vince</h1>
+            </div>
           </div>
           <button
             onClick={onShowPrize || handleGoToPrize}
