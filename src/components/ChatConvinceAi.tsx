@@ -351,7 +351,7 @@ export default function MobileChat() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-white w-full border-l border-slate-700">
+    <div className="flex flex-col h-full bg-slate-800 text-white w-full border-l border-slate-700">
       <style>{`
         @keyframes scale-pulse {
           0%, 100% { transform: scale(1); }
