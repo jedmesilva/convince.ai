@@ -90,8 +90,12 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
         <div className="max-w-2xl mx-auto mb-6">
           <div className="bg-slate-700/30 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/20 text-center">
             <div className="mb-4">
-              <div className="w-16 h-16 bg-violet-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Brain className="h-8 w-8 text-violet-300" />
+              <div className="w-16 h-16 rounded-full bg-violet-500/20 overflow-hidden mx-auto mb-3">
+                <img 
+                  src="/Vince_wht.svg" 
+                  alt="Vince" 
+                  className="w-full h-full object-cover rounded-full"
+                />
               </div>
               <p className="text-violet-100/90 text-lg leading-relaxed">
                 O <span className="font-bold text-violet-300">Vince</span> tem acumulado todo esse prêmio! Ele tem muitos objetivos audaciosos, mas se você se esforçar e conseguir convencê-lo, ele pode lhe dar todo o valor acumulado!
