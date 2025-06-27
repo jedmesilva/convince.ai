@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy } from 'lucide-react';
 import UserEmail from './UserEmail';
+import PaymentCheckout from './PaymentCheckout';
+import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 
 const TIMER_DURATION = 30;
 const INITIAL_CONVINCEMENT = 15;
@@ -203,6 +205,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const [convincementLevel, setConvincementLevel] = useState(INITIAL_CONVINCEMENT);
   const [isConvincementAnimating, setIsConvincementAnimating] = useState(false);
   const [showPrizeScreen, setShowPrizeScreen] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -335,6 +338,11 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   }, [inputText, isUnlocked, analyzeArgument, updateConvincementLevel, convincementLevel, generateBotResponse]);
 
   const handlePayToUnlock = useCallback(() => {
+    setShowPaymentDialog(true);
+  }, []);
+
+  const handlePaymentSuccess = useCallback(() => {
+    setShowPaymentDialog(false);
     setIsUnlocked(true);
     resetTimer();
     setIsTimerActive(true);
@@ -405,13 +413,19 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       {/* Input Area */}
       <div className="p-4 bg-slate-800 border-t border-slate-700">
         {!isUnlocked ? (
-          <button
-            onClick={handlePayToUnlock}
-            className="w-full bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl"
-          >
-            <Lock className="w-5 h-5" />
-            <span>1$ para desbloquear chat</span>
-          </button>
+          <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+            <DialogTrigger asChild>
+              <button
+                className="w-full bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl"
+              >
+                <Lock className="w-5 h-5" />
+                <span>1$ para desbloquear chat</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent className="p-0 max-w-4xl max-h-[90vh] overflow-hidden bg-transparent border-none">
+              <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} />
+            </DialogContent>
+          </Dialog>
         ) : (
           <div 
             className="bg-slate-700 rounded-3xl p-4 cursor-text"

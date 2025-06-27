@@ -4,9 +4,10 @@ import { DollarSign, Plus, Minus, CreditCard, QrCode, Clock, ShoppingCart, Eye, 
 interface CheckoutProps {
   isLoggedIn?: boolean;
   userEmail?: string;
+  onPaymentSuccess?: () => void;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmail = '' }) => {
+const Checkout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmail = '', onPaymentSuccess }) => {
   const [currentStep, setCurrentStep] = useState(isLoggedIn ? 'payment' : 'email');
   const [email, setEmail] = useState(userEmail);
   const [hasAccount, setHasAccount] = useState(false);
@@ -87,6 +88,11 @@ const Checkout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmail = '' 
     }
     
     setLoading(false);
+    
+    // Chama o callback de sucesso se fornecido
+    if (onPaymentSuccess) {
+      onPaymentSuccess();
+    }
   };
 
   const formatCardNumber = (value: string) => {
