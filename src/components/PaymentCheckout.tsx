@@ -54,15 +54,21 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
     setLoading(false);
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEmailSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (email) {
       simulateEmailCheck(email);
     }
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEmailKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && email) {
+      handleEmailSubmit();
+    }
+  };
+
+  const handleAuthSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (hasAccount && password) {
       setCurrentStep('payment');
     } else if (!hasAccount && name && password) {
@@ -70,12 +76,22 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
     }
   };
 
+  const handleAuthKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (hasAccount && password) {
+        handleAuthSubmit();
+      } else if (!hasAccount && name && password) {
+        handleAuthSubmit();
+      }
+    }
+  };
+
   const handlePaymentMethodSelect = (method: string) => {
     setPaymentMethod(method);
   };
 
-  const handlePurchase = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePurchase = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoading(true);
     
     // Simula processamento do pagamento
@@ -92,6 +108,15 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
     // Chama o callback de sucesso se fornecido
     if (onPaymentSuccess) {
       onPaymentSuccess();
+    }
+  };
+
+  const handleCardKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && paymentMethod === 'card') {
+      const { number, name, expiry, cvv } = cardData;
+      if (number && name && expiry && cvv) {
+        handlePurchase();
+      }
     }
   };
 
@@ -206,6 +231,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={handleEmailKeyDown}
                       placeholder="seu@email.com"
                       className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
                     />
@@ -243,6 +269,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        onKeyDown={handleAuthKeyDown}
                         placeholder="Seu nome completo"
                         className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
                       />
@@ -254,6 +281,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={handleAuthKeyDown}
                       placeholder={hasAccount ? 'Sua senha' : 'Criar senha'}
                       className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
                     />
@@ -356,6 +384,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       type="text"
                       value={cardData.number}
                       onChange={(e) => setCardData({...cardData, number: formatCardNumber(e.target.value)})}
+                      onKeyDown={handleCardKeyDown}
                       placeholder="1234 5678 9012 3456"
                       maxLength={19}
                       className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
@@ -368,6 +397,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       type="text"
                       value={cardData.name}
                       onChange={(e) => setCardData({...cardData, name: e.target.value.toUpperCase()})}
+                      onKeyDown={handleCardKeyDown}
                       placeholder="NOME NO CARTÃO"
                       className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
                       required
@@ -379,6 +409,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       type="text"
                       value={cardData.expiry}
                       onChange={(e) => setCardData({...cardData, expiry: formatExpiry(e.target.value)})}
+                      onKeyDown={handleCardKeyDown}
                       placeholder="MM/AA"
                       maxLength={5}
                       className="bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
@@ -388,6 +419,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       type="text"
                       value={cardData.cvv}
                       onChange={(e) => setCardData({...cardData, cvv: e.target.value.replace(/\D/g, '')})}
+                      onKeyDown={handleCardKeyDown}
                       placeholder="CVV"
                       maxLength={4}
                       className="bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
