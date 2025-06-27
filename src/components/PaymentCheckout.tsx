@@ -153,8 +153,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(139,92,246,0.3),transparent_70%)]" />
           
           <div className="relative p-4 sm:p-6 md:p-8">
-            <div className="text-center sm:text-left mb-4 sm:mb-6">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-violet-100 mb-4 flex items-center justify-center sm:justify-start gap-3">
+            <div className="text-start sm:text-left mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-violet-100 mb-4 flex items-center justify-start sm:justify-start gap-3">
                 <div className="bg-violet-500/20 p-2 rounded-lg">
                   <Clock className="h-6 w-6 text-violet-300" />
                 </div>
