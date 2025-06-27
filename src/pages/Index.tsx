@@ -5,9 +5,9 @@ import PrizeDisplayComponent from '../components/PrizeDisplayComponent';
 
 const Index = () => {
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col lg:flex-row">
+    <div className="h-screen w-screen overflow-hidden flex flex-col md:flex-row">
       {/* PrizeDisplayComponent - à esquerda no desktop, em cima no mobile */}
-      <div className="flex-1 lg:flex-none lg:w-1/2 overflow-auto">
+      <div className="flex-1 md:flex-none md:w-1/2 overflow-auto">
         <PrizeDisplayComponent 
           prizeAmount={5400} 
           failedAttempts={540}
@@ -16,7 +16,7 @@ const Index = () => {
       </div>
       
       {/* ChatConvinceAi - à direita no desktop, embaixo no mobile */}
-      <div className="flex-1 lg:flex-none lg:w-1/2 overflow-hidden">
+      <div className="flex-1 md:flex-none md:w-1/2 overflow-hidden">
         <ChatConvinceAi />
       </div>
     </div>
