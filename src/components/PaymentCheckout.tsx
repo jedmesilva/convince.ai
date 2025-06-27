@@ -119,15 +119,15 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="bg-gray-900">
       {/* Layout Responsivo */}
-      <div className="flex flex-col sm:flex-row min-h-screen">
+      <div className="flex flex-col sm:flex-row min-h-fit">
         
         {/* Sidebar do Resumo - Desktop à esquerda, Mobile no topo */}
-        <div className="sm:w-1/3 sm:min-h-screen bg-gradient-to-br from-slate-800 via-violet-500/20 to-slate-800 relative overflow-hidden">
+        <div className="sm:w-2/5 bg-gradient-to-br from-slate-800 via-violet-500/20 to-slate-800 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(139,92,246,0.3),transparent_70%)]" />
           
-          <div className="relative p-4 sm:p-6 md:p-8 sm:sticky sm:top-0">
+          <div className="relative p-4 sm:p-6 md:p-8">
             <div className="text-center sm:text-left mb-4 sm:mb-6">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-violet-100 mb-4 flex items-center justify-center sm:justify-start gap-3">
                 <div className="bg-violet-500/20 p-2 rounded-lg">
@@ -193,8 +193,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
         </div>
 
         {/* Área do Formulário - Desktop à direita, Mobile abaixo */}
-        <div className="sm:w-2/3 sm:min-h-screen bg-gray-900">
-          <div className="p-4 sm:p-6 md:p-8 sm:max-w-2xl sm:mx-auto">
+        <div className="sm:w-3/5 bg-gray-900">
+          <div className="p-4 sm:p-6 md:p-8 sm:max-w-xl sm:mx-auto">
             
             {/* Etapa 1: Email */}
             {currentStep === 'email' && (
