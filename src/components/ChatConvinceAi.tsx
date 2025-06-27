@@ -23,10 +23,10 @@ const ARGUMENT_ANALYSIS = {
 // Componente para o medidor de convencimento
 const ConvincementMeter = ({ level, isAnimating }) => {
   const getConvincementColor = (level) => {
-    if (level < 25) return 'from-red-600 to-red-400';
-    if (level < 50) return 'from-orange-600 to-orange-400';
-    if (level < 75) return 'from-yellow-600 to-yellow-400';
-    return 'from-green-600 to-green-400';
+    if (level < 25) return 'from-violet-800 to-violet-600';
+    if (level < 50) return 'from-violet-700 to-violet-500';
+    if (level < 75) return 'from-violet-600 to-violet-400';
+    return 'from-violet-500 to-violet-300';
   };
 
   const getConvincementStatus = (level) => {
@@ -41,22 +41,22 @@ const ConvincementMeter = ({ level, isAnimating }) => {
     <div className="px-4 pb-3 border-b border-gray-700">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-2">
-          <Brain className="w-4 h-4 text-purple-400" />
-          <span className="text-xs text-gray-400">Nível de Convencimento</span>
+          <Brain className="w-4 h-4 text-violet-400" />
+          <span className="text-xs text-violet-300/70">Nível de Convencimento</span>
         </div>
         <div className="flex items-center space-x-2">
           {isAnimating && (
-            <Zap className="w-3 h-3 text-yellow-400 animate-pulse" />
+            <Zap className="w-3 h-3 text-violet-300 animate-pulse" />
           )}
           <span className={`text-sm font-bold transition-all duration-300 ${
-            isAnimating ? 'text-yellow-400' : 'text-white'
+            isAnimating ? 'text-violet-300' : 'text-white'
           }`}>
             {level}%
           </span>
         </div>
       </div>
       
-      <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+      <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
         <div 
           className={`h-3 rounded-full transition-all duration-1000 ease-out bg-gradient-to-r ${getConvincementColor(level)} ${
             isAnimating ? 'animate-pulse' : ''
@@ -66,11 +66,11 @@ const ConvincementMeter = ({ level, isAnimating }) => {
       </div>
       
       <div className="flex justify-between items-center mt-1">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-violet-300/60">
           {getConvincementStatus(level)}
         </span>
         {level >= 90 && (
-          <span className="text-xs text-green-400 animate-pulse">🎉 Convencido!</span>
+          <span className="text-xs text-violet-300 animate-pulse">🎉 Convencido!</span>
         )}
       </div>
     </div>
@@ -92,7 +92,7 @@ const Timer = ({ timeLeft, isActive, isBlinking }) => {
   return (
     <div className="px-4 pb-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-gray-400">Tempo restante</span>
+        <span className="text-xs text-violet-300/70">Tempo restante</span>
         <span 
           className={`text-sm font-mono font-bold transition-colors duration-200 ${
             timeLeft <= 10 
@@ -103,10 +103,10 @@ const Timer = ({ timeLeft, isActive, isBlinking }) => {
           {formatTime(timeLeft)}
         </span>
       </div>
-      <div className="w-full bg-gray-700 rounded-full h-2">
+      <div className="w-full bg-slate-700 rounded-full h-2">
         <div 
           className={`h-2 rounded-full transition-all duration-1000 ease-linear ${
-            timeLeft <= 10 ? 'bg-red-500' : 'bg-purple-600'
+            timeLeft <= 10 ? 'bg-red-500' : 'bg-violet-400'
           }`}
           style={{ width: `${progressPercentage}%` }}
         />
@@ -121,8 +121,8 @@ const Message = ({ message }) => (
     <div
       className={`max-w-xs px-4 py-3 rounded-2xl ${
         message.isBot
-          ? 'bg-gray-700 text-white rounded-bl-sm'
-          : 'bg-purple-600 text-white rounded-br-sm'
+          ? 'bg-slate-700 text-white rounded-bl-sm'
+          : 'bg-violet-400 text-white rounded-br-sm'
       }`}
     >
       <p className="text-sm leading-relaxed">{message.text}</p>
@@ -406,7 +406,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
         {!isUnlocked ? (
           <button
             onClick={handlePayToUnlock}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-2xl transition-colors duration-200 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none"
+            className="w-full bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl"
           >
             <Lock className="w-5 h-5" />
             <span>1$ para desbloquear chat</span>
