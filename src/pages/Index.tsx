@@ -1,17 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatConvinceAi from '../components/ChatConvinceAi';
 import PrizeDisplayComponent from '../components/PrizeDisplayComponent';
 
 const Index = () => {
-  const [activeComponent, setActiveComponent] = useState<'prize' | 'chat'>('prize');
+  // Função para obter a tela ativa do localStorage
+  const getActiveComponentFromCache = (): 'prize' | 'chat' => {
+    try {
+      const cached = localStorage.getItem('activeComponent');
+      return (cached === 'chat' || cached === 'prize') ? cached : 'prize';
+    } catch {
+      return 'prize';
+    }
+  };
+
+  const [activeComponent, setActiveComponent] = useState<'prize' | 'chat'>(getActiveComponentFromCache);
+
+  // useEffect para garantir sincronização com o localStorage
+  useEffect(() => {
+    const cachedComponent = getActiveComponentFromCache();
+    if (cachedComponent !== activeComponent) {
+      setActiveComponent(cachedComponent);
+    }
+  }, []);
+
+  // Função para salvar no localStorage quando muda de tela
+  const saveActiveComponentToCache = (component: 'prize' | 'chat') => {
+    try {
+      localStorage.setItem('activeComponent', component);
+    } catch {
+      // Falha silenciosa se localStorage não estiver disponível
+    }
+  };
 
   const handleShowChat = () => {
     setActiveComponent('chat');
+    saveActiveComponentToCache('chat');
   };
 
   const handleShowPrize = () => {
     setActiveComponent('prize');
+    saveActiveComponentToCache('prize');
   };
 
   return (
