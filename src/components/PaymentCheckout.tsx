@@ -193,8 +193,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
         </div>
 
         {/* Área do Formulário - Desktop à direita, Mobile abaixo */}
-        <div className="sm:w-3/5 bg-gray-900">
-          <div className="p-4 sm:p-6 md:p-8 sm:max-w-xl sm:mx-auto">
+        <div className="sm:w-3/5 bg-gray-900 sm:flex sm:items-center">
+          <div className="p-4 sm:p-6 md:p-8 sm:max-w-xl sm:mx-auto w-full">
             
             {/* Etapa 1: Email */}
             {currentStep === 'email' && (
