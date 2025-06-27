@@ -182,7 +182,11 @@ const useTimer = (initialTime, isActive, onTimerEnd) => {
   return { timeLeft, isBlinking, resetTimer };
 };
 
-export default function MobileChat() {
+interface MobileChatProps {
+  onShowPrize?: () => void;
+}
+
+export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -369,7 +373,7 @@ export default function MobileChat() {
             <h1 className="font-semibold">Vince</h1>
           </div>
           <button
-            onClick={handleGoToPrize}
+            onClick={onShowPrize || handleGoToPrize}
             className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors duration-200"
             title="Ver prêmios disponíveis"
           >

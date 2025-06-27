@@ -14,13 +14,15 @@ interface PrizeDisplayProps {
   failedAttempts: number;
   winners?: number;
   className?: string;
+  onShowChat?: () => void;
 }
 
 const PrizeDisplay: React.FC<PrizeDisplayProps> = ({ 
   prizeAmount, 
   failedAttempts, 
   winners = 1,
-  className = '' 
+  className = '',
+  onShowChat
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   
@@ -98,7 +100,10 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
             
             <div className="space-y-3">
               <p className="text-violet-200 font-medium">Quer tentar a sua sorte?</p>
-              <button className="group relative bg-violet-400 hover:bg-violet-300 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95">
+              <button 
+                onClick={onShowChat}
+                className="group relative bg-violet-400 hover:bg-violet-300 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
+              >
                 <span className="text-lg">Tentar Convencer o Vince</span>
                 <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
@@ -194,6 +199,7 @@ const Demo = () => {
         failedAttempts={attempts}
         winners={1}
         className="shadow-2xl border-b border-violet-500"
+        onShowChat={() => console.log('Show chat clicked')}
       />
       
       {/* Área de conteúdo */}
