@@ -351,7 +351,7 @@ export default function MobileChat() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white max-w-sm mx-auto">
+    <div className="flex flex-col h-full bg-gray-900 text-white w-full">
       <style>{`
         @keyframes scale-pulse {
           0%, 100% { transform: scale(1); }
@@ -417,7 +417,11 @@ export default function MobileChat() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              onInput={handleTextareaInput}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = target.scrollHeight + 'px';
+              }}
               placeholder="Digite sua mensagem..."
               className="w-full bg-transparent text-white placeholder-gray-400 focus:outline-none text-base mb-3 resize-none min-h-[24px] max-h-32 overflow-y-auto"
               rows={1}

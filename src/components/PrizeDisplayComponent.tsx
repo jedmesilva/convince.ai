@@ -50,7 +50,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.2),transparent_50%)]" />
       </div>
       
-      <div className="relative container mx-auto px-4 py-6">
+      <div className="relative w-full px-4 py-6">
         {/* Badge de ganhadores */}
         <div className="flex justify-center mb-4">
           <div className="bg-violet-500/20 border border-violet-500/30 rounded-full px-4 py-2 flex items-center gap-2">
@@ -197,7 +197,7 @@ const Demo = () => {
       />
       
       {/* Área de conteúdo */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-violet-100 mb-6 flex items-center gap-3">
             <Clock className="h-6 w-6 text-violet-400" />
