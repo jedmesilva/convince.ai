@@ -38,8 +38,8 @@ const ConvincementMeter = ({ level, isAnimating }) => {
   };
 
   return (
-    <div className="px-4 pb-3 border-b border-gray-700">
-      <div className="flex items-center justify-between mb-2">
+    <div className="px-4 py-4 border-b border-gray-700">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <Brain className="w-4 h-4 text-violet-400" />
           <span className="text-xs text-violet-300/70">Nível de Convencimento</span>
@@ -90,8 +90,8 @@ const Timer = ({ timeLeft, isActive, isBlinking }) => {
   if (!isActive) return null;
 
   return (
-    <div className="px-4 pb-3">
-      <div className="flex items-center justify-between mb-2">
+    <div className="px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-violet-300/70">Tempo restante</span>
         <span 
           className={`text-sm font-mono font-bold transition-colors duration-200 ${
