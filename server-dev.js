@@ -1,25 +1,14 @@
 import express from 'express';
+import { createServer as createViteServer } from 'vite';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 5000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'dist')));
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
-
-// In-memory storage for mock data
+// Mock data storage
 let stats = {
   totalAttempts: 127,
   successfulAttempts: 3,
@@ -34,8 +23,9 @@ let attempts = [
   { id: '3', status: 'success', convincing_score: 8.7, created_at: new Date().toISOString(), convincers: { name: 'Maria Costa' } },
 ];
 
-// API Routes
+// API Routes - Must come BEFORE Vite middleware
 app.get('/api/health', (req, res) => {
+  console.log('API: Health check');
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
@@ -44,6 +34,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/prizes/current', (req, res) => {
+  console.log('API: Current prize');
   res.json({
     id: '1',
     amount: stats.currentPrizeAmount,
@@ -53,10 +44,12 @@ app.get('/api/prizes/current', (req, res) => {
 });
 
 app.get('/api/prizes/statistics', (req, res) => {
+  console.log('API: Prize statistics');
   res.json(stats);
 });
 
 app.get('/api/attempts', (req, res) => {
+  console.log('API: Attempts list');
   res.json(attempts);
 });
 
@@ -76,6 +69,7 @@ app.post('/api/convincers', (req, res) => {
     updated_at: new Date().toISOString()
   };
 
+  console.log('API: Created convincer', convincer.name);
   res.status(201).json(convincer);
 });
 
@@ -104,6 +98,7 @@ app.post('/api/payments', (req, res) => {
     created_at: new Date().toISOString()
   };
 
+  console.log('API: Payment processed', payment.id);
   res.status(201).json({
     payment,
     timeBalance,
@@ -111,32 +106,18 @@ app.post('/api/payments', (req, res) => {
   });
 });
 
-// Catch-all handler for frontend routes (must be last)
-app.get('*', (req, res) => {
-  // For now, serve a simple response since we don't have dist yet
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>AI Prize Persuader - API Working</title>
-    </head>
-    <body>
-      <h1>🚀 Servidor Unificado Funcionando!</h1>
-      <p>API disponível em: <a href="/api/health">/api/health</a></p>
-      <p>Estatísticas: <a href="/api/prizes/statistics">/api/prizes/statistics</a></p>
-    </body>
-    </html>
-  `);
+// Create Vite server in middleware mode
+const vite = await createViteServer({
+  server: { middlewareMode: true },
+  appType: 'spa'
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
+// Use vite's connect instance as middleware
+app.use(vite.ssrFixStacktrace);
+app.use(vite.middlewares);
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor unificado rodando em http://0.0.0.0:${PORT}`);
+  console.log(`🚀 Servidor de desenvolvimento rodando em http://0.0.0.0:${PORT}`);
   console.log(`📱 Frontend: http://localhost:${PORT}`);
   console.log(`🔗 API: http://localhost:${PORT}/api`);
 });

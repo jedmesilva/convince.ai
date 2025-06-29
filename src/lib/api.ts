@@ -1,5 +1,5 @@
-// Configurar URL da API para funcionar em todos os ambientes
-const API_BASE_URL = '/api';
+// Configurar URL da API para conectar com servidor API na porta 3001
+const API_BASE_URL = 'http://localhost:3001/api';
 
 export interface Prize {
   id: string;
