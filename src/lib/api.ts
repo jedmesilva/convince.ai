@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+// Configurar URL da API para funcionar em todos os ambientes
+const API_BASE_URL = '/api';
 
 export interface Prize {
   id: string;
@@ -59,7 +60,10 @@ export interface PaymentResponse {
 class ApiService {
   private async fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
     try {
+      console.log(`Fazendo requisição para: ${API_BASE_URL}${endpoint}`);
+      
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
           ...options?.headers,
@@ -67,13 +71,27 @@ class ApiService {
         ...options,
       });
 
+      console.log(`Resposta recebida: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      return await response.json();
+      const responseText = await response.text();
+      console.log(`Texto da resposta:`, responseText);
+      
+      try {
+        const data = JSON.parse(responseText);
+        console.log(`Dados recebidos:`, data);
+        return data;
+      } catch (parseError) {
+        console.error(`Erro ao fazer parse do JSON:`, parseError);
+        console.log(`Resposta original:`, responseText);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
     } catch (error) {
-      console.error(`API call failed for ${endpoint}:`, error);
+      console.error(`Erro na chamada da API para ${endpoint}:`, error);
       throw error;
     }
   }

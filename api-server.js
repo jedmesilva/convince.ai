@@ -7,13 +7,19 @@ const PORT = 3001;
 
 // CORS middleware
 app.use(cors({
-  origin: ['http://localhost:5000', 'http://localhost:8080', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000'],
-  credentials: true,
+  origin: '*', // Permitir todas as origens temporariamente para debug
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
