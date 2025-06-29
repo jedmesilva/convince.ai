@@ -95,8 +95,15 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt }) => {
   return (
     <div className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-violet-300/70">Tempo restante</span>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-violet-300/70">Tempo restante</span>
+          <button
+            onClick={onStopAttempt}
+            className="p-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200"
+            title="Parar tentativa"
+          >
+            <Square className="w-3 h-3" />
+          </button>
           <span 
             className={`text-sm font-mono font-bold transition-colors duration-200 ${
               timeLeft <= 10 
@@ -107,13 +114,6 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt }) => {
             {formatTime(timeLeft)}
           </span>
         </div>
-        <button
-          onClick={onStopAttempt}
-          className="p-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200"
-          title="Parar tentativa"
-        >
-          <Square className="w-3 h-3" />
-        </button>
       </div>
       <div className="w-full bg-slate-700 rounded-full h-2">
         <div 
