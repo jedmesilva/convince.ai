@@ -1,5 +1,7 @@
 // Configurar URL da API para conectar com servidor Supabase na porta 3001
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:3001/api' 
+  : `https://${window.location.hostname}:3001/api`;
 
 export interface Prize {
   id: string;
@@ -93,11 +95,13 @@ class ApiService {
       console.log(`Fazendo requisição para: ${API_BASE_URL}${endpoint}`);
       
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        mode: 'cors',
+        method: options?.method || 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           ...options?.headers,
         },
+        credentials: 'omit',
         ...options,
       });
 
