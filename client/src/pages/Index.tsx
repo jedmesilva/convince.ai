@@ -1,95 +1,65 @@
 
-import React, { useState, useEffect } from 'react';
-import ChatConvinceAi from '../components/ChatConvinceAi';
-import PrizeDisplayComponent from '../components/PrizeDisplayComponent';
-import { apiService, type PrizeStatistics } from '../lib/api';
+import React, { useState } from 'react';
+import AiAvatar from '../components/AiAvatar';
+import PrizeDisplay from '../components/PrizeDisplay';
+import ChatInterface from '../components/ChatInterface';
+import { Toaster } from "../components/ui/toaster";
 
 const Index = () => {
-  // Função para obter a tela ativa do localStorage
-  const getActiveComponentFromCache = (): 'prize' | 'chat' => {
-    try {
-      const cached = localStorage.getItem('activeComponent');
-      return (cached === 'chat' || cached === 'prize') ? cached : 'prize';
-    } catch {
-      return 'prize';
-    }
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [prizeAmount, setPrizeAmount] = useState(5400); // $5400 initial prize
+  const [failedAttempts, setFailedAttempts] = useState(540); // 540 initial failed attempts
+  
+  const handlePaymentSuccess = () => {
+    setIsUnlocked(true);
+    // Increase prize amount by 1 dollar
+    setPrizeAmount(prevAmount => prevAmount + 1);
   };
-
-  const [activeComponent, setActiveComponent] = useState<'prize' | 'chat'>(getActiveComponentFromCache);
-  const [prizeData, setPrizeData] = useState<PrizeStatistics>({
-    totalAttempts: 0,
-    successfulAttempts: 0,
-    failedAttempts: 0,
-    currentPrizeAmount: 100,
-    successRate: '0.00'
-  });
-
-  // useEffect para garantir sincronização com o localStorage e carregar dados da API
-  useEffect(() => {
-    const cachedComponent = getActiveComponentFromCache();
-    if (cachedComponent !== activeComponent) {
-      setActiveComponent(cachedComponent);
+  
+  const handleAiResponse = (response: string) => {
+    // If the response doesn't indicate winning, increment failed attempts
+    if (!response.toLowerCase().includes("parabéns") && !response.toLowerCase().includes("venceu")) {
+      setFailedAttempts(prevAttempts => prevAttempts + 1);
     }
-
-    // Carregar dados do prêmio da API
-    const loadPrizeData = async () => {
-      try {
-        const statistics = await apiService.getPrizeStatistics();
-        setPrizeData(statistics);
-      } catch (error) {
-        console.error('Erro ao carregar dados do prêmio:', error);
-        // Em caso de erro, mantem os valores padrão
-      }
-    };
-
-    loadPrizeData();
     
-    // Atualizar dados a cada 30 segundos
-    const interval = setInterval(loadPrizeData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Função para salvar no localStorage quando muda de tela
-  const saveActiveComponentToCache = (component: 'prize' | 'chat') => {
-    try {
-      localStorage.setItem('activeComponent', component);
-    } catch {
-      // Falha silenciosa se localStorage não estiver disponível
+    // Se a resposta for sobre pagamento, processa o pagamento
+    if (response.toLowerCase().includes("pagamento concluído")) {
+      handlePaymentSuccess();
     }
-  };
-
-  const handleShowChat = () => {
-    setActiveComponent('chat');
-    saveActiveComponentToCache('chat');
-  };
-
-  const handleShowPrize = () => {
-    setActiveComponent('prize');
-    saveActiveComponentToCache('prize');
   };
 
   return (
-    <div className="h-dvh w-screen overflow-hidden">
-      <div className="h-full w-full flex flex-col md:flex-row">
-        {/* PrizeDisplayComponent - à esquerda no desktop, visível no mobile quando activeComponent === 'prize' */}
-        <div className={`flex-1 md:flex-none md:w-3/5 overflow-y-auto scrollbar-hide ${
-          activeComponent === 'prize' ? 'block' : 'hidden md:block'
-        }`}>
-          <PrizeDisplayComponent 
-            prizeAmount={prizeData.currentPrizeAmount} 
-            failedAttempts={prizeData.failedAttempts}
-            winners={prizeData.successfulAttempts}
-            onShowChat={handleShowChat}
-          />
-        </div>
-        
-        {/* ChatConvinceAi - à direita no desktop, visível no mobile quando activeComponent === 'chat' */}
-        <div className={`flex-1 md:flex-none md:w-2/5 overflow-hidden ${
-          activeComponent === 'chat' ? 'block' : 'hidden md:block'
-        }`}>
-          <ChatConvinceAi onShowPrize={handleShowPrize} />
-        </div>
+    <div className="min-h-screen container mx-auto py-8 px-4 pb-[500px]">
+      <header className="mb-8">
+        <h1 className="text-4xl md:text-5xl font-bold text-center text-gradient mb-2">
+          Convença a IA
+        </h1>
+        <p className="text-center text-theme-soft-purple">
+          Ganhe todo o prêmio acumulado se conseguir persuadir nossa IA!
+        </p>
+      </header>
+      
+      <div className="flex flex-col items-center mb-2">
+        <AiAvatar />
       </div>
+      
+      <PrizeDisplay prizeAmount={prizeAmount} failedAttempts={failedAttempts} />
+      
+      <div className="mt-8 max-w-2xl mx-auto relative">
+        <ChatInterface 
+          isUnlocked={isUnlocked} 
+          onAiResponse={handleAiResponse} 
+        />
+      </div>
+      
+      <footer className="mt-16 text-center text-sm text-gray-500">
+        <p>© 2025 Convince AI - Uma chance de $1 para ganhar tudo!</p>
+        <p className="mt-2">
+          Esta é apenas uma demonstração - Nenhuma transação real é processada
+        </p>
+      </footer>
+      
+      <Toaster />
     </div>
   );
 };
