@@ -216,6 +216,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const [showPrizeScreen, setShowPrizeScreen] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [attemptStopped, setAttemptStopped] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -443,9 +444,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
 
       {/* Input Area */}
       <div className="p-4 bg-slate-800 border-t border-slate-700">
-        {attemptStopped ? (
-          <div>Attempt stopped</div>
-        ) : !isUnlocked ? (
+        {!isUnlocked ? (
           <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
             <DialogTrigger asChild>
               <button
