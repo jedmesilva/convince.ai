@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square } from 'lucide-react';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
@@ -58,7 +58,7 @@ const ConvincementMeter = ({ level, isAnimating }) => {
           </span>
         </div>
       </div>
-      
+
       <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
         <div 
           className={`h-3 rounded-full transition-all duration-1000 ease-out bg-gradient-to-r ${getConvincementColor(level)} ${
@@ -67,7 +67,7 @@ const ConvincementMeter = ({ level, isAnimating }) => {
           style={{ width: `${level}%` }}
         />
       </div>
-      
+
       <div className="flex justify-between items-center mt-1">
         <span className="text-xs text-violet-300/60">
           {getConvincementStatus(level)}
@@ -81,7 +81,7 @@ const ConvincementMeter = ({ level, isAnimating }) => {
 };
 
 // Componente para o timer
-const Timer = ({ timeLeft, isActive, isBlinking }) => {
+const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -96,15 +96,24 @@ const Timer = ({ timeLeft, isActive, isBlinking }) => {
     <div className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-violet-300/70">Tempo restante</span>
-        <span 
-          className={`text-sm font-mono font-bold transition-colors duration-200 ${
-            timeLeft <= 10 
-              ? `${isBlinking ? 'text-red-500' : 'text-red-300'}` 
-              : 'text-white'
-          }`}
-        >
-          {formatTime(timeLeft)}
-        </span>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={onStopAttempt}
+            className="p-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200"
+            title="Parar tentativa"
+          >
+            <Square className="w-3 h-3" />
+          </button>
+          <span 
+            className={`text-sm font-mono font-bold transition-colors duration-200 ${
+              timeLeft <= 10 
+                ? `${isBlinking ? 'text-red-500' : 'text-red-300'}` 
+                : 'text-white'
+            }`}
+          >
+            {formatTime(timeLeft)}
+          </span>
+        </div>
       </div>
       <div className="w-full bg-slate-700 rounded-full h-2">
         <div 
@@ -143,7 +152,7 @@ const useTimer = (initialTime, isActive, onTimerEnd) => {
 
   useEffect(() => {
     let interval = null;
-    
+
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft(time => {
@@ -155,7 +164,7 @@ const useTimer = (initialTime, isActive, onTimerEnd) => {
         });
       }, 1000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -163,7 +172,7 @@ const useTimer = (initialTime, isActive, onTimerEnd) => {
 
   useEffect(() => {
     let blinkInterval = null;
-    
+
     if (timeLeft <= 10 && timeLeft > 0 && isActive) {
       blinkInterval = setInterval(() => {
         setIsBlinking(prev => !prev);
@@ -171,7 +180,7 @@ const useTimer = (initialTime, isActive, onTimerEnd) => {
     } else {
       setIsBlinking(false);
     }
-    
+
     return () => {
       if (blinkInterval) clearInterval(blinkInterval);
     };
@@ -198,7 +207,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       isBot: true
     }
   ]);
-  
+
   const [inputText, setInputText] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isTimerActive, setIsTimerActive] = useState(false);
@@ -206,7 +215,9 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const [isConvincementAnimating, setIsConvincementAnimating] = useState(false);
   const [showPrizeScreen, setShowPrizeScreen] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  
+  const [attemptStopped, setAttemptStopped] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -230,42 +241,42 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const analyzeArgument = useCallback((text) => {
     const lowerText = text.toLowerCase();
     let change = 0;
-    
+
     const { positiveWords, strongPositiveWords, negativeWords, scores } = ARGUMENT_ANALYSIS;
-    
+
     // Análise de palavras positivas
     positiveWords.forEach(word => {
       if (lowerText.includes(word)) change += scores.positive;
     });
-    
+
     strongPositiveWords.forEach(word => {
       if (lowerText.includes(word)) change += scores.strongPositive;
     });
-    
+
     // Análise de palavras negativas
     negativeWords.forEach(word => {
       if (lowerText.includes(word)) change += scores.negative;
     });
-    
+
     // Bônus por tamanho
     if (text.length > 100) change += scores.lengthBonus100;
     if (text.length > 200) change += scores.lengthBonus200;
-    
+
     // Bônus por números
     if (/\d+/.test(text)) change += scores.numberBonus;
-    
+
     // Penalidade por CAPS
     if (text === text.toUpperCase() && text.length > 10) {
       change += scores.capsLockPenalty;
     }
-    
+
     return Math.max(-20, Math.min(25, change));
   }, []);
 
   // Função para atualizar nível de convencimento
   const updateConvincementLevel = useCallback((change) => {
     setIsConvincementAnimating(true);
-    
+
     setTimeout(() => {
       setConvincementLevel(prev => Math.max(0, Math.min(100, prev + change)));
       setTimeout(() => setIsConvincementAnimating(false), 500);
@@ -283,46 +294,46 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     } else if (convincementChange < -5) {
       return "Hmm, esse argumento não me convence muito. Tem algo mais sólido?";
     }
-    
+
     if (newLevel >= 90) {
       return "🎉 Parabéns! Você me convenceu completamente! Seus argumentos são irrefutáveis!";
     }
-    
+
     return "Interessante perspectiva. O que mais você tem a dizer?";
   }, []);
 
   const handleSendMessage = useCallback(() => {
     if (!inputText.trim() || !isUnlocked) return;
-    
+
     const convincementChange = analyzeArgument(inputText);
     const currentTime = new Date().toLocaleTimeString('pt-BR', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
-    
+
     const newMessage = {
       id: Date.now(), // Usando timestamp para ID único
       text: inputText,
       timestamp: currentTime,
       isBot: false
     };
-    
+
     setMessages(prev => [...prev, newMessage]);
     setInputText("");
-    
+
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = '24px';
     }
-    
+
     updateConvincementLevel(convincementChange);
-    
+
     // Resposta do bot
     setTimeout(() => {
       const newLevel = Math.max(0, Math.min(100, convincementLevel + convincementChange));
       const botResponseText = generateBotResponse(convincementChange, newLevel);
-      
+
       const botResponse = {
         id: Date.now() + 1,
         text: botResponseText,
@@ -332,7 +343,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
         }),
         isBot: true
       };
-      
+
       setMessages(prev => [...prev, botResponse]);
     }, 1000);
   }, [inputText, isUnlocked, analyzeArgument, updateConvincementLevel, convincementLevel, generateBotResponse]);
@@ -346,6 +357,16 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     setIsUnlocked(true);
     resetTimer();
     setIsTimerActive(true);
+    setAttemptStopped(false);
+  }, [resetTimer]);
+
+  const handleStopAttempt = useCallback(() => {
+    setAttemptStopped(true);
+    setIsTimerActive(false);
+    setInputText("");
+    setIsLoading(false);
+    setIsUnlocked(false);
+    resetTimer();
   }, [resetTimer]);
 
   const handleKeyPress = useCallback((e) => {
@@ -374,7 +395,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
           animation: scale-pulse 1.2s ease-in-out infinite;
         }
       `}</style>
-      
+
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700">
         <div className="flex items-center justify-between p-4">
@@ -399,16 +420,17 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
             <Trophy className="w-5 h-5 text-purple-400" />
           </button>
         </div>
-        
+
         <ConvincementMeter 
           level={convincementLevel} 
           isAnimating={isConvincementAnimating} 
         />
-        
+
         <Timer 
           timeLeft={timeLeft}
-          isActive={isTimerActive}
+          isActive={isTimerActive && !attemptStopped}
           isBlinking={isBlinking}
+          onStopAttempt={handleStopAttempt}
         />
       </div>
 
