@@ -49,7 +49,8 @@ export interface Payment {
 export interface TimeBalance {
   id: string;
   convincer_id: string;
-  total_time_seconds: number;
+  payment_id: string;
+  amount_time_seconds: number;
   status: string;
   created_at: string;
   updated_at: string;

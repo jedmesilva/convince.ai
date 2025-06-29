@@ -256,7 +256,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     try {
       const timeBalance = await apiService.getTimeBalance(user.id);
       setUserTimeBalance(timeBalance);
-      setAvailableTime(timeBalance.total_time_seconds || 0);
+      setAvailableTime(timeBalance.amount_time_seconds || 0);
     } catch (error) {
       console.error('Error loading time balance:', error);
       setAvailableTime(0);

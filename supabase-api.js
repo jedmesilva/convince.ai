@@ -420,11 +420,11 @@ app.post('/api/payments', async (req, res) => {
     let timeBalance;
     if (existingBalance) {
       // Usuário já tem saldo - adicionar o novo tempo comprado
-      const newTotalTime = existingBalance.total_time_seconds + time_purchased_seconds;
+      const newTotalTime = existingBalance.amount_time_seconds + time_purchased_seconds;
       const { data: updatedBalance, error: updateError } = await supabase
         .from('time_balances')
         .update({
-          total_time_seconds: newTotalTime,
+          amount_time_seconds: newTotalTime,
           updated_at: new Date().toISOString()
         })
         .eq('convincer_id', convincer_id)
@@ -442,7 +442,8 @@ app.post('/api/payments', async (req, res) => {
         .from('time_balances')
         .insert({
           convincer_id,
-          total_time_seconds: time_purchased_seconds,
+          payment_id: payment.id,
+          amount_time_seconds: time_purchased_seconds,
           status: 'active'
         })
         .select()
@@ -485,7 +486,7 @@ app.get('/api/time-balance/:convincer_id', async (req, res) => {
     if (!data) {
       return res.json({
         convincer_id,
-        total_time_seconds: 0,
+        amount_time_seconds: 0,
         status: 'inactive'
       });
     }
@@ -519,13 +520,13 @@ app.put('/api/time-balance/:convincer_id', async (req, res) => {
     }
 
     // Calculate new balance
-    const newTotalTime = Math.max(0, currentBalance.total_time_seconds - seconds_to_subtract);
+    const newTotalTime = Math.max(0, currentBalance.amount_time_seconds - seconds_to_subtract);
 
     // Update balance
     const { data: updatedBalance, error: updateError } = await supabase
       .from('time_balances')
       .update({
-        total_time_seconds: newTotalTime,
+        amount_time_seconds: newTotalTime,
         updated_at: new Date().toISOString()
       })
       .eq('convincer_id', convincer_id)
