@@ -8,11 +8,13 @@ import { WebSocketServer, WebSocket } from 'ws';
 const connections = new Map<string, WebSocket>();
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // API Routes
-  const apiRouter = express.Router();
+  // Note: API routes are now configured in index.ts before this function
+  
+  // Legacy API Routes (keep for WebSocket functionality)
+  const legacyRouter = express.Router();
   
   // Get stats (prize amount and failed attempts)
-  apiRouter.get("/stats", async (req, res) => {
+  legacyRouter.get("/stats", async (req, res) => {
     try {
       const prizeAmount = await storage.getPrizeAmount();
       const failedAttempts = await storage.getFailedAttemptsCount();
@@ -28,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chat endpoint
-  apiRouter.post("/chat", async (req, res) => {
+  legacyRouter.post("/chat", async (req, res) => {
     try {
       const { message } = req.body;
       
@@ -114,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment simulation endpoint
-  apiRouter.post("/payment", async (req, res) => {
+  legacyRouter.post("/payment", async (req, res) => {
     try {
       // Get or create session ID from cookies
       let sessionId = req.cookies?.sessionId;
@@ -140,8 +142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Use API router with /api prefix (these are the old routes)
-  app.use("/api/old", apiRouter);
+  // Use legacy router with /api/old prefix (these are the old routes)
+  app.use("/api/old", legacyRouter);
 
   const httpServer = createServer(app);
   

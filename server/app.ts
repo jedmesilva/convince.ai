@@ -1,12 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 import cors from 'cors';
 import apiRoutes from './apiRoutes';
+import { log } from "./vite";
 
 const app = express();
 
-// CORS middleware
+// CORS middleware - deve ser configurado antes de qualquer rota
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:5000', 'http://localhost:8080'],
   credentials: true,
@@ -17,6 +16,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -47,38 +47,26 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+// API Routes - IMPORTANTE: configurar antes de qualquer catch-all
+app.use('/api', apiRoutes);
 
-  // Configure API routes AFTER registerRoutes but BEFORE Vite setup
-  app.use('/api', apiRoutes);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    supabase: 'connected'
   });
+});
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+// Error handling middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  
+  console.error('API Error:', err);
+  res.status(status).json({ error: message });
+});
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+export default app;

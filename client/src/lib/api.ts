@@ -1,4 +1,4 @@
-// Configurar URL da API para conectar com servidor API na porta 3001
+// Configurar URL da API para conectar com servidor Supabase na porta 3001
 const API_BASE_URL = 'http://localhost:3001/api';
 
 export interface Prize {
@@ -75,23 +75,18 @@ class ApiService {
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`Erro HTTP ${response.status}:`, errorText);
         throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      const responseText = await response.text();
-      console.log(`Texto da resposta:`, responseText);
-      
-      try {
-        const data = JSON.parse(responseText);
-        console.log(`Dados recebidos:`, data);
-        return data;
-      } catch (parseError) {
-        console.error(`Erro ao fazer parse do JSON:`, parseError);
-        console.log(`Resposta original:`, responseText);
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
+      const data = await response.json();
+      console.log(`Dados recebidos:`, data);
+      return data;
     } catch (error) {
       console.error(`Erro na chamada da API para ${endpoint}:`, error);
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Erro de conexão com o servidor. Verifique se o servidor está rodando.');
+      }
       throw error;
     }
   }

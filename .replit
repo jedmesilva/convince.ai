@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20", "web", "postgresql-16"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
@@ -48,20 +48,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "API Server"
+args = "Start application"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "API Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api-server.js"
-waitForPort = 3001
+args = "API Supabase Server"
 
 [[workflows.workflow]]
 name = "Start application"
@@ -71,3 +62,12 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev -- --port 5000 --host 0.0.0.0"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "API Supabase Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node api-server-supabase.js"
+waitForPort = 3001
