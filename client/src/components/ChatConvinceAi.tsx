@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, type TimeBalance } from '../lib/api';
 
-const TIMER_DURATION = 30;
 const INITIAL_CONVINCEMENT = 15;
 
 // Constantes para análise de argumentos
@@ -83,14 +82,14 @@ const ConvincementMeter = ({ level, isAnimating }) => {
 };
 
 // Componente para o timer
-const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt }) => {
+const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progressPercentage = ((TIMER_DURATION - timeLeft) / TIMER_DURATION) * 100;
+  const progressPercentage = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
 
   if (!isActive) return null;
 
@@ -149,12 +148,14 @@ const Message = ({ message }) => (
 
 // Hook customizado para timer baseado no saldo real do usuário
 const useRealTimeTimer = (availableTime, isActive, onTimerEnd, userId) => {
-  const [timeLeft, setTimeLeft] = useState(Math.min(TIMER_DURATION, availableTime));
+  const [timeLeft, setTimeLeft] = useState(availableTime || 0);
   const [isBlinking, setIsBlinking] = useState(false);
+  const [initialTime, setInitialTime] = useState(availableTime || 0);
 
   // Atualizar timeLeft quando availableTime mudar
   useEffect(() => {
-    setTimeLeft(Math.min(TIMER_DURATION, availableTime));
+    setTimeLeft(availableTime || 0);
+    setInitialTime(availableTime || 0);
   }, [availableTime]);
 
   useEffect(() => {
@@ -211,11 +212,12 @@ const useRealTimeTimer = (availableTime, isActive, onTimerEnd, userId) => {
   }, [timeLeft, isActive]);
 
   const resetTimer = useCallback(() => {
-    setTimeLeft(Math.min(TIMER_DURATION, availableTime));
+    setTimeLeft(availableTime || 0);
+    setInitialTime(availableTime || 0);
     setIsBlinking(false);
   }, [availableTime]);
 
-  return { timeLeft, isBlinking, resetTimer };
+  return { timeLeft, isBlinking, resetTimer, initialTime };
 };
 
 interface MobileChatProps {
@@ -286,7 +288,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     loadUserTimeBalance();
   }, [loadUserTimeBalance]);
 
-  const { timeLeft, isBlinking, resetTimer } = useRealTimeTimer(availableTime, isTimerActive, onTimerEnd, user?.id);
+  const { timeLeft, isBlinking, resetTimer, initialTime } = useRealTimeTimer(availableTime, isTimerActive, onTimerEnd, user?.id);
 
   // Função otimizada para análise de argumentos
   const analyzeArgument = useCallback((text) => {
@@ -406,12 +408,11 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const handlePaymentSuccess = useCallback(() => {
     setShowPaymentDialog(false);
     setIsUnlocked(true);
-    resetTimer();
     setIsTimerActive(true);
     setAttemptStopped(false);
     // Recarregar saldo após pagamento bem-sucedido
     loadUserTimeBalance();
-  }, [resetTimer, loadUserTimeBalance]);
+  }, [loadUserTimeBalance]);
 
   const handleStopAttempt = useCallback(() => {
     setAttemptStopped(true);
@@ -484,6 +485,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
           isActive={isTimerActive && !attemptStopped}
           isBlinking={isBlinking}
           onStopAttempt={handleStopAttempt}
+          totalTime={initialTime || availableTime}
         />
       </div>
 
