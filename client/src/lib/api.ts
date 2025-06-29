@@ -46,16 +46,18 @@ export interface Payment {
   created_at: string;
 }
 
+export interface TimeBalance {
+  id: string;
+  convincer_id: string;
+  total_time_seconds: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PaymentResponse {
   payment: Payment;
-  timeBalance: {
-    id: string;
-    convincer_id: string;
-    payment_id: string;
-    amount_time_seconds: number;
-    status: string;
-    created_at: string;
-  };
+  timeBalance: TimeBalance;
   success: boolean;
 }
 
@@ -187,6 +189,18 @@ class ApiService {
         amount_paid,
         time_purchased_seconds,
       }),
+    });
+  }
+
+  // Time Balance endpoints
+  async getTimeBalance(convincer_id: string): Promise<TimeBalance> {
+    return this.fetchJson(`/time-balance/${convincer_id}`);
+  }
+
+  async updateTimeBalance(convincer_id: string, seconds_to_subtract: number): Promise<TimeBalance> {
+    return this.fetchJson(`/time-balance/${convincer_id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ seconds_to_subtract }),
     });
   }
 }

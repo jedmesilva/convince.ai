@@ -47,13 +47,12 @@ export const ai_responses = pgTable("ai_responses", {
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Time Balances table - purchased time for attempts
+// Time Balances table - unique balance per user
 export const time_balances = pgTable("time_balances", {
   id: uuid("id").primaryKey().defaultRandom(),
-  convincer_id: uuid("convincer_id").notNull().references(() => convincers.id),
-  payment_id: uuid("payment_id").notNull(),
-  amount_time_seconds: integer("amount_time_seconds").notNull(),
-  status: text("status").notNull().default("active"), // active, used, expired
+  convincer_id: uuid("convincer_id").notNull().references(() => convincers.id).unique(), // único por usuário
+  total_time_seconds: integer("total_time_seconds").notNull().default(0), // saldo total acumulado
+  status: text("status").notNull().default("active"), // active, suspended
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 });

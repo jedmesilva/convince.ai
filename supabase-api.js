@@ -410,21 +410,49 @@ app.post('/api/payments', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao processar pagamento' });
     }
 
-    // Create time balance
-    const { data: timeBalance, error: timeBalanceError } = await supabase
+    // Update or create time balance (único por usuário)
+    const { data: existingBalance, error: balanceError } = await supabase
       .from('time_balances')
-      .insert({
-        convincer_id,
-        payment_id: payment.id,
-        amount_time_seconds: time_purchased_seconds,
-        status: 'active'
-      })
-      .select()
+      .select('*')
+      .eq('convincer_id', convincer_id)
       .single();
 
-    if (timeBalanceError) {
-      console.error('Error creating time balance:', timeBalanceError);
-      return res.status(500).json({ error: 'Erro ao criar saldo de tempo' });
+    let timeBalance;
+    if (existingBalance) {
+      // Usuário já tem saldo - adicionar o novo tempo comprado
+      const newTotalTime = existingBalance.total_time_seconds + time_purchased_seconds;
+      const { data: updatedBalance, error: updateError } = await supabase
+        .from('time_balances')
+        .update({
+          total_time_seconds: newTotalTime,
+          updated_at: new Date().toISOString()
+        })
+        .eq('convincer_id', convincer_id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating time balance:', updateError);
+        return res.status(500).json({ error: 'Erro ao atualizar saldo de tempo' });
+      }
+      timeBalance = updatedBalance;
+    } else {
+      // Primeiro saldo do usuário - criar novo registro
+      const { data: newBalance, error: createError } = await supabase
+        .from('time_balances')
+        .insert({
+          convincer_id,
+          total_time_seconds: time_purchased_seconds,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating time balance:', createError);
+        return res.status(500).json({ error: 'Erro ao criar saldo de tempo' });
+      }
+      timeBalance = newBalance;
     }
 
     res.json({
@@ -434,6 +462,84 @@ app.post('/api/payments', async (req, res) => {
     });
   } catch (error) {
     console.error('Process payment error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Get user time balance
+app.get('/api/time-balance/:convincer_id', async (req, res) => {
+  try {
+    const { convincer_id } = req.params;
+    
+    const { data, error } = await supabase
+      .from('time_balances')
+      .select('*')
+      .eq('convincer_id', convincer_id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching time balance:', error);
+      return res.status(500).json({ error: 'Erro ao buscar saldo de tempo' });
+    }
+
+    if (!data) {
+      return res.json({
+        convincer_id,
+        total_time_seconds: 0,
+        status: 'inactive'
+      });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get time balance error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Update user time balance (decrementar tempo)
+app.put('/api/time-balance/:convincer_id', async (req, res) => {
+  try {
+    const { convincer_id } = req.params;
+    const { seconds_to_subtract } = req.body;
+    
+    if (!seconds_to_subtract || seconds_to_subtract <= 0) {
+      return res.status(400).json({ error: 'Tempo a subtrair deve ser maior que zero' });
+    }
+
+    // Get current balance
+    const { data: currentBalance, error: fetchError } = await supabase
+      .from('time_balances')
+      .select('*')
+      .eq('convincer_id', convincer_id)
+      .single();
+
+    if (fetchError || !currentBalance) {
+      return res.status(404).json({ error: 'Saldo de tempo não encontrado' });
+    }
+
+    // Calculate new balance
+    const newTotalTime = Math.max(0, currentBalance.total_time_seconds - seconds_to_subtract);
+
+    // Update balance
+    const { data: updatedBalance, error: updateError } = await supabase
+      .from('time_balances')
+      .update({
+        total_time_seconds: newTotalTime,
+        updated_at: new Date().toISOString()
+      })
+      .eq('convincer_id', convincer_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating time balance:', updateError);
+      return res.status(500).json({ error: 'Erro ao atualizar saldo de tempo' });
+    }
+
+    res.json(updatedBalance);
+  } catch (error) {
+    console.error('Update time balance error:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -452,7 +558,9 @@ app.get('/', (req, res) => {
       register: 'POST /api/auth/register',
       convincers: 'POST /api/convincers',
       attempts: 'GET /api/attempts',
-      payments: 'POST /api/payments'
+      payments: 'POST /api/payments',
+      timeBalance: 'GET /api/time-balance/:convincer_id',
+      updateTimeBalance: 'PUT /api/time-balance/:convincer_id'
     }
   });
 });

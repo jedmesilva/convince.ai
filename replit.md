@@ -97,6 +97,11 @@ This is a React-based web application called "ai-prize-persuader" that challenge
 
 Changelog:
 - June 27, 2025. Initial setup
+- June 29, 2025. Implementado sistema de time_balances único por usuário:
+  * Corrigida estrutura para um saldo único por usuário (não um registro por pagamento)
+  * Implementados endpoints para consultar e atualizar saldo em tempo real
+  * Timer do chat agora decrementa saldo real do banco de dados a cada segundo
+  * Sistema de pagamento agora acumula tempo no saldo existente do usuário
 
 # User Preferences
 

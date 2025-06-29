@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock } from 'lucide-react';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
+import { apiService, type TimeBalance } from '../lib/api';
 
 const TIMER_DURATION = 30;
 const INITIAL_CONVINCEMENT = 15;
@@ -146,30 +147,52 @@ const Message = ({ message }) => (
   </div>
 );
 
-// Hook customizado para timer
-const useTimer = (initialTime, isActive, onTimerEnd) => {
-  const [timeLeft, setTimeLeft] = useState(initialTime);
+// Hook customizado para timer baseado no saldo real do usuário
+const useRealTimeTimer = (availableTime, isActive, onTimerEnd, userId) => {
+  const [timeLeft, setTimeLeft] = useState(Math.min(TIMER_DURATION, availableTime));
   const [isBlinking, setIsBlinking] = useState(false);
+
+  // Atualizar timeLeft quando availableTime mudar
+  useEffect(() => {
+    setTimeLeft(Math.min(TIMER_DURATION, availableTime));
+  }, [availableTime]);
 
   useEffect(() => {
     let interval = null;
 
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(time => {
-          if (time <= 1) {
-            onTimerEnd();
-            return initialTime;
+    if (isActive && timeLeft > 0 && availableTime > 0) {
+      interval = setInterval(async () => {
+        try {
+          // Decrementar 1 segundo no banco de dados
+          if (userId) {
+            await apiService.updateTimeBalance(userId, 1);
           }
-          return time - 1;
-        });
+          
+          setTimeLeft(time => {
+            if (time <= 1) {
+              onTimerEnd();
+              return 0;
+            }
+            return time - 1;
+          });
+        } catch (error) {
+          console.error('Error updating time balance:', error);
+          // Se falhar, ainda decrementar localmente
+          setTimeLeft(time => {
+            if (time <= 1) {
+              onTimerEnd();
+              return 0;
+            }
+            return time - 1;
+          });
+        }
       }, 1000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, initialTime, onTimerEnd]);
+  }, [isActive, timeLeft, availableTime, onTimerEnd, userId]);
 
   useEffect(() => {
     let blinkInterval = null;
@@ -188,9 +211,9 @@ const useTimer = (initialTime, isActive, onTimerEnd) => {
   }, [timeLeft, isActive]);
 
   const resetTimer = useCallback(() => {
-    setTimeLeft(initialTime);
+    setTimeLeft(Math.min(TIMER_DURATION, availableTime));
     setIsBlinking(false);
-  }, [initialTime]);
+  }, [availableTime]);
 
   return { timeLeft, isBlinking, resetTimer };
 };
@@ -220,9 +243,32 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [attemptStopped, setAttemptStopped] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userTimeBalance, setUserTimeBalance] = useState<TimeBalance | null>(null);
+  const [availableTime, setAvailableTime] = useState(0); // tempo disponível em segundos
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // Função para carregar saldo de tempo do usuário
+  const loadUserTimeBalance = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const timeBalance = await apiService.getTimeBalance(user.id);
+      setUserTimeBalance(timeBalance);
+      setAvailableTime(timeBalance.total_time_seconds || 0);
+    } catch (error) {
+      console.error('Error loading time balance:', error);
+      setAvailableTime(0);
+    }
+  }, [user?.id]);
+
+  // Carregar saldo ao montar o componente ou quando usuário mudar
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadUserTimeBalance();
+    }
+  }, [isAuthenticated, user, loadUserTimeBalance]);
 
   // Função para scroll automático
   const scrollToBottom = useCallback(() => {
@@ -236,9 +282,11 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const onTimerEnd = useCallback(() => {
     setIsUnlocked(false);
     setIsTimerActive(false);
-  }, []);
+    // Recarregar saldo após timer acabar
+    loadUserTimeBalance();
+  }, [loadUserTimeBalance]);
 
-  const { timeLeft, isBlinking, resetTimer } = useTimer(TIMER_DURATION, isTimerActive, onTimerEnd);
+  const { timeLeft, isBlinking, resetTimer } = useRealTimeTimer(availableTime, isTimerActive, onTimerEnd, user?.id);
 
   // Função otimizada para análise de argumentos
   const analyzeArgument = useCallback((text) => {
@@ -361,7 +409,9 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     resetTimer();
     setIsTimerActive(true);
     setAttemptStopped(false);
-  }, [resetTimer]);
+    // Recarregar saldo após pagamento bem-sucedido
+    loadUserTimeBalance();
+  }, [resetTimer, loadUserTimeBalance]);
 
   const handleStopAttempt = useCallback(() => {
     setAttemptStopped(true);
