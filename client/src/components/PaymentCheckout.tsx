@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Plus, Minus, CreditCard, QrCode, Clock, ShoppingCart, Eye, EyeOff } from 'lucide-react';
+import { DollarSign, Plus, Minus, CreditCard, QrCode, Clock, ShoppingCart, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../lib/api';
 
@@ -10,7 +10,8 @@ interface CheckoutProps {
 const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
   const { isAuthenticated, user, checkEmail, login, register } = useAuth();
   
-  const [currentStep, setCurrentStep] = useState(isAuthenticated ? 'payment' : 'email');
+  // Definir o passo inicial baseado na autenticação
+  const [currentStep, setCurrentStep] = useState<'email' | 'login' | 'register' | 'payment'>('email');
   const [email, setEmail] = useState('');
   const [hasAccount, setHasAccount] = useState(false);
   const [password, setPassword] = useState('');
@@ -32,11 +33,15 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
   const totalPrice = attempts * pricePerAttempt;
   const totalTime = attempts * minutesPerAttempt;
 
-  // Initialize step based on authentication status
+  // Inicializar o passo correto baseado no status de autenticação
   useEffect(() => {
     if (isAuthenticated && user) {
+      // Usuário já está autenticado - vai direto para pagamento
       setCurrentStep('payment');
       setEmail(user.email);
+    } else {
+      // Usuário não autenticado - começa pelo email
+      setCurrentStep('email');
     }
   }, [isAuthenticated, user]);
 
@@ -63,7 +68,13 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     try {
       const result = await checkEmail(email);
       setHasAccount(result.exists);
-      setCurrentStep('auth');
+      
+      // Direcionar para o formulário correto baseado na existência da conta
+      if (result.exists) {
+        setCurrentStep('login'); // Usuário tem conta - formulário de login (só senha)
+      } else {
+        setCurrentStep('register'); // Usuário não tem conta - formulário de cadastro (nome + senha)
+      }
     } catch (error) {
       console.error('Error checking email:', error);
       setError('Erro ao verificar email. Tente novamente.');
@@ -78,57 +89,67 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     }
   };
 
-  const handleAuthSubmit = async (e?: React.FormEvent) => {
+  const handleLoginSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    if (!password) {
+      setError('Senha é obrigatória');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      if (hasAccount) {
-        // Login existing user
-        if (!password) {
-          setError('Senha é obrigatória');
-          setLoading(false);
-          return;
-        }
-
-        const success = await login(email, password);
-        if (success) {
-          setCurrentStep('payment');
-        } else {
-          setError('Email ou senha incorretos');
-        }
+      const success = await login(email, password);
+      if (success) {
+        setCurrentStep('payment');
       } else {
-        // Register new user
-        if (!name || !password) {
-          setError('Nome e senha são obrigatórios');
-          setLoading(false);
-          return;
-        }
-
-        const success = await register(email, password, name);
-        if (success) {
-          setCurrentStep('payment');
-        } else {
-          setError('Erro ao criar conta. Tente novamente.');
-        }
+        setError('Email ou senha incorretos');
       }
     } catch (error) {
-      console.error('Auth error:', error);
+      console.error('Login error:', error);
       setError('Erro interno. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAuthKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      if (hasAccount && password) {
-        handleAuthSubmit();
-      } else if (!hasAccount && name && password) {
-        handleAuthSubmit();
+  const handleRegisterSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    if (!name || !password) {
+      setError('Nome e senha são obrigatórios');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const success = await register(email, password, name);
+      if (success) {
+        setCurrentStep('payment');
+      } else {
+        setError('Erro ao criar conta. Tente novamente.');
       }
+    } catch (error) {
+      console.error('Register error:', error);
+      setError('Erro interno. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && password) {
+      handleLoginSubmit();
+    }
+  };
+
+  const handleRegisterKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && name && password) {
+      handleRegisterSubmit();
     }
   };
 
@@ -306,12 +327,18 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
               </div>
             )}
 
-            {/* Etapa 2: Autenticação */}
-            {currentStep === 'auth' && (
+            {/* Etapa 2: Login - usuário tem conta */}
+            {currentStep === 'login' && (
               <div className="bg-slate-800 rounded-2xl p-6 border border-violet-500/20">
-                <h2 className="text-xl font-bold text-violet-100 mb-4">
-                  {hasAccount ? 'Entre na sua conta' : 'Criar conta'}
-                </h2>
+                <div className="flex items-center gap-3 mb-4">
+                  <button 
+                    onClick={() => setCurrentStep('email')}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <h2 className="text-xl font-bold text-violet-100">Entre na sua conta</h2>
+                </div>
                 <div className="space-y-4">
                   <div>
                     <input
@@ -322,26 +349,83 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
                     />
                   </div>
                   
-                  {!hasAccount && (
-                    <div>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        onKeyDown={handleAuthKeyDown}
-                        placeholder="Seu nome completo"
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
-                      />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={handleLoginKeyDown}
+                      placeholder="Sua senha"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  
+                  {error && (
+                    <div className="text-red-400 text-sm text-center">
+                      {error}
                     </div>
                   )}
+                  
+                  <button
+                    onClick={handleLoginSubmit}
+                    disabled={loading || !password}
+                    className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                  >
+                    {loading ? 'Entrando...' : 'Entrar'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Etapa 2: Cadastro - usuário não tem conta */}
+            {currentStep === 'register' && (
+              <div className="bg-slate-800 rounded-2xl p-6 border border-violet-500/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <button 
+                    onClick={() => setCurrentStep('email')}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <h2 className="text-xl font-bold text-violet-100">Criar conta</h2>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <input
+                      type="email"
+                      value={email}
+                      disabled
+                      className="w-full bg-slate-600 border border-slate-500 rounded-lg px-4 py-3 text-slate-300"
+                    />
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyDown={handleRegisterKeyDown}
+                      placeholder="Seu nome completo"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
+                      autoFocus
+                    />
+                  </div>
                   
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={handleAuthKeyDown}
-                      placeholder={hasAccount ? 'Sua senha' : 'Criar senha'}
+                      onKeyDown={handleRegisterKeyDown}
+                      placeholder="Criar senha"
                       className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
                     />
                     <button
@@ -360,11 +444,11 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
                   )}
                   
                   <button
-                    onClick={handleAuthSubmit}
-                    disabled={loading}
+                    onClick={handleRegisterSubmit}
+                    disabled={loading || !name || !password}
                     className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                   >
-                    {loading ? 'Processando...' : (hasAccount ? 'Entrar' : 'Criar conta')}
+                    {loading ? 'Criando conta...' : 'Criar conta'}
                   </button>
                 </div>
               </div>
