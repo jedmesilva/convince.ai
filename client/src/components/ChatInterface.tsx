@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Square } from 'lucide-react';
 import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
 import PaymentPrompt from './PaymentPrompt';
@@ -28,6 +28,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [attemptStopped, setAttemptStopped] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -36,7 +37,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
   }, [messages]);
 
   const handlePaymentSuccess = () => {
+    setAttemptStopped(false);
     onAiResponse('Pagamento concluído');
+  };
+
+  const handleStopAttempt = () => {
+    setAttemptStopped(true);
+    setInputValue('');
+    setIsTyping(false);
+    
+    toast({
+      title: "Tentativa finalizada",
+      description: "Sua tentativa foi interrompida. Faça um novo pagamento para continuar.",
+    });
+  };
+
+  const handleStartNewAttempt = () => {
+    setMessages([initialMessage]);
+    setAttemptStopped(false);
   };
 
   const renderMessage = (message: Message) => {
@@ -134,8 +152,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
         </div>
         
         <div className="border-t border-theme-purple px-4 py-3">
-          {isUnlocked ? (
-            <div className="relative flex items-center">
+          {isUnlocked && !attemptStopped ? (
+            <div className="relative flex items-center gap-2">
               <textarea
                 className="flex-1 w-full bg-gray-800 border border-theme-purple rounded-lg px-4 py-3 pr-12 text-white resize-none focus:outline-none focus:ring-1 focus:ring-theme-purple focus:bg-gray-700 transition-colors duration-200 placeholder:text-gray-500"
                 placeholder="Digite sua mensagem..."
@@ -150,6 +168,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isUnlocked, onAiResponse 
                 className="absolute right-3 top-1/2 -translate-y-1/2 bg-theme-purple hover:bg-theme-vivid-purple text-white rounded-full p-2"
               >
                 <ArrowUp className="h-5 w-5" />
+              </Button>
+              <Button
+                onClick={handleStopAttempt}
+                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-md"
+                title="Parar tentativa"
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : attemptStopped ? (
+            <div className="text-center">
+              <p className="text-gray-400 mb-4">Tentativa finalizada. Inicie uma nova para continuar.</p>
+              <Button
+                onClick={handleStartNewAttempt}
+                className="bg-theme-purple hover:bg-theme-vivid-purple text-white px-6 py-2 rounded-lg"
+              >
+                Iniciar Nova Tentativa
               </Button>
             </div>
           ) : (

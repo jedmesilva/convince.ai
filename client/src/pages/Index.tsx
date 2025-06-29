@@ -9,9 +9,12 @@ const Index = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [prizeAmount, setPrizeAmount] = useState(5400); // $5400 initial prize
   const [failedAttempts, setFailedAttempts] = useState(540); // 540 initial failed attempts
+  const [currentAttemptId, setCurrentAttemptId] = useState<string | null>(null);
   
   const handlePaymentSuccess = () => {
     setIsUnlocked(true);
+    // Generate new attempt ID
+    setCurrentAttemptId(crypto.randomUUID());
     // Increase prize amount by 1 dollar
     setPrizeAmount(prevAmount => prevAmount + 1);
   };
@@ -25,6 +28,12 @@ const Index = () => {
     // Se a resposta for sobre pagamento, processa o pagamento
     if (response.toLowerCase().includes("pagamento concluído")) {
       handlePaymentSuccess();
+    }
+    
+    // Se a tentativa foi parada, reset unlock status
+    if (response.toLowerCase().includes("tentativa parada")) {
+      setIsUnlocked(false);
+      setCurrentAttemptId(null);
     }
   };
 
