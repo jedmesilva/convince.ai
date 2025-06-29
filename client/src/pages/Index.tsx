@@ -19,6 +19,18 @@ const Index = () => {
     setPrizeAmount(prevAmount => prevAmount + 1);
   };
   
+  const handleStopAttempt = () => {
+    setIsUnlocked(false);
+    setCurrentAttemptId(null);
+    // Incrementa tentativas falhadas quando para
+    setFailedAttempts(prevAttempts => prevAttempts + 1);
+  };
+
+  const handleStartNewAttempt = () => {
+    // Nova tentativa será criada quando o pagamento for feito
+    setCurrentAttemptId(crypto.randomUUID());
+  };
+
   const handleAiResponse = (response: string) => {
     // If the response doesn't indicate winning, increment failed attempts
     if (!response.toLowerCase().includes("parabéns") && !response.toLowerCase().includes("venceu")) {
@@ -28,12 +40,6 @@ const Index = () => {
     // Se a resposta for sobre pagamento, processa o pagamento
     if (response.toLowerCase().includes("pagamento concluído")) {
       handlePaymentSuccess();
-    }
-    
-    // Se a tentativa foi parada, reset unlock status
-    if (response.toLowerCase().includes("tentativa parada")) {
-      setIsUnlocked(false);
-      setCurrentAttemptId(null);
     }
   };
 
@@ -57,7 +63,9 @@ const Index = () => {
       <div className="mt-8 max-w-2xl mx-auto relative">
         <ChatInterface 
           isUnlocked={isUnlocked} 
-          onAiResponse={handleAiResponse} 
+          onAiResponse={handleAiResponse}
+          onStopAttempt={handleStopAttempt}
+          onStartNewAttempt={handleStartNewAttempt}
         />
       </div>
       
