@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square } from 'lucide-react';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
@@ -96,15 +96,24 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt }) => {
     <div className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-violet-300/70">Tempo restante</span>
-        <span 
-          className={`text-sm font-mono font-bold transition-colors duration-200 ${
-            timeLeft <= 10 
-              ? `${isBlinking ? 'text-red-500' : 'text-red-300'}` 
-              : 'text-white'
-          }`}
-        >
-          {formatTime(timeLeft)}
-        </span>
+        <div className="flex items-center space-x-2">
+          <span 
+            className={`text-sm font-mono font-bold transition-colors duration-200 ${
+              timeLeft <= 10 
+                ? `${isBlinking ? 'text-red-500' : 'text-red-300'}` 
+                : 'text-white'
+            }`}
+          >
+            {formatTime(timeLeft)}
+          </span>
+          <button
+            onClick={onStopAttempt}
+            className="p-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200"
+            title="Parar tentativa"
+          >
+            <Square className="w-3 h-3" />
+          </button>
+        </div>
       </div>
       <div className="w-full bg-slate-700 rounded-full h-2">
         <div 
@@ -114,12 +123,6 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt }) => {
           style={{ width: `${progressPercentage}%` }}
         />
       </div>
-      <button
-        onClick={onStopAttempt}
-        className="w-full bg-red-500 hover:bg-red-400 text-white font-semibold py-2 rounded-md transition-colors duration-200 mt-2"
-      >
-        Parar Tentativa
-      </button>
     </div>
   );
 };
