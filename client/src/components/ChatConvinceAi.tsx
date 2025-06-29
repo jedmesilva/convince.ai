@@ -100,10 +100,11 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime }) => 
         <div className="flex items-center space-x-2">
           <button
             onClick={onStopAttempt}
-            className="p-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200"
+            className="px-2 py-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200 flex items-center space-x-1"
             title="Parar tentativa"
           >
             <Square className="w-3 h-3" />
+            <span className="text-xs">Parar tentativa</span>
           </button>
           <span 
             className={`text-sm font-mono font-bold transition-colors duration-200 ${
