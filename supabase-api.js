@@ -213,6 +213,161 @@ app.post('/api/convincers', async (req, res) => {
   }
 });
 
+// Check if email exists
+app.post('/api/auth/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email é obrigatório' });
+    }
+
+    const { data, error } = await supabase
+      .from('convincers')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking email:', error);
+      return res.status(500).json({ error: 'Erro ao verificar email' });
+    }
+
+    res.json({
+      exists: !!data,
+      user: data || null
+    });
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Login user
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+    }
+
+    // Authenticate with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (authError) {
+      console.error('Auth error:', authError);
+      return res.status(401).json({ error: 'Email ou senha incorretos' });
+    }
+
+    // Get convincer data
+    const { data: convincer, error: convincerError } = await supabase
+      .from('convincers')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (convincerError) {
+      console.error('Error fetching convincer:', convincerError);
+      return res.status(500).json({ error: 'Erro ao buscar dados do usuário' });
+    }
+
+    res.json({
+      success: true,
+      user: authData.user,
+      convincer: convincer,
+      session: authData.session
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Register user
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+    
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, senha e nome são obrigatórios' });
+    }
+
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name
+        }
+      }
+    });
+
+    if (authError) {
+      console.error('Auth registration error:', authError);
+      if (authError.message.includes('User already registered')) {
+        return res.status(400).json({ error: 'Este email já está cadastrado' });
+      }
+      return res.status(400).json({ error: authError.message });
+    }
+
+    if (!authData.user) {
+      return res.status(400).json({ error: 'Erro ao criar usuário' });
+    }
+
+    // The convincer record will be created automatically by the trigger
+    // Wait a moment and then fetch the convincer data
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const { data: convincer, error: convincerError } = await supabase
+      .from('convincers')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (convincerError) {
+      console.error('Error fetching new convincer:', convincerError);
+      // Trigger might not have run yet, create manually
+      const { data: newConvincer, error: createError } = await supabase
+        .from('convincers')
+        .insert({
+          id: authData.user.id,
+          name: name,
+          email: email,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating convincer manually:', createError);
+        return res.status(500).json({ error: 'Erro ao criar perfil do usuário' });
+      }
+
+      return res.json({
+        success: true,
+        user: authData.user,
+        convincer: newConvincer,
+        session: authData.session
+      });
+    }
+
+    res.json({
+      success: true,
+      user: authData.user,
+      convincer: convincer,
+      session: authData.session
+    });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Process payment
 app.post('/api/payments', async (req, res) => {
   try {
@@ -278,6 +433,9 @@ app.get('/', (req, res) => {
       health: 'GET /api/health',
       currentPrize: 'GET /api/prizes/current',
       statistics: 'GET /api/prizes/statistics',
+      checkEmail: 'POST /api/auth/check-email',
+      login: 'POST /api/auth/login',
+      register: 'POST /api/auth/register',
       convincers: 'POST /api/convincers',
       attempts: 'GET /api/attempts',
       payments: 'POST /api/payments'

@@ -3,6 +3,7 @@ import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square } from 'lucide-r
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
+import { useAuth } from '../contexts/AuthContext';
 
 const TIMER_DURATION = 30;
 const INITIAL_CONVINCEMENT = 15;
@@ -199,6 +200,8 @@ interface MobileChatProps {
 }
 
 export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
+  const { isAuthenticated, user } = useAuth();
+  
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -492,7 +495,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
             />
             <div className="flex justify-between items-center">
               <UserEmail 
-                email="lucas@email.com" 
+                email={user?.email || "user@email.com"} 
                 compact={true}
                 onClick={() => console.log('Clicou no email do usuário')}
               />

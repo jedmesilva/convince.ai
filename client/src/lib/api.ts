@@ -57,6 +57,36 @@ export interface PaymentResponse {
   success: boolean;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthSession {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  user: AuthUser;
+}
+
+export interface CheckEmailResponse {
+  exists: boolean;
+  user: {
+    id: string;
+    email: string;
+  } | null;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  user: AuthUser;
+  convincer: Convincer;
+  session: AuthSession;
+}
+
 class ApiService {
   private async fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
     try {
@@ -115,6 +145,28 @@ class ApiService {
     return this.fetchJson('/convincers', {
       method: 'POST',
       body: JSON.stringify({ name, email }),
+    });
+  }
+
+  // Auth endpoints
+  async checkEmail(email: string): Promise<CheckEmailResponse> {
+    return this.fetchJson('/auth/check-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async login(email: string, password: string): Promise<AuthResponse> {
+    return this.fetchJson('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async register(email: string, password: string, name: string): Promise<AuthResponse> {
+    return this.fetchJson('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, name }),
     });
   }
 

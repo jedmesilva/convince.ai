@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DollarSign, Plus, Minus, CreditCard, QrCode, Clock, ShoppingCart, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../lib/api';
 
 interface CheckoutProps {
-  isLoggedIn?: boolean;
-  userEmail?: string;
   onPaymentSuccess?: () => void;
 }
 
-const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmail = '', onPaymentSuccess }) => {
-  const [currentStep, setCurrentStep] = useState(isLoggedIn ? 'payment' : 'email');
-  const [email, setEmail] = useState(userEmail);
+const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
+  const { isAuthenticated, user, checkEmail, login, register } = useAuth();
+  
+  const [currentStep, setCurrentStep] = useState(isAuthenticated ? 'payment' : 'email');
+  const [email, setEmail] = useState('');
   const [hasAccount, setHasAccount] = useState(false);
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -23,11 +25,20 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
   const [attempts, setAttempts] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const pricePerAttempt = 1;
   const minutesPerAttempt = 2.5;
   const totalPrice = attempts * pricePerAttempt;
   const totalTime = attempts * minutesPerAttempt;
+
+  // Initialize step based on authentication status
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setCurrentStep('payment');
+      setEmail(user.email);
+    }
+  }, [isAuthenticated, user]);
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -42,22 +53,22 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
     setAttempts(prev => increment ? prev + 1 : Math.max(1, prev - 1));
   };
 
-  const simulateEmailCheck = async (emailValue: string) => {
-    setLoading(true);
-    // Simula verificação de email
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simula se o email existe (emails com "test" terão conta)
-    const accountExists = emailValue.includes('test');
-    setHasAccount(accountExists);
-    setCurrentStep('auth');
-    setLoading(false);
-  };
-
-  const handleEmailSubmit = (e?: React.FormEvent) => {
+  const handleEmailSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (email) {
-      simulateEmailCheck(email);
+    if (!email) return;
+
+    setLoading(true);
+    setError('');
+    
+    try {
+      const result = await checkEmail(email);
+      setHasAccount(result.exists);
+      setCurrentStep('auth');
+    } catch (error) {
+      console.error('Error checking email:', error);
+      setError('Erro ao verificar email. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,12 +78,47 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
     }
   };
 
-  const handleAuthSubmit = (e?: React.FormEvent) => {
+  const handleAuthSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (hasAccount && password) {
-      setCurrentStep('payment');
-    } else if (!hasAccount && name && password) {
-      setCurrentStep('payment');
+    
+    setLoading(true);
+    setError('');
+
+    try {
+      if (hasAccount) {
+        // Login existing user
+        if (!password) {
+          setError('Senha é obrigatória');
+          setLoading(false);
+          return;
+        }
+
+        const success = await login(email, password);
+        if (success) {
+          setCurrentStep('payment');
+        } else {
+          setError('Email ou senha incorretos');
+        }
+      } else {
+        // Register new user
+        if (!name || !password) {
+          setError('Nome e senha são obrigatórios');
+          setLoading(false);
+          return;
+        }
+
+        const success = await register(email, password, name);
+        if (success) {
+          setCurrentStep('payment');
+        } else {
+          setError('Erro ao criar conta. Tente novamente.');
+        }
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      setError('Erro interno. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,22 +138,38 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
 
   const handlePurchase = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setLoading(true);
     
-    // Simula processamento do pagamento
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    if (paymentMethod === 'pix') {
-      alert('Código PIX gerado! QR Code disponível para pagamento.');
-    } else {
-      alert('Compra realizada com sucesso! Suas tentativas foram adicionadas.');
+    if (!user || !paymentMethod) {
+      setError('Usuário não autenticado ou método de pagamento não selecionado');
+      return;
     }
     
-    setLoading(false);
+    setLoading(true);
+    setError('');
     
-    // Chama o callback de sucesso se fornecido
-    if (onPaymentSuccess) {
-      onPaymentSuccess();
+    try {
+      // Calculate time in seconds (2.5 minutes per attempt)
+      const timeInSeconds = attempts * minutesPerAttempt * 60;
+      
+      const paymentResponse = await apiService.processPayment(
+        user.id,
+        totalPrice,
+        timeInSeconds
+      );
+      
+      if (paymentResponse.success) {
+        setLoading(false);
+        if (onPaymentSuccess) {
+          onPaymentSuccess();
+        }
+      } else {
+        setError('Erro ao processar pagamento. Tente novamente.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      setError('Erro ao processar pagamento. Tente novamente.');
+      setLoading(false);
     }
   };
 
@@ -228,6 +290,11 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                       className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
                     />
                   </div>
+                  {error && (
+                    <div className="text-red-400 text-sm text-center">
+                      {error}
+                    </div>
+                  )}
                   <button
                     onClick={handleEmailSubmit}
                     disabled={loading || !email}
@@ -286,11 +353,18 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ isLoggedIn = false, userEmai
                     </button>
                   </div>
                   
+                  {error && (
+                    <div className="text-red-400 text-sm text-center">
+                      {error}
+                    </div>
+                  )}
+                  
                   <button
                     onClick={handleAuthSubmit}
-                    className="w-full bg-violet-500 hover:bg-violet-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    disabled={loading}
+                    className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                   >
-                    {hasAccount ? 'Entrar' : 'Criar conta'}
+                    {loading ? 'Processando...' : (hasAccount ? 'Entrar' : 'Criar conta')}
                   </button>
                 </div>
               </div>
