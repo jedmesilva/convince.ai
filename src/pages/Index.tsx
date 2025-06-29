@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ChatConvinceAi from '../components/ChatConvinceAi';
 import PrizeDisplayComponent from '../components/PrizeDisplayComponent';
+import { apiService, type PrizeStatistics } from '../lib/api';
 
 const Index = () => {
   // Função para obter a tela ativa do localStorage
@@ -15,13 +16,37 @@ const Index = () => {
   };
 
   const [activeComponent, setActiveComponent] = useState<'prize' | 'chat'>(getActiveComponentFromCache);
+  const [prizeData, setPrizeData] = useState<PrizeStatistics>({
+    totalAttempts: 0,
+    successfulAttempts: 0,
+    failedAttempts: 0,
+    currentPrizeAmount: 100,
+    successRate: '0.00'
+  });
 
-  // useEffect para garantir sincronização com o localStorage
+  // useEffect para garantir sincronização com o localStorage e carregar dados da API
   useEffect(() => {
     const cachedComponent = getActiveComponentFromCache();
     if (cachedComponent !== activeComponent) {
       setActiveComponent(cachedComponent);
     }
+
+    // Carregar dados do prêmio da API
+    const loadPrizeData = async () => {
+      try {
+        const statistics = await apiService.getPrizeStatistics();
+        setPrizeData(statistics);
+      } catch (error) {
+        console.error('Erro ao carregar dados do prêmio:', error);
+        // Em caso de erro, mantem os valores padrão
+      }
+    };
+
+    loadPrizeData();
+    
+    // Atualizar dados a cada 30 segundos
+    const interval = setInterval(loadPrizeData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Função para salvar no localStorage quando muda de tela
@@ -51,9 +76,9 @@ const Index = () => {
           activeComponent === 'prize' ? 'block' : 'hidden md:block'
         }`}>
           <PrizeDisplayComponent 
-            prizeAmount={5400} 
-            failedAttempts={540}
-            winners={1}
+            prizeAmount={prizeData.currentPrizeAmount} 
+            failedAttempts={prizeData.failedAttempts}
+            winners={prizeData.successfulAttempts}
             onShowChat={handleShowChat}
           />
         </div>

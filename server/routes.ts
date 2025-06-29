@@ -140,8 +140,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Use API router with /api prefix
-  app.use("/api", apiRouter);
+  // Use API router with /api prefix (these are the old routes)
+  app.use("/api/old", apiRouter);
 
   const httpServer = createServer(app);
   

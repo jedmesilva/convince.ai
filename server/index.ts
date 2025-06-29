@@ -1,8 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import cors from 'cors';
+import simpleApiRoutes from './simpleApiRoutes';
 
 const app = express();
+
+// CORS middleware
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:5000', 'http://localhost:8080'],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -37,6 +46,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Add API routes
+  app.use('/api', simpleApiRoutes);
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
