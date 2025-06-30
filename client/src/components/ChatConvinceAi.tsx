@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, StopCircle, Clock } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock } from 'lucide-react';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
@@ -103,7 +103,7 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime }) => 
             className="px-2 py-1 bg-red-500 hover:bg-red-400 text-white rounded transition-colors duration-200 flex items-center space-x-1"
             title="Parar tentativa"
           >
-            <StopCircle className="w-3 h-3 fill-current" />
+            <Square className="w-3 h-3 fill-current" />
             <span className="text-xs">Parar tentativa</span>
           </button>
           <span 
