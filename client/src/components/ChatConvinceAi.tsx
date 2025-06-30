@@ -770,6 +770,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       console.log('Nenhuma tentativa atual para marcar como abandonada');
     }
 
+    // Parar tentativa - resetar estado do chat
     setAttemptStopped(true);
     setIsTimerActive(false);
     setInputText("");
@@ -788,7 +789,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     ]);
     
     resetTimer();
-    console.log('handleStopAttempt completed - chat bloqueado novamente');
+    console.log('handleStopAttempt completed - chat bloqueado, tentativa parada');
   }, [currentAttempt, resetTimer]);
 
   const handleKeyPress = useCallback((e) => {
