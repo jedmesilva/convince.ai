@@ -554,20 +554,9 @@ app.post('/api/attempts', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao criar tentativa' });
     }
 
-    // Deduct time from balance
-    const newBalance = availableTime - available_time_seconds;
-    const { error: updateError } = await supabase
-      .from('time_balances')
-      .update({
-        amount_time_seconds: newBalance,
-        updated_at: new Date().toISOString()
-      })
-      .eq('convincer_id', convincer_id);
-
-    if (updateError) {
-      console.error('Error updating time balance:', updateError);
-      // Continue despite balance update error
-    }
+    // Note: We don't deduct time when creating attempt - time is decremented during chat timer
+    // The available_time_seconds in the attempt represents the maximum time the user can use
+    // Time balance is decremented in real-time during the chat session
 
     res.status(201).json(attempt);
   } catch (error) {
@@ -656,6 +645,14 @@ app.get('/api/attempts/:id/messages', async (req, res) => {
 // POST /api/messages - Create message
 app.post('/api/messages', async (req, res) => {
   try {
+    console.log('Request body for messages:', req.body);
+    console.log('Request headers for messages:', req.headers);
+    
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('Invalid request body for messages:', req.body);
+      return res.status(400).json({ error: 'Dados da requisição inválidos' });
+    }
+    
     const { attempt_id, convincer_id, message, convincing_score_snapshot } = req.body;
 
     const { data, error } = await supabase
