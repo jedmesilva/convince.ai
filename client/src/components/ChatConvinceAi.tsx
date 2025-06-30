@@ -402,9 +402,38 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     }, 1000);
   }, [inputText, isUnlocked, analyzeArgument, updateConvincementLevel, convincementLevel, generateBotResponse]);
 
-  const handlePayToUnlock = useCallback(() => {
-    setShowPaymentDialog(true);
-  }, []);
+  const handlePayToUnlock = useCallback(async () => {
+    // Primeiro, verificar se o usuário está autenticado
+    if (!isAuthenticated || !user) {
+      // Se não estiver autenticado, abrir o checkout para login/cadastro
+      setShowPaymentDialog(true);
+      return;
+    }
+
+    // Se estiver autenticado, verificar se tem saldo de tempo
+    try {
+      setIsLoading(true);
+      const timeBalance = await apiService.getTimeBalance(user.id);
+      
+      // Se tem saldo de tempo disponível (mais de 0 segundos), liberar o chat diretamente
+      if (timeBalance.amount_time_seconds && timeBalance.amount_time_seconds > 0) {
+        setUserTimeBalance(timeBalance);
+        setAvailableTime(timeBalance.amount_time_seconds);
+        setIsUnlocked(true);
+        setIsTimerActive(true);
+        setAttemptStopped(false);
+      } else {
+        // Se não tem saldo de tempo, abrir o checkout para comprar mais tempo
+        setShowPaymentDialog(true);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar saldo de tempo:', error);
+      // Em caso de erro, abrir o checkout como fallback
+      setShowPaymentDialog(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, user, apiService]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPaymentDialog(false);
@@ -501,22 +530,34 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       {/* Input Area */}
       <div className="p-4 bg-slate-800 border-t border-slate-700">
         {!isUnlocked ? (
-          <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-            <DialogTrigger asChild>
-              <button
-                className="w-full bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl"
-              >
-                <Lock className="w-5 h-5" />
-                <span>Desbloquear chat</span>
-              </button>
-            </DialogTrigger>
-            <DialogContent className="!p-0 !m-0 !gap-0 w-[95vw] max-w-6xl h-auto min-h-[300px] max-h-[95dvh] sm:min-h-[400px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-transparent border-none !top-[50%] sm:!top-[50%] !rounded-2xl">
-              <DialogTitle className="sr-only">
-                Checkout - Finalizar Compra
-              </DialogTitle>
-              <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} />
-            </DialogContent>
-          </Dialog>
+          <>
+            <button
+              onClick={handlePayToUnlock}
+              disabled={isLoading}
+              className="w-full bg-violet-400 hover:bg-violet-300 disabled:bg-violet-400/70 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl disabled:hover:scale-100 disabled:hover:shadow-none"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Verificando...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5" />
+                  <span>Desbloquear chat</span>
+                </>
+              )}
+            </button>
+            
+            <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+              <DialogContent className="!p-0 !m-0 !gap-0 w-[95vw] max-w-6xl h-auto min-h-[300px] max-h-[95dvh] sm:min-h-[400px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-transparent border-none !top-[50%] sm:!top-[50%] !rounded-2xl">
+                <DialogTitle className="sr-only">
+                  Checkout - Finalizar Compra
+                </DialogTitle>
+                <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} />
+              </DialogContent>
+            </Dialog>
+          </>
         ) : (
           <div 
             className="bg-slate-700 rounded-3xl p-4 cursor-text"
