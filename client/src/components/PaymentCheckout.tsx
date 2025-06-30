@@ -63,9 +63,20 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess, onClose })
     setAttempts(prev => increment ? prev + 1 : Math.max(1, prev - 1));
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleEmailSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!email) return;
+
+    // Validar formato do email
+    if (!validateEmail(email)) {
+      setError('Por favor, insira um email válido');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -370,10 +381,20 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess, onClose })
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        // Limpar erro quando o usuário começar a digitar novamente
+                        if (error && error.includes('email válido')) {
+                          setError('');
+                        }
+                      }}
                       onKeyDown={handleEmailKeyDown}
                       placeholder="seu@email.com"
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-violet-500 focus:outline-none"
+                      className={`w-full bg-slate-700 border rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none ${
+                        error && error.includes('email válido') 
+                          ? 'border-red-500 focus:border-red-500' 
+                          : 'border-slate-600 focus:border-violet-500'
+                      }`}
                     />
                   </div>
                   {error && (
@@ -383,7 +404,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess, onClose })
                   )}
                   <button
                     onClick={handleEmailSubmit}
-                    disabled={loading || !email}
+                    disabled={loading || !email || !validateEmail(email)}
                     className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                   >
                     {loading ? 'Verificando...' : 'Continuar'}
