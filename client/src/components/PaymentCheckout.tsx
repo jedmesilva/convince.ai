@@ -27,6 +27,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [userTimeBalance, setUserTimeBalance] = useState<number | null>(null);
 
   const pricePerAttempt = 1;
   const minutesPerAttempt = 2.5;
@@ -45,6 +46,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     }
   }, [isAuthenticated, user]);
 
+  // Função para formatar tempo em minutos
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -89,6 +91,35 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     }
   };
 
+  // Função para formatar tempo em segundos para formato legível
+  const formatTimeBalance = (seconds: number): string => {
+    if (seconds < 60) {
+      return `${seconds} segundo${seconds !== 1 ? 's' : ''}`;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (remainingSeconds === 0) {
+      return `${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+    }
+    return `${minutes} minuto${minutes !== 1 ? 's' : ''} e ${remainingSeconds} segundo${remainingSeconds !== 1 ? 's' : ''}`;
+  };
+
+  // Função para obter mensagem contextual baseada no saldo de tempo
+  const getTimeBalanceMessage = (): string => {
+    if (userTimeBalance === null) return '';
+    
+    if (userTimeBalance === 0) {
+      return 'Você não tem tempo disponível para tentativas, considere adicionar tempo para tentar convencer o Vince';
+    }
+    
+    if (userTimeBalance < 60) {
+      return `Você tem ${formatTimeBalance(userTimeBalance)} disponível, considere adicionar mais tempo para ter chance de convencer o Vince`;
+    }
+    
+    return `Você tem ${formatTimeBalance(userTimeBalance)} disponível`;
+  };
+
   // Função para verificar saldo de tempo após login/cadastro bem-sucedido
   const checkUserTimeBalanceAndProceed = async () => {
     if (!user?.id) {
@@ -99,19 +130,15 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     try {
       const timeBalance = await apiService.getTimeBalance(user.id);
       
-      // Se usuário tem saldo de tempo disponível (mais de 0 segundos), liberar chat diretamente
-      if (timeBalance.amount_time_seconds && timeBalance.amount_time_seconds > 0) {
-        // Fechar o checkout e liberar o chat
-        if (onPaymentSuccess) {
-          onPaymentSuccess();
-        }
-      } else {
-        // Se não tem saldo, continuar para etapa de pagamento
-        setCurrentStep('payment');
-      }
+      // Armazenar o saldo de tempo do usuário para exibir na tela de pagamento
+      setUserTimeBalance(timeBalance.amount_time_seconds || 0);
+      
+      // Sempre ir para etapa de pagamento, mas com informações contextuais sobre o saldo
+      setCurrentStep('payment');
     } catch (error) {
       console.error('Erro ao verificar saldo de tempo:', error);
-      // Em caso de erro, continuar para pagamento como fallback
+      // Em caso de erro, definir saldo como 0 e continuar para pagamento
+      setUserTimeBalance(0);
       setCurrentStep('payment');
     }
   };
@@ -486,8 +513,38 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
             {/* Etapa 3: Método de pagamento */}
             {currentStep === 'payment' && !paymentMethod && (
               <div className="bg-slate-800 rounded-2xl p-6 border border-violet-500/20">
-                <h2 className="text-xl font-bold text-violet-100 mb-4">Escolha o método de pagamento</h2>
+                <h2 className="text-xl font-bold text-violet-100 mb-4">Adicionar tempo para tentativas</h2>
+                
+                {/* Exibir informações sobre o saldo de tempo atual */}
+                {userTimeBalance !== null && (
+                  <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-5 w-5 text-violet-400" />
+                      <span className="font-semibold text-violet-300">Seu tempo atual</span>
+                    </div>
+                    <p className="text-slate-300 text-sm mb-3">
+                      {getTimeBalanceMessage()}
+                    </p>
+                    
+                    {/* Botão para pular esta etapa */}
+                    <button
+                      onClick={() => {
+                        if (onPaymentSuccess) {
+                          onPaymentSuccess();
+                        }
+                      }}
+                      className="w-full bg-slate-600 hover:bg-slate-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                    >
+                      Adicionar tempo depois
+                    </button>
+                  </div>
+                )}
+                
                 <div className="space-y-3">
+                  <p className="text-slate-400 text-sm mb-4">
+                    Escolha como adicionar mais tempo:
+                  </p>
+                  
                   <button
                     onClick={() => handlePaymentMethodSelect('card')}
                     className="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-violet-500 rounded-lg p-4 text-left transition-all"
