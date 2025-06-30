@@ -444,6 +444,11 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     loadUserTimeBalance();
   }, [loadUserTimeBalance]);
 
+  const handleClosePayment = useCallback(() => {
+    setShowPaymentDialog(false);
+    // Não desbloquear o chat - apenas fechar o checkout
+  }, []);
+
   const handleStopAttempt = useCallback(() => {
     setAttemptStopped(true);
     setIsTimerActive(false);
@@ -554,7 +559,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
                 <DialogTitle className="sr-only">
                   Checkout - Finalizar Compra
                 </DialogTitle>
-                <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} />
+                <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} onClose={handleClosePayment} />
               </DialogContent>
             </Dialog>
           </>

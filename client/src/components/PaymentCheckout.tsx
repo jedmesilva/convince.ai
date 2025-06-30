@@ -5,9 +5,10 @@ import { apiService } from '../lib/api';
 
 interface CheckoutProps {
   onPaymentSuccess?: () => void;
+  onClose?: () => void;
 }
 
-const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
+const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess, onClose }) => {
   const { isAuthenticated, user, checkEmail, login, register } = useAuth();
   
   // Definir o passo inicial baseado na autenticação
@@ -537,8 +538,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
                     {/* Botão para pular esta etapa */}
                     <button
                       onClick={() => {
-                        if (onPaymentSuccess) {
-                          onPaymentSuccess();
+                        if (onClose) {
+                          onClose();
                         }
                       }}
                       className="w-full bg-slate-600 hover:bg-slate-500 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
