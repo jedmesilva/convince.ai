@@ -501,7 +501,20 @@ app.get('/api/time-balance/:convincer_id', async (req, res) => {
 // POST /api/attempts - Create new attempt
 app.post('/api/attempts', async (req, res) => {
   try {
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+    
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('Invalid request body:', req.body);
+      return res.status(400).json({ error: 'Dados da requisição inválidos' });
+    }
+    
     const { available_time_seconds } = req.body;
+    
+    if (!available_time_seconds || typeof available_time_seconds !== 'number') {
+      console.error('Invalid available_time_seconds:', available_time_seconds);
+      return res.status(400).json({ error: 'Tempo disponível inválido' });
+    }
     
     // For now, use a hardcoded user ID - in production, get from auth token
     const convincer_id = '5502e1b4-a9b8-42fa-8c4e-03b3722558f9';
