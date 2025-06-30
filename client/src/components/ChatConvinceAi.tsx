@@ -632,10 +632,16 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       setIsLoading(true);
       const timeBalance = await apiService.getTimeBalance(user.id);
       
-      // Se tem saldo de tempo disponível (mais de 0 segundos), criar nova tentativa e liberar o chat
-      if (timeBalance.amount_time_seconds && timeBalance.amount_time_seconds > 0) {
-        // Criar nova tentativa com o tempo disponível
-        const newAttempt = await createNewAttempt(timeBalance.amount_time_seconds);
+      console.log('Time balance response:', timeBalance);
+      
+      // Verificar se tem saldo de tempo disponível (mais de 0 segundos)
+      const availableSeconds = timeBalance?.amount_time_seconds || 0;
+      
+      if (availableSeconds > 0) {
+        // Tem saldo de tempo - criar nova tentativa e liberar o chat
+        console.log(`Usuário tem ${availableSeconds} segundos disponíveis`);
+        
+        const newAttempt = await createNewAttempt(availableSeconds);
         
         if (newAttempt) {
           setUserTimeBalance(timeBalance);
@@ -643,12 +649,14 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
           setIsUnlocked(true);
           setIsTimerActive(true);
           setAttemptStopped(false);
+          console.log('Chat desbloqueado com sucesso!');
         } else {
           console.error('Falha ao criar nova tentativa');
           setShowPaymentDialog(true);
         }
       } else {
-        // Se não tem saldo de tempo, abrir o checkout para comprar mais tempo
+        // Não tem saldo de tempo - abrir o checkout para comprar mais tempo
+        console.log('Usuário não tem saldo de tempo disponível');
         setShowPaymentDialog(true);
       }
     } catch (error) {
@@ -658,7 +666,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user, createNewAttempt]);
+  }, [isAuthenticated, user, createNewAttempt, apiService]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPaymentDialog(false);

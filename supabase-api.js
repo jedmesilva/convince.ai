@@ -498,6 +498,177 @@ app.get('/api/time-balance/:convincer_id', async (req, res) => {
   }
 });
 
+// POST /api/attempts - Create new attempt
+app.post('/api/attempts', async (req, res) => {
+  try {
+    const { available_time_seconds } = req.body;
+    
+    // For now, use a hardcoded user ID - in production, get from auth token
+    const convincer_id = '5502e1b4-a9b8-42fa-8c4e-03b3722558f9';
+    
+    // Check if user has available time balance
+    const { data: timeBalance, error: timeError } = await supabase
+      .from('time_balances')
+      .select('amount_time_seconds')
+      .eq('convincer_id', convincer_id)
+      .single();
+
+    if (timeError && timeError.code !== 'PGRST116') {
+      console.error('Error checking time balance:', timeError);
+      return res.status(500).json({ error: 'Erro ao verificar saldo de tempo' });
+    }
+
+    const availableTime = timeBalance?.amount_time_seconds || 0;
+    
+    if (availableTime < available_time_seconds) {
+      return res.status(400).json({ error: 'Saldo de tempo insuficiente' });
+    }
+
+    // Create new attempt
+    const { data: attempt, error: attemptError } = await supabase
+      .from('attempts')
+      .insert({
+        convincer_id,
+        status: 'active',
+        available_time_seconds,
+        convincing_score: 0
+      })
+      .select()
+      .single();
+
+    if (attemptError) {
+      console.error('Error creating attempt:', attemptError);
+      return res.status(500).json({ error: 'Erro ao criar tentativa' });
+    }
+
+    // Deduct time from balance
+    const newBalance = availableTime - available_time_seconds;
+    const { error: updateError } = await supabase
+      .from('time_balances')
+      .update({
+        amount_time_seconds: newBalance,
+        updated_at: new Date().toISOString()
+      })
+      .eq('convincer_id', convincer_id);
+
+    if (updateError) {
+      console.error('Error updating time balance:', updateError);
+      // Continue despite balance update error
+    }
+
+    res.status(201).json(attempt);
+  } catch (error) {
+    console.error('Create attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/convincers/:id/attempts/active - Get active attempt for user
+app.get('/api/convincers/:id/attempts/active', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from('attempts')
+      .select('*')
+      .eq('convincer_id', id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching active attempt:', error);
+      return res.status(500).json({ error: 'Erro ao buscar tentativa ativa' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get convincer active attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// PATCH /api/attempts/:id - Update attempt
+app.patch('/api/attempts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const { data, error } = await supabase
+      .from('attempts')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating attempt:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar tentativa' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Update attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// GET /api/attempts/:id/messages - Get messages for attempt
+app.get('/api/attempts/:id/messages', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('attempt_id', id)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching attempt messages:', error);
+      return res.status(500).json({ error: 'Erro ao buscar mensagens da tentativa' });
+    }
+
+    res.json(data || []);
+  } catch (error) {
+    console.error('Get attempt messages error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/messages - Create message
+app.post('/api/messages', async (req, res) => {
+  try {
+    const { attempt_id, convincer_id, message, convincing_score_snapshot } = req.body;
+
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        attempt_id,
+        convincer_id,
+        message,
+        convincing_score_snapshot: convincing_score_snapshot || 0,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating message:', error);
+      return res.status(500).json({ error: 'Erro ao criar mensagem' });
+    }
+
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Create message error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Update user time balance (decrementar tempo)
 app.put('/api/time-balance/:convincer_id', async (req, res) => {
   try {
