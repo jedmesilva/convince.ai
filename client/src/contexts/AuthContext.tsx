@@ -40,6 +40,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           // Check if session is still valid
           if (session.expires_at && new Date(session.expires_at) > new Date()) {
+            // Ensure the token is stored
+            if (session.access_token) {
+              localStorage.setItem('authToken', session.access_token);
+            }
+            
             setAuthState({
               isAuthenticated: true,
               user: user,
@@ -83,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Store in localStorage
         localStorage.setItem('auth_user', JSON.stringify(response.convincer));
         localStorage.setItem('auth_session', JSON.stringify(sessionWithExpiry));
+        localStorage.setItem('authToken', response.session.access_token);
         
         setAuthState({
           isAuthenticated: true,
@@ -117,6 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Store in localStorage
         localStorage.setItem('auth_user', JSON.stringify(response.convincer));
         localStorage.setItem('auth_session', JSON.stringify(sessionWithExpiry));
+        localStorage.setItem('authToken', response.session.access_token);
         
         setAuthState({
           isAuthenticated: true,

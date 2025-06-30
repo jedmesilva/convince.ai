@@ -102,6 +102,13 @@ Changelog:
   * Implementados endpoints para consultar e atualizar saldo em tempo real
   * Timer do chat agora decrementa saldo real do banco de dados a cada segundo
   * Sistema de pagamento agora acumula tempo no saldo existente do usuário
+- June 30, 2025. Correções críticas no sistema de tentativas:
+  * Corrigido problema de token de autenticação null nas requisições API
+  * Implementado fluxo correto: verificação de saldo → criação de tentativa → desbloqueio do chat
+  * Corrigida recuperação de tentativas ativas no recarregamento da página
+  * Melhorado sistema de atualização de status das tentativas (abandoned, failed, completed)
+  * Corrigida vinculação de mensagens às tentativas atuais
+  * Implementado sistema robusto de criação de tentativas após pagamentos
 
 # User Preferences
 
