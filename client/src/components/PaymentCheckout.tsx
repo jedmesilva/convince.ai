@@ -310,7 +310,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
             
             {/* Seletor de tentativas */}
             <div className="bg-slate-700/30 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/20 mb-6">
-              <div className="text-center mb-4">
+              <div className="flex items-center justify-center">
                 <div className="flex items-center justify-center gap-4">
                   <button 
                     onClick={() => adjustAttempts(false)}
