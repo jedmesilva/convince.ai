@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 type AsyncHandler = (req: Request, res: Response) => Promise<any>;
 
 // POST /api/convincers - Create new user
-export const createConvincer = async (req: Request, res: Response): Promise<void> => {
+export const createConvincer = async (req: Request, res: Response) => {
   try {
     const validatedData = convincerCreateSchema.parse(req.body);
     
@@ -156,6 +156,38 @@ export const getConvincerAttempts = async (req: Request, res: Response) => {
     res.json(data);
   } catch (error) {
     console.error('Get convincer attempts error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+// GET /api/convincers/:id/attempts/active - Get active attempt for user
+export const getConvincerActiveAttempt = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user is accessing their own data
+    if (!req.user || req.user.sub !== id) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('attempts')
+      .select('*')
+      .eq('convincer_id', id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching active attempt:', error);
+      return res.status(500).json({ error: 'Erro ao buscar tentativa ativa' });
+    }
+
+    // Return null if no active attempt found
+    res.json(data);
+  } catch (error) {
+    console.error('Get convincer active attempt error:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };

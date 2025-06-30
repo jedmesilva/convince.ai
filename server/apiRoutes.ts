@@ -7,6 +7,7 @@ import {
   getConvincer,
   updateConvincer,
   getConvincerAttempts,
+  getConvincerActiveAttempt,
   getConvincerPayments,
   getConvincerTimeBalances,
   getConvincerWithdrawals,
@@ -82,6 +83,9 @@ router.put('/convincers/:id', authMiddleware, updateConvincer);
 
 // GET /api/convincers/:id/attempts - List user attempts
 router.get('/convincers/:id/attempts', authMiddleware, getConvincerAttempts);
+
+// GET /api/convincers/:id/attempts/active - Get active attempt for user
+router.get('/convincers/:id/attempts/active', authMiddleware, getConvincerActiveAttempt);
 
 // GET /api/convincers/:id/payments - List user payments
 router.get('/convincers/:id/payments', authMiddleware, getConvincerPayments);

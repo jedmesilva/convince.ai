@@ -20,12 +20,37 @@ export interface PrizeStatistics {
 
 export interface Attempt {
   id: string;
+  convincer_id: string;
   status: string;
+  available_time_seconds: number;
   convincing_score: number;
   created_at: string;
-  convincers: {
+  updated_at: string;
+  convincers?: {
     name: string;
   };
+}
+
+export interface Message {
+  id: string;
+  attempt_id: string;
+  convincer_id: string;
+  message: string;
+  convincing_score_snapshot: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIResponse {
+  id: string;
+  attempt_id: string;
+  user_message_id: string;
+  ai_response: string;
+  convincing_score_snapshot: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Convincer {
@@ -145,6 +170,80 @@ class ApiService {
   // Attempts endpoints
   async getAttempts(): Promise<Attempt[]> {
     return this.fetchJson('/attempts');
+  }
+
+  async createAttempt(available_time_seconds: number): Promise<Attempt> {
+    return this.fetchJson('/attempts', {
+      method: 'POST',
+      body: JSON.stringify({ available_time_seconds }),
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+  }
+
+  async getAttempt(attemptId: string): Promise<Attempt> {
+    return this.fetchJson(`/attempts/${attemptId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+  }
+
+  async updateAttempt(attemptId: string, data: { status?: string; convincing_score?: number }): Promise<Attempt> {
+    return this.fetchJson(`/attempts/${attemptId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+  }
+
+  async getActiveAttempt(convincerId: string): Promise<Attempt | null> {
+    try {
+      return await this.fetchJson(`/convincers/${convincerId}/attempts/active`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+    } catch (error) {
+      // Se não encontrar tentativa ativa, retorna null
+      return null;
+    }
+  }
+
+  async getAttemptMessages(attemptId: string): Promise<Message[]> {
+    return this.fetchJson(`/attempts/${attemptId}/messages`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+  }
+
+  async createMessage(attemptId: string, message: string): Promise<Message> {
+    return this.fetchJson('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ attempt_id: attemptId, message }),
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+  }
+
+  async createAIResponse(attemptId: string, userMessageId: string, aiResponse: string, convincingScore: number): Promise<AIResponse> {
+    return this.fetchJson('/ai-responses', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        attempt_id: attemptId, 
+        user_message_id: userMessageId, 
+        ai_response: aiResponse,
+        convincing_score_snapshot: convincingScore
+      }),
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
   }
 
   // Convincers endpoints

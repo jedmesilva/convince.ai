@@ -4,9 +4,17 @@ import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
-import { apiService, type TimeBalance } from '../lib/api';
+import { apiService, type TimeBalance, type Attempt, type Message, type AIResponse } from '../lib/api';
 
 const INITIAL_CONVINCEMENT = 15;
+
+// Interface para mensagens do chat
+interface ChatMessage {
+  id: string;
+  text: string;
+  timestamp: string;
+  isBot: boolean;
+}
 
 // Constantes para análise de argumentos
 const ARGUMENT_ANALYSIS = {
@@ -225,9 +233,9 @@ interface MobileChatProps {
 export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const { isAuthenticated, user } = useAuth();
   
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 1,
+      id: "initial-1",
       text: "540 pessoas tentaram mas falharam! Quer tentar sua sorte?",
       timestamp: "00:19",
       isBot: true
@@ -245,6 +253,11 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [userTimeBalance, setUserTimeBalance] = useState<TimeBalance | null>(null);
   const [availableTime, setAvailableTime] = useState(0); // tempo disponível em segundos
+  
+  // Novos estados para gerenciamento de tentativas
+  const [currentAttempt, setCurrentAttempt] = useState<Attempt | null>(null);
+  const [attemptMessages, setAttemptMessages] = useState<Message[]>([]);
+  const [aiResponses, setAiResponses] = useState<AIResponse[]>([]);
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -263,12 +276,142 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     }
   }, [user?.id]);
 
-  // Carregar saldo ao montar o componente ou quando usuário mudar
+  // Função para carregar tentativa ativa do usuário
+  const loadActiveAttempt = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const activeAttempt = await apiService.getActiveAttempt(user.id);
+      
+      if (activeAttempt) {
+        setCurrentAttempt(activeAttempt);
+        setAvailableTime(activeAttempt.available_time_seconds);
+        setConvincementLevel(activeAttempt.convincing_score);
+        
+        // Carregar mensagens da tentativa
+        await loadAttemptMessages(activeAttempt.id);
+        
+        // Se há tentativa ativa, desbloquear o chat
+        setIsUnlocked(true);
+        setIsTimerActive(true);
+        setAttemptStopped(false);
+      } else {
+        // Limpar dados se não há tentativa ativa
+        setCurrentAttempt(null);
+        setAttemptMessages([]);
+        setAiResponses([]);
+        setIsUnlocked(false);
+        setIsTimerActive(false);
+        // Resetar mensagens para o estado inicial
+        setMessages([
+          {
+            id: "initial-1",
+            text: "540 pessoas tentaram mas falharam! Quer tentar sua sorte?",
+            timestamp: "00:19",
+            isBot: true
+          }
+        ]);
+        setConvincementLevel(INITIAL_CONVINCEMENT);
+      }
+    } catch (error) {
+      console.error('Error loading active attempt:', error);
+      setCurrentAttempt(null);
+      setIsUnlocked(false);
+      setIsTimerActive(false);
+    }
+  }, [user?.id]);
+
+  // Função para carregar mensagens de uma tentativa
+  const loadAttemptMessages = useCallback(async (attemptId: string) => {
+    try {
+      const messages = await apiService.getAttemptMessages(attemptId);
+      
+      setAttemptMessages(messages);
+      
+      // Converter mensagens para o formato esperado pelo chat
+      const chatMessages: ChatMessage[] = [];
+      
+      // Adicionar mensagem inicial
+      chatMessages.push({
+        id: "attempt-start",
+        text: "Agora é sua chance! Tente me convencer e ganhe o prêmio!",
+        timestamp: new Date().toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        isBot: true
+      });
+      
+      // Intercalar mensagens do usuário e respostas da AI
+      messages.forEach((message, index) => {
+        chatMessages.push({
+          id: `user-${message.id}`,
+          text: message.message,
+          timestamp: new Date(message.created_at).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isBot: false
+        });
+        
+        // Aqui adicionaríamos a resposta da AI correspondente
+        // Por enquanto, vamos simular uma resposta básica
+        chatMessages.push({
+          id: `ai-${message.id}`,
+          text: `Resposta para: "${message.message.substring(0, 30)}..."`,
+          timestamp: new Date(message.created_at).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isBot: true
+        });
+      });
+      
+      setMessages(chatMessages);
+    } catch (error) {
+      console.error('Error loading attempt messages:', error);
+    }
+  }, []);
+
+  // Função para criar nova tentativa
+  const createNewAttempt = useCallback(async (timeSeconds: number) => {
+    if (!user?.id) return null;
+    
+    try {
+      const newAttempt = await apiService.createAttempt(timeSeconds);
+      setCurrentAttempt(newAttempt);
+      setConvincementLevel(INITIAL_CONVINCEMENT);
+      
+      // Limpar mensagens antigas e definir mensagem inicial da nova tentativa
+      setMessages([
+        {
+          id: "new-attempt-start",
+          text: "Nova tentativa iniciada! Tente me convencer e ganhe o prêmio!",
+          timestamp: new Date().toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isBot: true
+        }
+      ]);
+      
+      setAttemptMessages([]);
+      setAiResponses([]);
+      
+      return newAttempt;
+    } catch (error) {
+      console.error('Error creating new attempt:', error);
+      return null;
+    }
+  }, [user?.id]);
+
+  // Carregar saldo e tentativa ativa ao montar o componente ou quando usuário mudar
   useEffect(() => {
     if (isAuthenticated && user) {
       loadUserTimeBalance();
+      loadActiveAttempt();
     }
-  }, [isAuthenticated, user, loadUserTimeBalance]);
+  }, [isAuthenticated, user, loadUserTimeBalance, loadActiveAttempt]);
 
   // Função para scroll automático
   const scrollToBottom = useCallback(() => {
@@ -279,12 +422,23 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const onTimerEnd = useCallback(() => {
+  const onTimerEnd = useCallback(async () => {
+    if (currentAttempt) {
+      try {
+        // Marcar tentativa como falha quando o tempo acaba
+        await apiService.updateAttempt(currentAttempt.id, { status: 'failed' });
+      } catch (error) {
+        console.error('Error updating attempt status on timeout:', error);
+      }
+    }
+
     setIsUnlocked(false);
     setIsTimerActive(false);
+    setAttemptStopped(true);
+    setCurrentAttempt(null);
     // Recarregar saldo após timer acabar
     loadUserTimeBalance();
-  }, [loadUserTimeBalance]);
+  }, [currentAttempt, loadUserTimeBalance]);
 
   const { timeLeft, isBlinking, resetTimer, initialTime } = useRealTimeTimer(availableTime, isTimerActive, onTimerEnd, user?.id);
 
@@ -353,23 +507,10 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     return "Interessante perspectiva. O que mais você tem a dizer?";
   }, []);
 
-  const handleSendMessage = useCallback(() => {
-    if (!inputText.trim() || !isUnlocked) return;
+  const handleSendMessage = useCallback(async () => {
+    if (!inputText.trim() || !isUnlocked || !currentAttempt) return;
 
-    const convincementChange = analyzeArgument(inputText);
-    const currentTime = new Date().toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-
-    const newMessage = {
-      id: Date.now(), // Usando timestamp para ID único
-      text: inputText,
-      timestamp: currentTime,
-      isBot: false
-    };
-
-    setMessages(prev => [...prev, newMessage]);
+    const messageText = inputText;
     setInputText("");
 
     // Reset textarea height
@@ -378,26 +519,105 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       textareaRef.current.style.height = '24px';
     }
 
-    updateConvincementLevel(convincementChange);
+    try {
+      // Salvar mensagem no banco de dados
+      const savedMessage = await apiService.createMessage(currentAttempt.id, messageText);
+      
+      // Adicionar mensagem do usuário ao chat
+      const currentTime = new Date().toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
 
-    // Resposta do bot
-    setTimeout(() => {
-      const newLevel = Math.max(0, Math.min(100, convincementLevel + convincementChange));
-      const botResponseText = generateBotResponse(convincementChange, newLevel);
-
-      const botResponse = {
-        id: Date.now() + 1,
-        text: botResponseText,
-        timestamp: new Date().toLocaleTimeString('pt-BR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        isBot: true
+      const newMessage = {
+        id: `user-${savedMessage.id}`,
+        text: messageText,
+        timestamp: currentTime,
+        isBot: false
       };
 
-      setMessages(prev => [...prev, botResponse]);
-    }, 1000);
-  }, [inputText, isUnlocked, analyzeArgument, updateConvincementLevel, convincementLevel, generateBotResponse]);
+      setMessages(prev => [...prev, newMessage]);
+
+      // Gerar resposta da AI e atualizar score
+      setTimeout(async () => {
+        try {
+          // Gerar resposta da AI através da API
+          const response = await apiService.createAIResponse(
+            currentAttempt.id, 
+            savedMessage.id, 
+            "Resposta gerada automaticamente", // Placeholder - será substituída pela lógica de AI no backend
+            convincementLevel
+          );
+
+          const convincementChange = analyzeArgument(messageText);
+          const newLevel = Math.max(0, Math.min(100, convincementLevel + convincementChange));
+          updateConvincementLevel(convincementChange);
+
+          // Atualizar score da tentativa
+          await apiService.updateAttempt(currentAttempt.id, { convincing_score: newLevel });
+
+          const botResponseText = generateBotResponse(convincementChange, newLevel);
+
+          const botResponse = {
+            id: `ai-${response.id}`,
+            text: botResponseText,
+            timestamp: new Date().toLocaleTimeString('pt-BR', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            isBot: true
+          };
+
+          setMessages(prev => [...prev, botResponse]);
+
+          // Verificar se usuário ganhou (score >= 90)
+          if (newLevel >= 90) {
+            // Marcar tentativa como concluída
+            await apiService.updateAttempt(currentAttempt.id, { status: 'completed' });
+            setIsTimerActive(false);
+            setShowPrizeScreen(true);
+          }
+        } catch (error) {
+          console.error('Error generating AI response:', error);
+          // Fallback para resposta local se API falhar
+          const convincementChange = analyzeArgument(messageText);
+          const newLevel = Math.max(0, Math.min(100, convincementLevel + convincementChange));
+          updateConvincementLevel(convincementChange);
+
+          const botResponseText = generateBotResponse(convincementChange, newLevel);
+
+          const botResponse = {
+            id: `ai-fallback-${Date.now()}`,
+            text: botResponseText,
+            timestamp: new Date().toLocaleTimeString('pt-BR', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            isBot: true
+          };
+
+          setMessages(prev => [...prev, botResponse]);
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Em caso de erro, ainda permitir interação local
+      const currentTime = new Date().toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      const newMessage = {
+        id: `local-${Date.now()}`,
+        text: messageText,
+        timestamp: currentTime,
+        isBot: false
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+    }
+  }, [inputText, isUnlocked, currentAttempt, apiService, analyzeArgument, updateConvincementLevel, convincementLevel, generateBotResponse]);
 
   const handlePayToUnlock = useCallback(async () => {
     // Primeiro, verificar se o usuário está autenticado
@@ -412,13 +632,21 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
       setIsLoading(true);
       const timeBalance = await apiService.getTimeBalance(user.id);
       
-      // Se tem saldo de tempo disponível (mais de 0 segundos), liberar o chat diretamente
+      // Se tem saldo de tempo disponível (mais de 0 segundos), criar nova tentativa e liberar o chat
       if (timeBalance.amount_time_seconds && timeBalance.amount_time_seconds > 0) {
-        setUserTimeBalance(timeBalance);
-        setAvailableTime(timeBalance.amount_time_seconds);
-        setIsUnlocked(true);
-        setIsTimerActive(true);
-        setAttemptStopped(false);
+        // Criar nova tentativa com o tempo disponível
+        const newAttempt = await createNewAttempt(timeBalance.amount_time_seconds);
+        
+        if (newAttempt) {
+          setUserTimeBalance(timeBalance);
+          setAvailableTime(newAttempt.available_time_seconds);
+          setIsUnlocked(true);
+          setIsTimerActive(true);
+          setAttemptStopped(false);
+        } else {
+          console.error('Falha ao criar nova tentativa');
+          setShowPaymentDialog(true);
+        }
       } else {
         // Se não tem saldo de tempo, abrir o checkout para comprar mais tempo
         setShowPaymentDialog(true);
@@ -430,7 +658,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user, apiService]);
+  }, [isAuthenticated, user, createNewAttempt]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPaymentDialog(false);
@@ -446,14 +674,24 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     // Não desbloquear o chat - apenas fechar o checkout
   }, []);
 
-  const handleStopAttempt = useCallback(() => {
+  const handleStopAttempt = useCallback(async () => {
+    if (currentAttempt) {
+      try {
+        // Marcar tentativa como abandonada
+        await apiService.updateAttempt(currentAttempt.id, { status: 'abandoned' });
+      } catch (error) {
+        console.error('Error updating attempt status:', error);
+      }
+    }
+
     setAttemptStopped(true);
     setIsTimerActive(false);
     setInputText("");
     setIsLoading(false);
     setIsUnlocked(false);
+    setCurrentAttempt(null);
     resetTimer();
-  }, [resetTimer]);
+  }, [currentAttempt, resetTimer]);
 
   const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey && isUnlocked) {
