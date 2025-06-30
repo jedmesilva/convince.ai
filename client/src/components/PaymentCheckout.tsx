@@ -40,6 +40,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
       // Usuário já está autenticado - vai direto para pagamento
       setCurrentStep('payment');
       setEmail(user.email);
+      // Buscar saldo de tempo do usuário autenticado
+      checkUserTimeBalanceAndProceed();
     } else {
       // Usuário não autenticado - começa pelo email
       setCurrentStep('email');
@@ -122,16 +124,21 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
 
   // Função para verificar saldo de tempo após login/cadastro bem-sucedido
   const checkUserTimeBalanceAndProceed = async () => {
+    console.log('Verificando saldo de tempo para usuário:', user?.id);
+    
     if (!user?.id) {
+      console.log('Usuário não encontrado, indo para pagamento');
       setCurrentStep('payment');
       return;
     }
 
     try {
       const timeBalance = await apiService.getTimeBalance(user.id);
+      console.log('Saldo de tempo recebido:', timeBalance);
       
       // Armazenar o saldo de tempo do usuário para exibir na tela de pagamento
       setUserTimeBalance(timeBalance.amount_time_seconds || 0);
+      console.log('userTimeBalance definido como:', timeBalance.amount_time_seconds || 0);
       
       // Sempre ir para etapa de pagamento, mas com informações contextuais sobre o saldo
       setCurrentStep('payment');
@@ -515,6 +522,11 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
               <div className="bg-slate-800 rounded-2xl p-6 border border-violet-500/20">
                 <h2 className="text-xl font-bold text-violet-100 mb-4">Adicionar tempo para tentativas</h2>
                 
+                {/* Debug: Mostrar sempre para testar */}
+                <div className="mb-4 p-3 bg-red-900/20 rounded-lg border border-red-500/30 text-red-300 text-xs">
+                  Debug: userTimeBalance = {userTimeBalance} | user = {user?.id}
+                </div>
+                
                 {/* Exibir informações sobre o saldo de tempo atual */}
                 {userTimeBalance !== null && (
                   <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
@@ -539,7 +551,7 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
                     </button>
                   </div>
                 )}
-                
+              
                 <div className="space-y-3">
                   <p className="text-slate-400 text-sm mb-4">
                     Escolha como adicionar mais tempo:
