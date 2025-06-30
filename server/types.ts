@@ -114,7 +114,7 @@ export const attemptCreateSchema = z.object({
 });
 
 export const attemptUpdateSchema = z.object({
-  status: z.enum(['active', 'completed', 'failed']).optional(),
+  status: z.enum(['active', 'completed', 'failed', 'abandoned']).optional(),
   convincing_score: z.number().min(0).max(100).optional(),
 });
 
