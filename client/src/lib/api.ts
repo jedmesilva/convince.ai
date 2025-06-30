@@ -122,22 +122,13 @@ class ApiService {
     try {
       console.log(`Fazendo requisição para: ${API_BASE_URL}${endpoint}`);
       
-      // Automaticamente incluir token de autenticação se disponível
-      const token = localStorage.getItem('authToken');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options?.headers,
-      };
-      
-      // Adicionar Authorization header se token existe
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: options?.method || 'GET',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...options?.headers,
+        },
         credentials: 'omit',
         ...options,
       });
@@ -185,29 +176,37 @@ class ApiService {
     return this.fetchJson('/attempts', {
       method: 'POST',
       body: JSON.stringify({ available_time_seconds }),
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
     });
   }
 
   async getAttempt(attemptId: string): Promise<Attempt> {
-    return this.fetchJson(`/attempts/${attemptId}`);
+    return this.fetchJson(`/attempts/${attemptId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
   }
 
   async updateAttempt(attemptId: string, data: { status?: string; convincing_score?: number }): Promise<Attempt> {
-    const token = localStorage.getItem('authToken');
-    console.log('UpdateAttempt - Token from localStorage:', token ? 'Token exists' : 'Token is null/undefined');
-    console.log('UpdateAttempt - Data to send:', data);
-    console.log('UpdateAttempt - Attempt ID:', attemptId);
-    console.log('UpdateAttempt - API URL:', `${API_BASE_URL}/attempts/${attemptId}`);
-    
     return this.fetchJson(`/attempts/${attemptId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
     });
   }
 
   async getActiveAttempt(convincerId: string): Promise<Attempt | null> {
     try {
-      return await this.fetchJson(`/convincers/${convincerId}/attempts/active`);
+      return await this.fetchJson(`/convincers/${convincerId}/attempts/active`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
     } catch (error) {
       // Se não encontrar tentativa ativa, retorna null
       return null;

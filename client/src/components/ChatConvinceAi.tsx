@@ -276,24 +276,48 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     }
   }, [user?.id]);
 
-  // Função para carregar tentativa ativa do usuário (se existir)
+  // Função para carregar tentativa ativa do usuário
   const loadActiveAttempt = useCallback(async () => {
-    if (!user?.id) return null;
+    if (!user?.id) return;
     
     try {
-      console.log('Verificando tentativa ativa para usuário:', user.id);
       const activeAttempt = await apiService.getActiveAttempt(user.id);
       
-      if (activeAttempt && activeAttempt.status === 'active') {
-        console.log('Tentativa ativa encontrada:', activeAttempt.id);
-        return activeAttempt;
+      if (activeAttempt) {
+        setCurrentAttempt(activeAttempt);
+        setAvailableTime(activeAttempt.available_time_seconds);
+        setConvincementLevel(activeAttempt.convincing_score);
+        
+        // Carregar mensagens da tentativa
+        await loadAttemptMessages(activeAttempt.id);
+        
+        // Se há tentativa ativa, desbloquear o chat
+        setIsUnlocked(true);
+        setIsTimerActive(true);
+        setAttemptStopped(false);
       } else {
-        console.log('Nenhuma tentativa ativa encontrada');
-        return null;
+        // Limpar dados se não há tentativa ativa
+        setCurrentAttempt(null);
+        setAttemptMessages([]);
+        setAiResponses([]);
+        setIsUnlocked(false);
+        setIsTimerActive(false);
+        // Resetar mensagens para o estado inicial
+        setMessages([
+          {
+            id: "initial-1",
+            text: "540 pessoas tentaram mas falharam! Quer tentar sua sorte?",
+            timestamp: "00:19",
+            isBot: true
+          }
+        ]);
+        setConvincementLevel(INITIAL_CONVINCEMENT);
       }
     } catch (error) {
-      console.error('Erro ao carregar tentativa ativa:', error);
-      return null;
+      console.error('Error loading active attempt:', error);
+      setCurrentAttempt(null);
+      setIsUnlocked(false);
+      setIsTimerActive(false);
     }
   }, [user?.id]);
 
@@ -349,64 +373,20 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     }
   }, []);
 
-  // Função para configurar uma tentativa (ativa ou nova) no chat
-  const setupAttemptInChat = useCallback(async (attempt: any) => {
-    console.log('Configurando tentativa no chat:', attempt.id);
+  // Função para criar nova tentativa
+  const createNewAttempt = useCallback(async (timeSeconds: number) => {
+    if (!user?.id) return null;
     
-    setCurrentAttempt(attempt);
-    setAvailableTime(attempt.available_time_seconds);
-    setConvincementLevel(attempt.convincing_score);
-    
-    // Carregar mensagens existentes da tentativa
     try {
-      const messages = await apiService.getAttemptMessages(attempt.id);
-      setAttemptMessages(messages);
+      const newAttempt = await apiService.createAttempt(timeSeconds);
+      setCurrentAttempt(newAttempt);
+      setConvincementLevel(INITIAL_CONVINCEMENT);
       
-      const chatMessages: ChatMessage[] = [
-        {
-          id: "attempt-start",
-          text: "Agora é sua chance! Tente me convencer e ganhe o prêmio!",
-          timestamp: new Date().toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          isBot: true
-        }
-      ];
-      
-      // Adicionar mensagens existentes se houver
-      messages.forEach((message) => {
-        chatMessages.push({
-          id: `user-${message.id}`,
-          text: message.message,
-          timestamp: new Date(message.created_at).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          isBot: false
-        });
-        
-        // Simular resposta da AI
-        chatMessages.push({
-          id: `ai-${message.id}`,
-          text: `Interessante argumento, mas ainda não me convenceu...`,
-          timestamp: new Date(message.created_at).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          isBot: true
-        });
-      });
-      
-      setMessages(chatMessages);
-      
-    } catch (error) {
-      console.error('Erro ao carregar mensagens da tentativa:', error);
-      // Mensagem inicial mesmo se não conseguir carregar mensagens
+      // Limpar mensagens antigas e definir mensagem inicial da nova tentativa
       setMessages([
         {
-          id: "attempt-start",
-          text: "Agora é sua chance! Tente me convencer e ganhe o prêmio!",
+          id: "new-attempt-start",
+          text: "Nova tentativa iniciada! Tente me convencer e ganhe o prêmio!",
           timestamp: new Date().toLocaleTimeString('pt-BR', { 
             hour: '2-digit', 
             minute: '2-digit' 
@@ -414,61 +394,24 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
           isBot: true
         }
       ]);
-    }
-    
-    // Desbloquear o chat
-    setIsUnlocked(true);
-    setIsTimerActive(true);
-    setAttemptStopped(false);
-    
-    console.log('Chat desbloqueado para tentativa:', attempt.id);
-  }, []);
-
-  // FUNÇÃO PRINCIPAL: Desbloquear chat (verificar tentativa ativa ou criar nova)
-  const handleUnlockChat = useCallback(async () => {
-    if (!user?.id) {
-      console.error('Usuário não autenticado');
-      return;
-    }
-
-    console.log('=== INICIANDO DESBLOQUEIO DO CHAT ===');
-    
-    try {
-      // 1. Verificar se há tentativa ativa
-      console.log('1. Verificando tentativa ativa...');
-      const activeAttempt = await loadActiveAttempt();
       
-      if (activeAttempt) {
-        // Tentativa ativa encontrada - carregar no chat
-        console.log('2. Tentativa ativa encontrada - carregando no chat:', activeAttempt.id);
-        await setupAttemptInChat(activeAttempt);
-      } else {
-        // Nenhuma tentativa ativa - verificar saldo e criar nova
-        console.log('2. Nenhuma tentativa ativa - verificando saldo...');
-        await loadUserTimeBalance();
-        
-        if (userTimeBalance && userTimeBalance.amount_time_seconds > 0) {
-          console.log('3. Saldo disponível - criando nova tentativa...');
-          const newAttempt = await apiService.createAttempt(userTimeBalance.amount_time_seconds);
-          console.log('4. Nova tentativa criada:', newAttempt.id);
-          await setupAttemptInChat(newAttempt);
-        } else {
-          console.log('3. Sem saldo - mostrando checkout de pagamento');
-          setShowPaymentDialog(true);
-        }
-      }
+      setAttemptMessages([]);
+      setAiResponses([]);
+      
+      return newAttempt;
     } catch (error) {
-      console.error('Erro ao desbloquear chat:', error);
+      console.error('Error creating new attempt:', error);
+      return null;
     }
-  }, [user?.id, loadActiveAttempt, setupAttemptInChat, loadUserTimeBalance, userTimeBalance]);
+  }, [user?.id]);
 
-  // Carregar dados iniciais ao montar componente
+  // Carregar saldo e tentativa ativa ao montar o componente ou quando usuário mudar
   useEffect(() => {
     if (isAuthenticated && user) {
       loadUserTimeBalance();
-      // Não carregar tentativa ativa automaticamente - só no desbloqueio
+      loadActiveAttempt();
     }
-  }, [isAuthenticated, user, loadUserTimeBalance]);
+  }, [isAuthenticated, user, loadUserTimeBalance, loadActiveAttempt]);
 
   // Função para scroll automático
   const scrollToBottom = useCallback(() => {
@@ -687,20 +630,25 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     // Se estiver autenticado, verificar se tem saldo de tempo
     try {
       setIsLoading(true);
-      const currentTimeBalance = await apiService.getTimeBalance(user.id);
+      const timeBalance = await apiService.getTimeBalance(user.id);
       
-      console.log('Time balance response:', currentTimeBalance);
-      
-      // Verificar se tem saldo de tempo disponível (mais de 0 segundos)
-      const availableSeconds = currentTimeBalance?.amount_time_seconds || 0;
-      
-      if (availableSeconds > 0) {
-        // Tem saldo - usar função principal de desbloqueio
-        console.log(`Usuário tem ${availableSeconds} segundos disponíveis`);
-        await handleUnlockChat();
+      // Se tem saldo de tempo disponível (mais de 0 segundos), criar nova tentativa e liberar o chat
+      if (timeBalance.amount_time_seconds && timeBalance.amount_time_seconds > 0) {
+        // Criar nova tentativa com o tempo disponível
+        const newAttempt = await createNewAttempt(timeBalance.amount_time_seconds);
+        
+        if (newAttempt) {
+          setUserTimeBalance(timeBalance);
+          setAvailableTime(newAttempt.available_time_seconds);
+          setIsUnlocked(true);
+          setIsTimerActive(true);
+          setAttemptStopped(false);
+        } else {
+          console.error('Falha ao criar nova tentativa');
+          setShowPaymentDialog(true);
+        }
       } else {
-        // Não tem saldo - abrir checkout
-        console.log('Usuário não tem saldo de tempo disponível');
+        // Se não tem saldo de tempo, abrir o checkout para comprar mais tempo
         setShowPaymentDialog(true);
       }
     } catch (error) {
@@ -710,15 +658,16 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user, handleUnlockChat]);
+  }, [isAuthenticated, user, createNewAttempt]);
 
-  const handlePaymentSuccess = useCallback(async () => {
+  const handlePaymentSuccess = useCallback(() => {
     setShowPaymentDialog(false);
-    
-    // Recarregar saldo e desbloquear chat
-    await loadUserTimeBalance();
-    await handleUnlockChat();
-  }, [loadUserTimeBalance, handleUnlockChat]);
+    setIsUnlocked(true);
+    setIsTimerActive(true);
+    setAttemptStopped(false);
+    // Recarregar saldo após pagamento bem-sucedido
+    loadUserTimeBalance();
+  }, [loadUserTimeBalance]);
 
   const handleClosePayment = useCallback(() => {
     setShowPaymentDialog(false);
@@ -726,54 +675,22 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   }, []);
 
   const handleStopAttempt = useCallback(async () => {
-    console.log('handleStopAttempt called - currentAttempt:', currentAttempt);
-    
-    // Se não temos currentAttempt, buscar tentativa ativa do usuário
-    let attemptToStop = currentAttempt;
-    
-    if (!attemptToStop && user?.id) {
+    if (currentAttempt) {
       try {
-        console.log('Buscando tentativa ativa para parar...');
-        attemptToStop = await apiService.getActiveAttempt(user.id);
-        console.log('Tentativa ativa encontrada:', attemptToStop);
-      } catch (error) {
-        console.error('Erro ao buscar tentativa ativa:', error);
-      }
-    }
-    
-    if (attemptToStop) {
-      try {
-        console.log('Tentando atualizar status da tentativa para abandoned:', attemptToStop.id);
-        const result = await apiService.updateAttempt(attemptToStop.id, { status: 'abandoned' });
-        console.log('Tentativa marcada como abandonada com sucesso:', result);
+        // Marcar tentativa como abandonada
+        await apiService.updateAttempt(currentAttempt.id, { status: 'abandoned' });
       } catch (error) {
         console.error('Error updating attempt status:', error);
-        console.error('Error details:', error.message || error);
       }
-    } else {
-      console.log('Nenhuma tentativa atual para marcar como abandonada');
     }
 
-    // Parar tentativa - resetar estado do chat
     setAttemptStopped(true);
     setIsTimerActive(false);
     setInputText("");
     setIsLoading(false);
     setIsUnlocked(false);
     setCurrentAttempt(null);
-    
-    // Resetar mensagens para o estado inicial
-    setMessages([
-      {
-        id: "initial-1",
-        text: "540 pessoas tentaram mas falharam! Quer tentar sua sorte?",
-        timestamp: "00:19",
-        isBot: true
-      }
-    ]);
-    
     resetTimer();
-    console.log('handleStopAttempt completed - chat bloqueado, tentativa parada');
   }, [currentAttempt, resetTimer]);
 
   const handleKeyPress = useCallback((e) => {
@@ -855,7 +772,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
         {!isUnlocked ? (
           <>
             <button
-              onClick={handleUnlockChat}
+              onClick={handlePayToUnlock}
               disabled={isLoading}
               className="w-full bg-violet-400 hover:bg-violet-300 disabled:bg-violet-400/70 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2 scale-pulse hover:scale-100 hover:animate-none transform hover:scale-105 hover:shadow-xl disabled:hover:scale-100 disabled:hover:shadow-none"
             >
