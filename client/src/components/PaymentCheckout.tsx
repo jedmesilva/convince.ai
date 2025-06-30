@@ -112,14 +112,14 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     if (userTimeBalance === null) return '';
     
     if (userTimeBalance === 0) {
-      return 'Você não tem tempo disponível para tentativas, considere adicionar tempo para tentar convencer o Vince';
+      return 'Você não possui tempo disponível para conversar com o Vince. Adicione tempo para começar sua tentativa de convencê-lo.';
     }
     
     if (userTimeBalance < 60) {
-      return `Você tem ${formatTimeBalance(userTimeBalance)} disponível, considere adicionar mais tempo para ter chance de convencer o Vince`;
+      return `Você tem ${formatTimeBalance(userTimeBalance)} disponíveis. Considere adicionar mais tempo para ter mais chances de sucesso.`;
     }
     
-    return `Você tem ${formatTimeBalance(userTimeBalance)} disponível`;
+    return `Você tem ${formatTimeBalance(userTimeBalance)} disponíveis para conversar com o Vince.`;
   };
 
   // Função para verificar saldo de tempo após login/cadastro bem-sucedido
@@ -521,11 +521,6 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
             {currentStep === 'payment' && !paymentMethod && (
               <div className="bg-slate-800 rounded-2xl p-6 border border-violet-500/20">
                 <h2 className="text-xl font-bold text-violet-100 mb-4">Adicionar tempo para tentativas</h2>
-                
-                {/* Debug: Mostrar sempre para testar */}
-                <div className="mb-4 p-3 bg-red-900/20 rounded-lg border border-red-500/30 text-red-300 text-xs">
-                  Debug: userTimeBalance = {userTimeBalance} | user = {user?.id}
-                </div>
                 
                 {/* Exibir informações sobre o saldo de tempo atual */}
                 {userTimeBalance !== null && (
