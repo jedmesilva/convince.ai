@@ -73,9 +73,6 @@ const ConvincementMeter = ({ level, isAnimating }) => {
         <span className="text-xs text-violet-300/60">
           {getConvincementStatus(level)}
         </span>
-        {level >= 90 && (
-          <span className="text-xs text-violet-300 animate-pulse">🎉 Convencido!</span>
-        )}
       </div>
     </div>
   );
