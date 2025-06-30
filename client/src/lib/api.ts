@@ -192,12 +192,18 @@ class ApiService {
   }
 
   async updateAttempt(attemptId: string, data: { status?: string; convincing_score?: number }): Promise<Attempt> {
+    const token = localStorage.getItem('authToken');
+    console.log('UpdateAttempt - Token from localStorage:', token ? 'Token exists' : 'Token is null/undefined');
+    console.log('UpdateAttempt - Data to send:', data);
+    console.log('UpdateAttempt - Attempt ID:', attemptId);
+    console.log('UpdateAttempt - API URL:', `${API_BASE_URL}/attempts/${attemptId}`);
+    
     return this.fetchJson(`/attempts/${attemptId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }

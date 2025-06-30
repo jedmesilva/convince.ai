@@ -755,14 +755,19 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   }, []);
 
   const handleStopAttempt = useCallback(async () => {
+    console.log('handleStopAttempt called - currentAttempt:', currentAttempt);
+    
     if (currentAttempt) {
       try {
-        // Marcar tentativa como abandonada
-        await apiService.updateAttempt(currentAttempt.id, { status: 'abandoned' });
-        console.log('Tentativa marcada como abandonada:', currentAttempt.id);
+        console.log('Tentando atualizar status da tentativa para abandoned:', currentAttempt.id);
+        const result = await apiService.updateAttempt(currentAttempt.id, { status: 'abandoned' });
+        console.log('Tentativa marcada como abandonada com sucesso:', result);
       } catch (error) {
         console.error('Error updating attempt status:', error);
+        console.error('Error details:', error.message || error);
       }
+    } else {
+      console.log('Nenhuma tentativa atual para marcar como abandonada');
     }
 
     setAttemptStopped(true);
@@ -783,6 +788,7 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
     ]);
     
     resetTimer();
+    console.log('handleStopAttempt completed - chat bloqueado novamente');
   }, [currentAttempt, resetTimer]);
 
   const handleKeyPress = useCallback((e) => {
