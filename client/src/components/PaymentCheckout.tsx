@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DollarSign, Plus, Minus, CreditCard, QrCode, Clock, ShoppingCart, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../lib/api';
@@ -89,6 +89,33 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     }
   };
 
+  // Função para verificar saldo de tempo após login/cadastro bem-sucedido
+  const checkUserTimeBalanceAndProceed = async () => {
+    if (!user?.id) {
+      setCurrentStep('payment');
+      return;
+    }
+
+    try {
+      const timeBalance = await apiService.getTimeBalance(user.id);
+      
+      // Se usuário tem saldo de tempo disponível (mais de 0 segundos), liberar chat diretamente
+      if (timeBalance.amount_time_seconds && timeBalance.amount_time_seconds > 0) {
+        // Fechar o checkout e liberar o chat
+        if (onPaymentSuccess) {
+          onPaymentSuccess();
+        }
+      } else {
+        // Se não tem saldo, continuar para etapa de pagamento
+        setCurrentStep('payment');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar saldo de tempo:', error);
+      // Em caso de erro, continuar para pagamento como fallback
+      setCurrentStep('payment');
+    }
+  };
+
   const handleLoginSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
@@ -103,7 +130,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     try {
       const success = await login(email, password);
       if (success) {
-        setCurrentStep('payment');
+        // Após login bem-sucedido, verificar se usuário tem saldo de tempo
+        await checkUserTimeBalanceAndProceed();
       } else {
         setError('Email ou senha incorretos');
       }
@@ -129,7 +157,8 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
     try {
       const success = await register(email, password, name);
       if (success) {
-        setCurrentStep('payment');
+        // Após cadastro bem-sucedido, verificar se usuário tem saldo de tempo
+        await checkUserTimeBalanceAndProceed();
       } else {
         setError('Erro ao criar conta. Tente novamente.');
       }
