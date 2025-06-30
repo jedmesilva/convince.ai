@@ -100,6 +100,10 @@ export const getAttempt = async (req: Request, res: Response) => {
 // PATCH /api/attempts/:id - Update attempt status or score
 export const updateAttempt = async (req: Request, res: Response) => {
   try {
+    console.log('UpdateAttempt - Request params:', req.params);
+    console.log('UpdateAttempt - Request body:', req.body);
+    console.log('UpdateAttempt - User from token:', req.user);
+    
     const { id } = req.params;
     
     // First check if attempt exists and get owner
@@ -109,16 +113,21 @@ export const updateAttempt = async (req: Request, res: Response) => {
       .eq('id', id)
       .single();
 
+    console.log('UpdateAttempt - Attempt found:', attempt);
+    console.log('UpdateAttempt - Fetch error:', fetchError);
+
     if (fetchError || !attempt) {
       return res.status(404).json({ error: 'Tentativa não encontrada' });
     }
 
     // Check if user owns this attempt
     if (!req.user || req.user.sub !== attempt.convincer_id) {
+      console.log('UpdateAttempt - Access denied. User:', req.user?.sub, 'Owner:', attempt.convincer_id);
       return res.status(403).json({ error: 'Acesso negado' });
     }
 
     const validatedData = attemptUpdateSchema.parse(req.body);
+    console.log('UpdateAttempt - Validated data:', validatedData);
 
     const { data, error } = await supabaseAdmin
       .from('attempts')
@@ -129,6 +138,9 @@ export const updateAttempt = async (req: Request, res: Response) => {
       .eq('id', id)
       .select()
       .single();
+
+    console.log('UpdateAttempt - Update result:', data);
+    console.log('UpdateAttempt - Update error:', error);
 
     if (error) {
       console.error('Error updating attempt:', error);

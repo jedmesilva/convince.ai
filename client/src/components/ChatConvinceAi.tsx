@@ -728,10 +728,23 @@ export default function MobileChat({ onShowPrize }: MobileChatProps = {}) {
   const handleStopAttempt = useCallback(async () => {
     console.log('handleStopAttempt called - currentAttempt:', currentAttempt);
     
-    if (currentAttempt) {
+    // Se não temos currentAttempt, buscar tentativa ativa do usuário
+    let attemptToStop = currentAttempt;
+    
+    if (!attemptToStop && user?.id) {
       try {
-        console.log('Tentando atualizar status da tentativa para abandoned:', currentAttempt.id);
-        const result = await apiService.updateAttempt(currentAttempt.id, { status: 'abandoned' });
+        console.log('Buscando tentativa ativa para parar...');
+        attemptToStop = await apiService.getActiveAttempt(user.id);
+        console.log('Tentativa ativa encontrada:', attemptToStop);
+      } catch (error) {
+        console.error('Erro ao buscar tentativa ativa:', error);
+      }
+    }
+    
+    if (attemptToStop) {
+      try {
+        console.log('Tentando atualizar status da tentativa para abandoned:', attemptToStop.id);
+        const result = await apiService.updateAttempt(attemptToStop.id, { status: 'abandoned' });
         console.log('Tentativa marcada como abandonada com sucesso:', result);
       } catch (error) {
         console.error('Error updating attempt status:', error);
