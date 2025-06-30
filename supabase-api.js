@@ -594,7 +594,16 @@ app.get('/api/convincers/:id/attempts/active', async (req, res) => {
 // PATCH /api/attempts/:id - Update attempt
 app.patch('/api/attempts/:id', async (req, res) => {
   try {
+    console.log('PATCH attempt request body:', req.body);
+    console.log('PATCH attempt request headers:', req.headers);
+    
     const { id } = req.params;
+    
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('Invalid request body for PATCH attempt:', req.body);
+      return res.status(400).json({ error: 'Dados da requisição inválidos' });
+    }
+    
     const updateData = req.body;
 
     const { data, error } = await supabase
@@ -612,6 +621,7 @@ app.patch('/api/attempts/:id', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao atualizar tentativa' });
     }
 
+    console.log('Attempt updated successfully:', data);
     res.json(data);
   } catch (error) {
     console.error('Update attempt error:', error);
