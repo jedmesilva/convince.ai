@@ -329,15 +329,16 @@ const PaymentCheckout: React.FC<CheckoutProps> = ({ onPaymentSuccess }) => {
                     <Plus className="h-5 w-5 text-violet-300" />
                   </button>
                 </div>
-                <p className="text-violet-300 text-sm mt-2">
-                  {attempts === 1 ? '1 tentativa' : `${attempts} tentativas`}
-                </p>
               </div>
             </div>
             
             {/* Resumo detalhado */}
             <div className="space-y-4">
               <div className="bg-slate-600/20 rounded-lg p-4 border border-violet-500/10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-violet-300 text-sm">Tentativas</span>
+                  <span className="text-violet-200 font-bold text-lg">{attempts === 1 ? '1 tentativa' : `${attempts} tentativas`}</span>
+                </div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-violet-300 text-sm">Tempo total</span>
                   <span className="text-violet-200 font-bold text-lg">{formatTime(totalTime)}</span>
