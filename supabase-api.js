@@ -34,7 +34,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
-  
+
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
@@ -69,7 +69,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/prizes/statistics', async (req, res) => {
   try {
     console.log('Fetching prize statistics...');
-    
+
     // Get current prize
     const { data: currentPrize, error: currentError } = await supabase
       .from('prizes')
@@ -210,7 +210,7 @@ app.get('/api/attempts', async (req, res) => {
 app.post('/api/convincers', async (req, res) => {
   try {
     const { name, email } = req.body;
-    
+
     if (!name || !email) {
       return res.status(400).json({ error: 'Nome e email são obrigatórios' });
     }
@@ -240,7 +240,7 @@ app.post('/api/convincers', async (req, res) => {
 app.post('/api/auth/check-email', async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({ error: 'Email é obrigatório' });
     }
@@ -270,7 +270,7 @@ app.post('/api/auth/check-email', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
@@ -314,7 +314,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, name } = req.body;
-    
+
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, senha e nome são obrigatórios' });
     }
@@ -395,7 +395,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/payments', async (req, res) => {
   try {
     const { convincer_id, amount_paid, time_purchased_seconds } = req.body;
-    
+
     if (!convincer_id || !amount_paid || !time_purchased_seconds) {
       return res.status(400).json({ 
         error: 'Dados obrigatórios: convincer_id, amount_paid, time_purchased_seconds' 
@@ -480,7 +480,7 @@ app.post('/api/payments', async (req, res) => {
 app.get('/api/time-balance/:convincer_id', async (req, res) => {
   try {
     const { convincer_id } = req.params;
-    
+
     const { data, error } = await supabase
       .from('time_balances')
       .select('*')
@@ -512,7 +512,7 @@ app.put('/api/time-balance/:convincer_id', async (req, res) => {
   try {
     const { convincer_id } = req.params;
     const { seconds_to_subtract } = req.body;
-    
+
     if (!seconds_to_subtract || seconds_to_subtract <= 0) {
       return res.status(400).json({ error: 'Tempo a subtrair deve ser maior que zero' });
     }
@@ -577,61 +577,63 @@ app.get('/api/attempts', async (req, res) => {
 // Create attempt
 app.post('/api/attempts', async (req, res) => {
   try {
+    const { available_time_seconds } = req.body;
+    const authHeader = req.headers.authorization;
+
     console.log('=== DEBUG CREATE ATTEMPT ===');
     console.log('Content-Type:', req.headers['content-type']);
     console.log('Raw body:', req.body);
     console.log('Body type:', typeof req.body);
-    console.log('Body keys:', req.body ? Object.keys(req.body) : 'no keys');
-    
-    // Try to parse body if it's text/plain but contains JSON
-    let parsedBody = req.body;
-    if (req.headers['content-type']?.includes('text/plain') && typeof req.body === 'string') {
-      try {
-        parsedBody = JSON.parse(req.body);
-        console.log('Parsed JSON from text/plain:', parsedBody);
-      } catch (e) {
-        console.log('Failed to parse as JSON:', e.message);
-      }
-    }
-    
-    const { available_time_seconds } = parsedBody || {};
-    const authHeader = req.headers.authorization;
-    
+    console.log('Body keys:', Object.keys(req.body));
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token de autenticação necessário' });
+      return res.status(401).json({ error: 'Token de autorização necessário' });
     }
 
     const token = authHeader.substring(7);
-    
-    // Verify JWT token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
+    // Verify token with Supabase and set user context
+    const { data: user, error: authError } = await supabase.auth.getUser(token);
+
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return res.status(401).json({ error: 'Token inválido' });
     }
 
     if (!available_time_seconds || available_time_seconds <= 0) {
-      return res.status(400).json({ error: 'Tempo disponível deve ser maior que zero' });
+      return res.status(400).json({ error: 'available_time_seconds deve ser maior que 0' });
     }
 
-    // Create attempt
-    const { data: attempt, error: attemptError } = await supabase
+    // Set the user context for RLS
+    const supabaseWithAuth = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
+    const { data, error } = await supabaseWithAuth
       .from('attempts')
       .insert({
-        convincer_id: user.id,
-        available_time_seconds,
+        convincer_id: user.user.id,
         status: 'active',
+        available_time_seconds,
         convincing_score: 15
       })
       .select()
       .single();
 
-    if (attemptError) {
-      console.error('Error creating attempt:', attemptError);
+    if (error) {
+      console.error('Error creating attempt:', error);
       return res.status(500).json({ error: 'Erro ao criar tentativa' });
     }
 
-    res.status(201).json(attempt);
+    res.status(201).json(data);
   } catch (error) {
     console.error('Create attempt error:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -643,14 +645,14 @@ app.get('/api/attempts/:attemptId', async (req, res) => {
   try {
     const { attemptId } = req.params;
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Token de autenticação necessário' });
     }
 
     const token = authHeader.substring(7);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       return res.status(401).json({ error: 'Token inválido' });
     }
@@ -681,19 +683,19 @@ app.patch('/api/attempts/:attemptId', async (req, res) => {
     console.log('=== PATCH ENDPOINT HIT ===');
     console.log('Request body:', req.body);
     console.log('Content-Type:', req.headers['content-type']);
-    
+
     const { attemptId } = req.params;
     const { status, convincing_score } = req.body;
-    
+
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Token de autenticação necessário' });
     }
 
     const token = authHeader.substring(7);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       return res.status(401).json({ error: 'Token inválido' });
     }
@@ -702,7 +704,7 @@ app.patch('/api/attempts/:attemptId', async (req, res) => {
     if (status) updateData.status = status;
     if (convincing_score !== undefined) updateData.convincing_score = convincing_score;
     updateData.updated_at = new Date().toISOString();
-    
+
     console.log('Updating attempt:', attemptId, 'with data:', updateData);
 
     const { data, error } = await supabase
@@ -735,14 +737,14 @@ app.get('/api/convincers/:convincerId/attempts/active', async (req, res) => {
   try {
     const { convincerId } = req.params;
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Token de autenticação necessário' });
     }
 
     const token = authHeader.substring(7);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       return res.status(401).json({ error: 'Token inválido' });
     }
@@ -781,14 +783,14 @@ app.get('/api/attempts/:attemptId/messages', async (req, res) => {
   try {
     const { attemptId } = req.params;
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Token de autenticação necessário' });
     }
 
     const token = authHeader.substring(7);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       return res.status(401).json({ error: 'Token inválido' });
     }
@@ -827,15 +829,18 @@ app.post('/api/messages', async (req, res) => {
   try {
     const { attempt_id, message } = req.body;
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token de autenticação necessário' });
+      return res.status(401).json({ error: 'Token de autorização necessário' });
     }
 
     const token = authHeader.substring(7);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
+    // Verify token
+    const { data: user, error: authError } = await supabase.auth.getUser(token);
+
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return res.status(401).json({ error: 'Token inválido' });
     }
 
@@ -850,15 +855,28 @@ app.post('/api/messages', async (req, res) => {
       .eq('id', attempt_id)
       .single();
 
-    if (attemptError || !attempt || attempt.convincer_id !== user.id) {
+    if (attemptError || !attempt || attempt.convincer_id !== user.user.id) {
       return res.status(403).json({ error: 'Não autorizado' });
     }
 
-    const { data: newMessage, error: messageError } = await supabase
+    // Use authenticated Supabase client
+    const supabaseWithAuth = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
+    const { data: newMessage, error: messageError } = await supabaseWithAuth
       .from('messages')
       .insert({
         attempt_id,
-        convincer_id: user.id,
+        convincer_id: user.user.id,
         message,
         convincing_score_snapshot: attempt.convincing_score,
         status: 'sent'
@@ -883,15 +901,18 @@ app.post('/api/ai-responses', async (req, res) => {
   try {
     const { attempt_id, user_message_id, ai_response, convincing_score_snapshot } = req.body;
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token de autenticação necessário' });
+      return res.status(401).json({ error: 'Token de autorização necessário' });
     }
 
     const token = authHeader.substring(7);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
+    // Verify token
+    const { data: user, error: authError } = await supabase.auth.getUser(token);
+
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return res.status(401).json({ error: 'Token inválido' });
     }
 
@@ -906,15 +927,27 @@ app.post('/api/ai-responses', async (req, res) => {
       .eq('id', attempt_id)
       .single();
 
-    if (attemptError || !attempt || attempt.convincer_id !== user.id) {
+    if (attemptError || !attempt || attempt.convincer_id !== user.user.id) {
       return res.status(403).json({ error: 'Não autorizado' });
     }
 
-    const { data: newResponse, error: responseError } = await supabase
+    // Use authenticated Supabase client
+    const supabaseWithAuth = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
+    const { data: newResponse, error: responseError } = await supabaseWithAuth
       .from('ai_responses')
       .insert({
-        attempt_id,
-        user_message_id,
+        attempt_id,        user_message_id,
         ai_response,
         convincing_score_snapshot: convincing_score_snapshot || 0,
         status: 'sent'
@@ -924,7 +957,7 @@ app.post('/api/ai-responses', async (req, res) => {
 
     if (responseError) {
       console.error('Error creating AI response:', responseError);
-      return res.status(500).json({ error: 'Erro ao criar resposta da AI' });
+      return res.status(500).json({ error: 'Erro ao criar resposta da IA' });
     }
 
     res.status(201).json(newResponse);
