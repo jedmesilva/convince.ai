@@ -203,6 +203,12 @@ class ApiService {
 
   async updateAttempt(attemptId: string, data: { status?: string; convincing_score?: number }): Promise<Attempt> {
     const token = this.getAuthToken();
+    console.log('=== DEBUG UPDATE ATTEMPT CLIENT ===');
+    console.log('Attempt ID:', attemptId);
+    console.log('Data to send:', data);
+    console.log('Token exists:', !!token);
+    console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'null');
+    
     return this.fetchJson(`/attempts/${attemptId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),

@@ -398,9 +398,17 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     console.log('🛑 Usuário parou a tentativa');
     
     if (currentAttempt?.status === 'active') {
+      console.log('📝 Tentativa ativa encontrada, atualizando para abandoned...');
       await updateAttemptStatus('abandoned');
       setChatState('attempt_abandoned');
       blockChat();
+      
+      // Limpar timer
+      setTimeLeft(0);
+      
+      console.log('✅ Tentativa abandonada, chat bloqueado');
+    } else {
+      console.log('⚠️ Nenhuma tentativa ativa para parar');
     }
   }, [currentAttempt, updateAttemptStatus, blockChat]);
 
