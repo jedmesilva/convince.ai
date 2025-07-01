@@ -16,6 +16,10 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Parse JSON first
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 // CORS middleware - Allow all origins for development
 app.use(cors({
   origin: true,
@@ -37,8 +41,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
-app.use(express.json());
 
 // Request logging
 app.use((req, res, next) => {
