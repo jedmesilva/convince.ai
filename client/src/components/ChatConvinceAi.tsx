@@ -396,7 +396,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     }
   }, [currentAttempt, updateAttemptStatus, blockChat]);
 
-  // Handler principal para botão "Desbloquear chat" / "Iniciar tentativa"
+  // Handler para botão "Desbloquear chat" (usuário não autenticado)
   const handleUnlockChat = useCallback(async () => {
     console.log('🔓 Processando desbloqueio do chat...');
     setIsLoading(true);
@@ -415,42 +415,58 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       // 2. Verificar saldo de tempo
       const timeBalance = await checkUserTimeBalance();
       
-      if (timeBalance > 0) {
-        // 3. Verificar se já existe tentativa ativa
-        const existingAttempt = await checkAttemptStatus();
-        
-        if (existingAttempt && existingAttempt.status === 'active') {
-          // Continuar tentativa existente
-          console.log('🔄 Continuando tentativa existente...');
-          setCurrentAttempt(existingAttempt);
-          setTimeLeft(existingAttempt.available_time_seconds);
-          setInitialTime(existingAttempt.available_time_seconds);
-          setConvincementLevel(existingAttempt.convincing_score);
-          setChatState('attempt_active');
-        } else {
-          // 4. Criar nova tentativa
-          const newAttempt = await createAttempt();
-          if (newAttempt) {
-            console.log('✅ Nova tentativa criada com sucesso!');
-            setChatState('attempt_active');
-          } else {
-            console.error('❌ Falha ao criar tentativa');
-            setShowPaymentDialog(true);
-          }
-        }
-      } else {
+      if (timeBalance <= 0) {
         // Usuário sem saldo - abrir checkout para compra
         console.log('💰 Usuário sem saldo, abrindo checkout...');
         setChatState('user_authenticated_no_balance');
         setShowPaymentDialog(true);
+        return;
       }
+
+      // 3. Se chegou aqui, usuário está autenticado e tem saldo
+      // Redirecionar para função de iniciar tentativa
+      await handleStartAttempt();
     } catch (error) {
       console.error('Erro no processo de desbloqueio:', error);
       setShowPaymentDialog(true);
     } finally {
       setIsLoading(false);
     }
-  }, [checkUserAuthentication, checkUserTimeBalance, checkAttemptStatus, createAttempt]);
+  }, [checkUserAuthentication, checkUserTimeBalance]);
+
+  // Handler específico para "Iniciar tentativa" (usuário autenticado com saldo)
+  const handleStartAttempt = useCallback(async () => {
+    console.log('🚀 Iniciando nova tentativa...');
+    setIsLoading(true);
+
+    try {
+      // Verificar se já existe tentativa ativa
+      const existingAttempt = await checkAttemptStatus();
+      
+      if (existingAttempt && existingAttempt.status === 'active') {
+        // Continuar tentativa existente
+        console.log('🔄 Continuando tentativa existente...');
+        setCurrentAttempt(existingAttempt);
+        setTimeLeft(existingAttempt.available_time_seconds);
+        setInitialTime(existingAttempt.available_time_seconds);
+        setConvincementLevel(existingAttempt.convincing_score);
+        setChatState('attempt_active');
+      } else {
+        // Criar nova tentativa
+        const newAttempt = await createAttempt();
+        if (newAttempt) {
+          console.log('✅ Nova tentativa criada com sucesso!');
+          setChatState('attempt_active');
+        } else {
+          console.error('❌ Falha ao criar tentativa');
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar tentativa:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [checkAttemptStatus, createAttempt]);
 
   // ==== DEFINIR ESTADO INICIAL ====
   
@@ -704,7 +720,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         return (
           <div className="space-y-3">
             <button
-              onClick={handleUnlockChat}
+              onClick={handleStartAttempt}
               disabled={isLoading}
               className="w-full bg-violet-400 hover:bg-violet-300 disabled:bg-violet-400/70 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-2"
             >

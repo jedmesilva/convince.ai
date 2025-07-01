@@ -568,6 +568,9 @@ app.get('/api/attempts', async (req, res) => {
 // Create attempt
 app.post('/api/attempts', async (req, res) => {
   try {
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+    
     const { available_time_seconds } = req.body;
     const authHeader = req.headers.authorization;
     
