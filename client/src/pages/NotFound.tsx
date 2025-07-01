@@ -76,7 +76,7 @@ const NotFound = () => {
         <div className="mb-8 flex justify-center">
           <div className="w-32 h-32 rounded-3xl bg-slate-700 overflow-hidden shadow-2xl">
             <img 
-              src="/Vince_wht.svg" 
+              src="/Vince_Think.svg" 
               alt="Vince - Mascote" 
               className="w-full h-full object-cover rounded-3xl"
             />
