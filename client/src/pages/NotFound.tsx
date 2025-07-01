@@ -55,7 +55,7 @@ const NotFound = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white p-4">
+    <div className="min-h-screen bg-slate-900 text-white p-4 py-8">
       <style jsx>{`
         @keyframes fade-in {
           from {
@@ -81,6 +81,13 @@ const NotFound = () => {
               className="w-full h-full object-cover rounded-3xl"
             />
           </div>
+        </div>
+
+        {/* Código de erro estilizado no topo da lista de mensagens, alinhado à esquerda */}
+        <div className="mb-6 flex justify-start max-w-lg mx-auto">
+          <span className="text-6xl font-bold text-slate-400 bg-slate-800 px-6 py-3 rounded-2xl border border-slate-600">
+            404
+          </span>
         </div>
 
         {/* Mensagens do Vince com sistema sequencial */}
@@ -121,21 +128,16 @@ const NotFound = () => {
         {/* Indicador de digitação - agora aparece APÓS as mensagens visíveis */}
         {isTyping && <TypingIndicator />}
 
-        {/* Código de erro estilizado com mais espaçamento */}
-        <div className="mb-12 mt-16">
-          <span className="text-6xl font-bold text-slate-400 bg-slate-800 px-6 py-3 rounded-2xl border border-slate-600">
-            404
-          </span>
+        {/* Botão Voltar alinhado à esquerda */}
+        <div className="mt-8 flex justify-start max-w-lg mx-auto">
+          <button
+            onClick={handleGoBack}
+            className="bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Voltar</span>
+          </button>
         </div>
-
-        {/* Botão Voltar */}
-        <button
-          onClick={handleGoBack}
-          className="bg-violet-400 hover:bg-violet-300 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 text-lg flex items-center justify-center space-x-3 mx-auto shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Voltar</span>
-        </button>
       </div>
     </div>
   );
