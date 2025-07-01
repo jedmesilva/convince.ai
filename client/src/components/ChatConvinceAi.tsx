@@ -387,8 +387,15 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       if (currentAttempt?.status === 'active') {
         // Mudar status para "expired"
         await updateAttemptStatus('expired');
-        setChatState('attempt_expired');
+        
+        // Limpar tentativa atual
+        setCurrentAttempt(null);
+        
+        // Atualizar estado para mostrar botão de comprar mais tempo
+        setChatState('user_authenticated_no_balance');
         blockChat();
+        
+        console.log('✅ Tentativa expirada, exibindo botão para comprar mais tempo');
       }
     }
   }, [checkUserTimeBalance, updateTimer, currentAttempt, updateAttemptStatus, blockChat]);
@@ -722,6 +729,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         );
 
       case 'user_authenticated_no_balance':
+      case 'attempt_expired':
         return (
           <button
             onClick={() => setShowPaymentDialog(true)}
