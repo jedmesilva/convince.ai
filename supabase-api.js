@@ -16,9 +16,11 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Parse JSON first
+// Parse different content types
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.text({ limit: '10mb' })); // Add text parser
+app.use(express.raw({ limit: '10mb' })); // Add raw parser
 
 // CORS middleware - Allow all origins for development
 app.use(cors({
@@ -570,10 +572,24 @@ app.get('/api/attempts', async (req, res) => {
 // Create attempt
 app.post('/api/attempts', async (req, res) => {
   try {
-    console.log('Request body:', req.body);
-    console.log('Request headers:', req.headers);
+    console.log('=== DEBUG CREATE ATTEMPT ===');
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Raw body:', req.body);
+    console.log('Body type:', typeof req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'no keys');
     
-    const { available_time_seconds } = req.body;
+    // Try to parse body if it's text/plain but contains JSON
+    let parsedBody = req.body;
+    if (req.headers['content-type']?.includes('text/plain') && typeof req.body === 'string') {
+      try {
+        parsedBody = JSON.parse(req.body);
+        console.log('Parsed JSON from text/plain:', parsedBody);
+      } catch (e) {
+        console.log('Failed to parse as JSON:', e.message);
+      }
+    }
+    
+    const { available_time_seconds } = parsedBody || {};
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

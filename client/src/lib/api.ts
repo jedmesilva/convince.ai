@@ -180,6 +180,8 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ available_time_seconds }),
       headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     });
