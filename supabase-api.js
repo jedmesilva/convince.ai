@@ -16,11 +16,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Parse different content types
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// CORS middleware - Allow all origins for development
+// CORS middleware DEVE vir ANTES do parsing
 app.use(cors({
   origin: true,
   credentials: false,
@@ -41,6 +37,10 @@ app.use((req, res, next) => {
     next();
   }
 });
+
+// Parse different content types - DEPOIS do CORS
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging
 app.use((req, res, next) => {
@@ -827,6 +827,12 @@ app.get('/api/attempts/:attemptId/messages', async (req, res) => {
 // Create message
 app.post('/api/messages', async (req, res) => {
   try {
+    console.log('=== DEBUG CREATE MESSAGE ===');
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Raw body:', req.body);
+    console.log('Body type:', typeof req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'body is null/undefined');
+    
     const { attempt_id, message } = req.body;
     const authHeader = req.headers.authorization;
 
