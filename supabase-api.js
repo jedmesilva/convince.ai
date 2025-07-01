@@ -671,8 +671,25 @@ app.get('/api/attempts/:attemptId', async (req, res) => {
 // Update attempt
 app.patch('/api/attempts/:attemptId', async (req, res) => {
   try {
+    console.log('=== DEBUG UPDATE ATTEMPT ===');
+    console.log('Attempt ID:', req.params.attemptId);
+    console.log('Request body:', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
+    
     const { attemptId } = req.params;
-    const { status, convincing_score } = req.body;
+    
+    // Handle different content types for PATCH request
+    let parsedBody = req.body;
+    if (req.headers['content-type']?.includes('text/plain') && typeof req.body === 'string') {
+      try {
+        parsedBody = JSON.parse(req.body);
+        console.log('Parsed JSON from text/plain:', parsedBody);
+      } catch (e) {
+        console.log('Failed to parse as JSON:', e.message);
+      }
+    }
+    
+    const { status, convincing_score } = parsedBody || {};
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

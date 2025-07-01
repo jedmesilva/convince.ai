@@ -207,6 +207,8 @@ class ApiService {
       method: 'PATCH',
       body: JSON.stringify(data),
       headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     });

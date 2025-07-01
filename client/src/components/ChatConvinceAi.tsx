@@ -272,14 +272,22 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
   // 6. Atualizar status da tentativa
   const updateAttemptStatus = useCallback(async (status: string) => {
-    if (!currentAttempt) return;
+    if (!currentAttempt) {
+      console.log('❌ Nenhuma tentativa ativa para atualizar');
+      return;
+    }
     
     try {
       console.log(`📝 Atualizando status da tentativa para: ${status}`);
-      await apiService.updateAttempt(currentAttempt.id, { status });
+      console.log(`📝 ID da tentativa: ${currentAttempt.id}`);
+      console.log(`📝 Dados a serem enviados:`, { status });
+      
+      const result = await apiService.updateAttempt(currentAttempt.id, { status });
+      console.log('✅ Status atualizado com sucesso:', result);
+      
       setCurrentAttempt(prev => prev ? { ...prev, status } : null);
     } catch (error) {
-      console.error('Erro ao atualizar status da tentativa:', error);
+      console.error('❌ Erro ao atualizar status da tentativa:', error);
     }
   }, [currentAttempt]);
 
