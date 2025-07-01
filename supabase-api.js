@@ -545,6 +545,354 @@ app.put('/api/time-balance/:convincer_id', async (req, res) => {
   }
 });
 
+// Attempts endpoints
+app.get('/api/attempts', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('attempts')
+      .select('*, convincers(name)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching attempts:', error);
+      return res.status(500).json({ error: 'Erro ao buscar tentativas' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get attempts error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Create attempt
+app.post('/api/attempts', async (req, res) => {
+  try {
+    const { available_time_seconds } = req.body;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // Verify JWT token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    if (!available_time_seconds || available_time_seconds <= 0) {
+      return res.status(400).json({ error: 'Tempo disponível deve ser maior que zero' });
+    }
+
+    // Create attempt
+    const { data: attempt, error: attemptError } = await supabase
+      .from('attempts')
+      .insert({
+        convincer_id: user.id,
+        available_time_seconds,
+        status: 'active',
+        convincing_score: 15
+      })
+      .select()
+      .single();
+
+    if (attemptError) {
+      console.error('Error creating attempt:', attemptError);
+      return res.status(500).json({ error: 'Erro ao criar tentativa' });
+    }
+
+    res.status(201).json(attempt);
+  } catch (error) {
+    console.error('Create attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Get specific attempt
+app.get('/api/attempts/:attemptId', async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    const { data, error } = await supabase
+      .from('attempts')
+      .select('*')
+      .eq('id', attemptId)
+      .eq('convincer_id', user.id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Tentativa não encontrada' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Update attempt
+app.patch('/api/attempts/:attemptId', async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const { status, convincing_score } = req.body;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (convincing_score !== undefined) updateData.convincing_score = convincing_score;
+    updateData.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('attempts')
+      .update(updateData)
+      .eq('id', attemptId)
+      .eq('convincer_id', user.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Tentativa não encontrada ou não autorizada' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Update attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Get active attempt for user
+app.get('/api/convincers/:convincerId/attempts/active', async (req, res) => {
+  try {
+    const { convincerId } = req.params;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    if (user.id !== convincerId) {
+      return res.status(403).json({ error: 'Não autorizado' });
+    }
+
+    const { data, error } = await supabase
+      .from('attempts')
+      .select('*')
+      .eq('convincer_id', convincerId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching active attempt:', error);
+      return res.status(500).json({ error: 'Erro ao buscar tentativa ativa' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Nenhuma tentativa ativa encontrada' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get active attempt error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Get messages for attempt
+app.get('/api/attempts/:attemptId/messages', async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    // Verify user owns the attempt
+    const { data: attempt, error: attemptError } = await supabase
+      .from('attempts')
+      .select('convincer_id')
+      .eq('id', attemptId)
+      .single();
+
+    if (attemptError || !attempt || attempt.convincer_id !== user.id) {
+      return res.status(403).json({ error: 'Não autorizado' });
+    }
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('attempt_id', attemptId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching messages:', error);
+      return res.status(500).json({ error: 'Erro ao buscar mensagens' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get attempt messages error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Create message
+app.post('/api/messages', async (req, res) => {
+  try {
+    const { attempt_id, message } = req.body;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    if (!attempt_id || !message) {
+      return res.status(400).json({ error: 'attempt_id e message são obrigatórios' });
+    }
+
+    // Verify user owns the attempt
+    const { data: attempt, error: attemptError } = await supabase
+      .from('attempts')
+      .select('convincer_id, convincing_score')
+      .eq('id', attempt_id)
+      .single();
+
+    if (attemptError || !attempt || attempt.convincer_id !== user.id) {
+      return res.status(403).json({ error: 'Não autorizado' });
+    }
+
+    const { data: newMessage, error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        attempt_id,
+        convincer_id: user.id,
+        message,
+        convincing_score_snapshot: attempt.convincing_score,
+        status: 'sent'
+      })
+      .select()
+      .single();
+
+    if (messageError) {
+      console.error('Error creating message:', messageError);
+      return res.status(500).json({ error: 'Erro ao criar mensagem' });
+    }
+
+    res.status(201).json(newMessage);
+  } catch (error) {
+    console.error('Create message error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Create AI response
+app.post('/api/ai-responses', async (req, res) => {
+  try {
+    const { attempt_id, user_message_id, ai_response, convincing_score_snapshot } = req.body;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    if (!attempt_id || !user_message_id || !ai_response) {
+      return res.status(400).json({ error: 'attempt_id, user_message_id e ai_response são obrigatórios' });
+    }
+
+    // Verify user owns the attempt
+    const { data: attempt, error: attemptError } = await supabase
+      .from('attempts')
+      .select('convincer_id')
+      .eq('id', attempt_id)
+      .single();
+
+    if (attemptError || !attempt || attempt.convincer_id !== user.id) {
+      return res.status(403).json({ error: 'Não autorizado' });
+    }
+
+    const { data: newResponse, error: responseError } = await supabase
+      .from('ai_responses')
+      .insert({
+        attempt_id,
+        user_message_id,
+        ai_response,
+        convincing_score_snapshot: convincing_score_snapshot || 0,
+        status: 'sent'
+      })
+      .select()
+      .single();
+
+    if (responseError) {
+      console.error('Error creating AI response:', responseError);
+      return res.status(500).json({ error: 'Erro ao criar resposta da AI' });
+    }
+
+    res.status(201).json(newResponse);
+  } catch (error) {
+    console.error('Create AI response error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
@@ -559,6 +907,13 @@ app.get('/', (req, res) => {
       register: 'POST /api/auth/register',
       convincers: 'POST /api/convincers',
       attempts: 'GET /api/attempts',
+      createAttempt: 'POST /api/attempts',
+      getAttempt: 'GET /api/attempts/:attemptId',
+      updateAttempt: 'PATCH /api/attempts/:attemptId',
+      activeAttempt: 'GET /api/convincers/:convincerId/attempts/active',
+      attemptMessages: 'GET /api/attempts/:attemptId/messages',
+      createMessage: 'POST /api/messages',
+      createAIResponse: 'POST /api/ai-responses',
       payments: 'POST /api/payments',
       timeBalance: 'GET /api/time-balance/:convincer_id',
       updateTimeBalance: 'PUT /api/time-balance/:convincer_id'

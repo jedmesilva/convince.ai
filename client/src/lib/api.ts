@@ -173,38 +173,49 @@ class ApiService {
   }
 
   async createAttempt(available_time_seconds: number): Promise<Attempt> {
+    const session = localStorage.getItem('auth_session');
+    const token = session ? JSON.parse(session).access_token : null;
+    
     return this.fetchJson('/attempts', {
       method: 'POST',
       body: JSON.stringify({ available_time_seconds }),
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }
 
+  private getAuthToken(): string | null {
+    const session = localStorage.getItem('auth_session');
+    return session ? JSON.parse(session).access_token : null;
+  }
+
   async getAttempt(attemptId: string): Promise<Attempt> {
+    const token = this.getAuthToken();
     return this.fetchJson(`/attempts/${attemptId}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }
 
   async updateAttempt(attemptId: string, data: { status?: string; convincing_score?: number }): Promise<Attempt> {
+    const token = this.getAuthToken();
     return this.fetchJson(`/attempts/${attemptId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }
 
   async getActiveAttempt(convincerId: string): Promise<Attempt | null> {
     try {
+      const token = this.getAuthToken();
       return await this.fetchJson(`/convincers/${convincerId}/attempts/active`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
     } catch (error) {
@@ -214,24 +225,27 @@ class ApiService {
   }
 
   async getAttemptMessages(attemptId: string): Promise<Message[]> {
+    const token = this.getAuthToken();
     return this.fetchJson(`/attempts/${attemptId}/messages`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }
 
   async createMessage(attemptId: string, message: string): Promise<Message> {
+    const token = this.getAuthToken();
     return this.fetchJson('/messages', {
       method: 'POST',
       body: JSON.stringify({ attempt_id: attemptId, message }),
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }
 
   async createAIResponse(attemptId: string, userMessageId: string, aiResponse: string, convincingScore: number): Promise<AIResponse> {
+    const token = this.getAuthToken();
     return this.fetchJson('/ai-responses', {
       method: 'POST',
       body: JSON.stringify({ 
@@ -241,7 +255,7 @@ class ApiService {
         convincing_score_snapshot: convincingScore
       }),
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
   }
