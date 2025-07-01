@@ -92,7 +92,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
             <div className="mb-4">
               <div className="w-16 h-16 rounded-full bg-violet-500/20 overflow-hidden mx-auto mb-3">
                 <img 
-                  src="/Vince_wht.svg" 
+                  src="/Vince_Money.svg" 
                   alt="Vince" 
                   className="w-full h-full object-cover rounded-full"
                 />
