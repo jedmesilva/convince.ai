@@ -716,7 +716,12 @@ app.patch('/api/attempts/:attemptId', async (req, res) => {
       .select()
       .single();
 
-    if (error || !data) {
+    if (error) {
+      console.error('Error updating attempt:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar tentativa', details: error });
+    }
+
+    if (!data) {
       return res.status(404).json({ error: 'Tentativa não encontrada ou não autorizada' });
     }
 

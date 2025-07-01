@@ -16,7 +16,7 @@ export const convincers = pgTable("convincers", {
 export const attempts = pgTable("attempts", {
   id: uuid("id").primaryKey().defaultRandom(),
   convincer_id: uuid("convincer_id").notNull().references(() => convincers.id),
-  status: text("status").notNull().default("active"), // active, completed, failed, abandoned
+  status: text("status").notNull().default("active"), // active, completed, failed, abandoned, expired
   available_time_seconds: integer("available_time_seconds").notNull().default(1800), // 30 minutes
   convincing_score: integer("convincing_score").notNull().default(0), // 0-100
   created_at: timestamp("created_at").notNull().defaultNow(),
