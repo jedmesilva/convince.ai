@@ -103,7 +103,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
             </div>
             
             <div className="space-y-3">
-              <p className="text-violet-200 font-medium">Quer tentar a sua sorte?</p>
+              <p className="text-violet-200 font-medium">Será que você é capaz de convencê-lo?</p>
               <button 
                 onClick={onShowChat}
                 className="group relative bg-violet-400 hover:bg-violet-300 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95"
