@@ -407,17 +407,29 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     if (currentAttempt?.status === 'active') {
       console.log('📝 Tentativa ativa encontrada, atualizando para abandoned...');
       await updateAttemptStatus('abandoned');
-      setChatState('attempt_abandoned');
+      
+      // Limpar tentativa atual
+      setCurrentAttempt(null);
+      
+      // Verificar saldo para definir estado correto
+      const timeBalance = await checkUserTimeBalance();
+      
+      if (timeBalance > 0) {
+        setChatState('user_authenticated_has_balance');
+      } else {
+        setChatState('user_authenticated_no_balance');
+      }
+      
       blockChat();
       
       // Limpar timer
       setTimeLeft(0);
       
-      console.log('✅ Tentativa abandonada, chat bloqueado');
+      console.log('✅ Tentativa abandonada, exibindo botões apropriados');
     } else {
       console.log('⚠️ Nenhuma tentativa ativa para parar');
     }
-  }, [currentAttempt, updateAttemptStatus, blockChat]);
+  }, [currentAttempt, updateAttemptStatus, blockChat, checkUserTimeBalance]);
 
   // Handler para botão "Desbloquear chat" (usuário não autenticado)
   const handleUnlockChat = useCallback(async () => {
@@ -730,6 +742,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
       case 'user_authenticated_no_balance':
       case 'attempt_expired':
+      case 'attempt_abandoned':
         return (
           <button
             onClick={() => setShowPaymentDialog(true)}
