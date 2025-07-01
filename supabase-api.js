@@ -19,14 +19,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Parse different content types
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.text({ limit: '10mb' })); // Add text parser
-app.use(express.raw({ limit: '10mb' })); // Add raw parser
 
 // CORS middleware - Allow all origins for development
 app.use(cors({
   origin: true,
   credentials: false,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   optionsSuccessStatus: 200
 }));
@@ -34,7 +32,7 @@ app.use(cors({
 // Additional CORS headers for preflight
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
   
   if (req.method === 'OPTIONS') {
@@ -677,64 +675,35 @@ app.get('/api/attempts/:attemptId', async (req, res) => {
 
 // Endpoint PATCH movido para cima para evitar conflitos
 
-// Update attempt - MOVED UP TO AVOID MIDDLEWARE CONFLICTS
+// Update attempt
 app.patch('/api/attempts/:attemptId', async (req, res) => {
   try {
     console.log('=== PATCH ENDPOINT HIT ===');
-    console.log('Raw request URL:', req.url);
-    console.log('Raw request method:', req.method);
-    console.log('Raw request headers:', req.headers);
-    console.log('Raw request body type:', typeof req.body);
-    console.log('Raw request body:', req.body);
+    console.log('Request body:', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
     
     const { attemptId } = req.params;
-    
-    // Handle different content types for PATCH request
-    let parsedBody = req.body;
-    if (req.headers['content-type']?.includes('text/plain') && typeof req.body === 'string') {
-      try {
-        parsedBody = JSON.parse(req.body);
-        console.log('Parsed JSON from text/plain:', parsedBody);
-      } catch (e) {
-        console.log('Failed to parse as JSON:', e.message);
-        return res.status(400).json({ error: 'JSON inválido' });
-      }
-    }
-    
-    const { status, convincing_score } = parsedBody || {};
-    console.log('Extracted data - status:', status, 'convincing_score:', convincing_score);
+    const { status, convincing_score } = req.body;
     
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('Auth header missing or invalid');
       return res.status(401).json({ error: 'Token de autenticação necessário' });
     }
 
     const token = authHeader.substring(7);
-    console.log('Token extracted, length:', token.length);
-    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    if (authError) {
-      console.error('Auth error:', authError);
-      return res.status(401).json({ error: 'Token inválido', details: authError });
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
     }
-    
-    if (!user) {
-      console.log('No user found');
-      return res.status(401).json({ error: 'Usuário não encontrado' });
-    }
-    
-    console.log('User authenticated:', user.id);
 
     const updateData = {};
     if (status) updateData.status = status;
     if (convincing_score !== undefined) updateData.convincing_score = convincing_score;
     updateData.updated_at = new Date().toISOString();
     
-    console.log('Update data prepared:', updateData);
-    console.log('Attempting to update attempt:', attemptId, 'for user:', user.id);
+    console.log('Updating attempt:', attemptId, 'with data:', updateData);
 
     const { data, error } = await supabase
       .from('attempts')
@@ -744,23 +713,20 @@ app.patch('/api/attempts/:attemptId', async (req, res) => {
       .select()
       .single();
 
-    console.log('Supabase update result - data:', data, 'error:', error);
-
     if (error) {
-      console.error('Supabase error updating attempt:', error);
+      console.error('Error updating attempt:', error);
       return res.status(500).json({ error: 'Erro ao atualizar tentativa', details: error });
     }
 
     if (!data) {
-      console.log('No data returned - attempt not found or unauthorized');
       return res.status(404).json({ error: 'Tentativa não encontrada ou não autorizada' });
     }
 
-    console.log('Success! Returning data:', data);
+    console.log('Attempt updated successfully:', data);
     res.json(data);
   } catch (error) {
     console.error('Unexpected error in update attempt:', error);
-    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
