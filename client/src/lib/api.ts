@@ -209,15 +209,40 @@ class ApiService {
     console.log('Token exists:', !!token);
     console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'null');
     
-    return this.fetchJson(`/attempts/${attemptId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/attempts/${attemptId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response text:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { error: errorText };
+        }
+        throw new Error(`HTTP ${response.status}: ${errorData.error || 'Unknown error'}`);
+      }
+
+      const result = await response.json();
+      console.log('Success response:', result);
+      return result;
+    } catch (error) {
+      console.error('Update attempt error:', error);
+      throw error;
+    }
   }
 
   async getActiveAttempt(convincerId: string): Promise<Attempt | null> {

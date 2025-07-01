@@ -47,6 +47,13 @@ app.use((req, res, next) => {
 // Request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+  if (req.method === 'PATCH' && req.path.includes('/attempts/')) {
+    console.log('PATCH request details:', {
+      path: req.path,
+      body: req.body,
+      headers: req.headers
+    });
+  }
   next();
 });
 
@@ -668,13 +675,17 @@ app.get('/api/attempts/:attemptId', async (req, res) => {
   }
 });
 
-// Update attempt
+// Endpoint PATCH movido para cima para evitar conflitos
+
+// Update attempt - MOVED UP TO AVOID MIDDLEWARE CONFLICTS
 app.patch('/api/attempts/:attemptId', async (req, res) => {
   try {
-    console.log('=== DEBUG UPDATE ATTEMPT ===');
-    console.log('Attempt ID:', req.params.attemptId);
-    console.log('Request body:', req.body);
-    console.log('Content-Type:', req.headers['content-type']);
+    console.log('=== PATCH ENDPOINT HIT ===');
+    console.log('Raw request URL:', req.url);
+    console.log('Raw request method:', req.method);
+    console.log('Raw request headers:', req.headers);
+    console.log('Raw request body type:', typeof req.body);
+    console.log('Raw request body:', req.body);
     
     const { attemptId } = req.params;
     
@@ -686,27 +697,44 @@ app.patch('/api/attempts/:attemptId', async (req, res) => {
         console.log('Parsed JSON from text/plain:', parsedBody);
       } catch (e) {
         console.log('Failed to parse as JSON:', e.message);
+        return res.status(400).json({ error: 'JSON inválido' });
       }
     }
     
     const { status, convincing_score } = parsedBody || {};
+    console.log('Extracted data - status:', status, 'convincing_score:', convincing_score);
+    
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('Auth header missing or invalid');
       return res.status(401).json({ error: 'Token de autenticação necessário' });
     }
 
     const token = authHeader.substring(7);
+    console.log('Token extracted, length:', token.length);
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Token inválido' });
+    if (authError) {
+      console.error('Auth error:', authError);
+      return res.status(401).json({ error: 'Token inválido', details: authError });
     }
+    
+    if (!user) {
+      console.log('No user found');
+      return res.status(401).json({ error: 'Usuário não encontrado' });
+    }
+    
+    console.log('User authenticated:', user.id);
 
     const updateData = {};
     if (status) updateData.status = status;
     if (convincing_score !== undefined) updateData.convincing_score = convincing_score;
     updateData.updated_at = new Date().toISOString();
+    
+    console.log('Update data prepared:', updateData);
+    console.log('Attempting to update attempt:', attemptId, 'for user:', user.id);
 
     const { data, error } = await supabase
       .from('attempts')
@@ -716,19 +744,23 @@ app.patch('/api/attempts/:attemptId', async (req, res) => {
       .select()
       .single();
 
+    console.log('Supabase update result - data:', data, 'error:', error);
+
     if (error) {
-      console.error('Error updating attempt:', error);
+      console.error('Supabase error updating attempt:', error);
       return res.status(500).json({ error: 'Erro ao atualizar tentativa', details: error });
     }
 
     if (!data) {
+      console.log('No data returned - attempt not found or unauthorized');
       return res.status(404).json({ error: 'Tentativa não encontrada ou não autorizada' });
     }
 
+    console.log('Success! Returning data:', data);
     res.json(data);
   } catch (error) {
-    console.error('Update attempt error:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('Unexpected error in update attempt:', error);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
