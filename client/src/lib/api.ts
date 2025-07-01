@@ -210,7 +210,7 @@ class ApiService {
     console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'null');
     
     try {
-      const response = await fetch(`${this.baseUrl}/attempts/${attemptId}`, {
+      const response = await fetch(`${API_BASE_URL}/attempts/${attemptId}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
         headers: {
