@@ -121,7 +121,7 @@ class ApiService {
   private async fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
     try {
       console.log(`Fazendo requisição para: ${API_BASE_URL}${endpoint}`);
-      
+
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: options?.method || 'GET',
         headers: {
@@ -175,7 +175,7 @@ class ApiService {
   async createAttempt(available_time_seconds: number): Promise<Attempt> {
     const session = localStorage.getItem('auth_session');
     const token = session ? JSON.parse(session).access_token : null;
-    
+
     return this.fetchJson('/attempts', {
       method: 'POST',
       body: JSON.stringify({ available_time_seconds }),
@@ -208,7 +208,7 @@ class ApiService {
     console.log('Data to send:', data);
     console.log('Token exists:', !!token);
     console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'null');
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/attempts/${attemptId}`, {
         method: 'PATCH',
@@ -268,13 +268,20 @@ class ApiService {
     });
   }
 
+  // Criar mensagem
   async createMessage(attemptId: string, message: string): Promise<Message> {
-    const token = this.getAuthToken();
+    console.log('=== DEBUG CREATE MESSAGE CLIENT ===');
+    console.log('Attempt ID:', attemptId);
+    console.log('Message:', message);
+    console.log('Token exists:', !!this.getAuthToken());
+    console.log('Token preview:', this.getAuthToken()?.substring(0, 20) + '...');
+
     return this.fetchJson('/messages', {
       method: 'POST',
       body: JSON.stringify({ attempt_id: attemptId, message }),
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAuthToken()}`,
       },
     });
   }
