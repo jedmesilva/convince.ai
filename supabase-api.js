@@ -975,6 +975,55 @@ app.post('/api/ai-responses', async (req, res) => {
   }
 });
 
+// Get AI responses for an attempt
+app.get('/api/attempts/:attemptId/ai-responses', async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autorização necessário' });
+    }
+
+    const token = authHeader.substring(7);
+
+    // Verify token
+    const { data: user, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    // Verify user owns the attempt
+    const { data: attempt, error: attemptError } = await supabase
+      .from('attempts')
+      .select('convincer_id')
+      .eq('id', attemptId)
+      .single();
+
+    if (attemptError || !attempt || attempt.convincer_id !== user.user.id) {
+      return res.status(403).json({ error: 'Não autorizado' });
+    }
+
+    const { data, error } = await supabase
+      .from('ai_responses')
+      .select('*')
+      .eq('attempt_id', attemptId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching AI responses:', error);
+      return res.status(500).json({ error: 'Erro ao buscar respostas da IA' });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get attempt AI responses error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
@@ -1076,8 +1125,31 @@ const notifyAttemptUpdate = (attemptId, attemptData) => {
   });
 };
 
+// Função para enviar notificação de nova resposta AI
+const notifyAIResponseCreated = (aiResponseData) => {
+  console.log(`🤖 Notificando nova resposta AI para tentativa ${aiResponseData.attempt_id}:`, aiResponseData);
+  
+  clients.forEach((client, clientId) => {
+    if (client.subscriptions.has(aiResponseData.attempt_id) && client.ws.readyState === 1) {
+      try {
+        client.ws.send(JSON.stringify({
+          type: 'ai_response_created',
+          attemptId: aiResponseData.attempt_id,
+          aiResponseId: aiResponseData.id,
+          aiResponse: aiResponseData.ai_response,
+          convincingScore: aiResponseData.convincing_score_snapshot,
+          created_at: aiResponseData.created_at
+        }));
+        console.log(`✅ Notificação AI response enviada para cliente ${clientId}`);
+      } catch (error) {
+        console.error(`❌ Erro ao enviar notificação AI response para cliente ${clientId}:`, error);
+      }
+    }
+  });
+};
+
 // Configurar realtime do Supabase para escutar mudanças na tabela attempts
-const channel = supabase
+const attemptsChannel = supabase
   .channel('attempts-realtime')
   .on(
     'postgres_changes',
@@ -1095,7 +1167,29 @@ const channel = supabase
     }
   )
   .subscribe((status) => {
-    console.log('📡 Status da subscrição Supabase realtime:', status);
+    console.log('📡 Status da subscrição attempts realtime:', status);
+  });
+
+// Configurar realtime do Supabase para escutar mudanças na tabela ai_responses
+const aiResponsesChannel = supabase
+  .channel('ai-responses-realtime')
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'ai_responses'
+    },
+    (payload) => {
+      console.log('🤖 Nova AI response detectada:', payload);
+      
+      if (payload.new && payload.new.attempt_id) {
+        notifyAIResponseCreated(payload.new);
+      }
+    }
+  )
+  .subscribe((status) => {
+    console.log('📡 Status da subscrição ai_responses realtime:', status);
   });
 
 // Iniciar servidor

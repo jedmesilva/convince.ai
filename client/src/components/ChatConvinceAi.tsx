@@ -231,6 +231,23 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           setIsConvincementAnimating(true);
           setTimeout(() => setIsConvincementAnimating(false), 1000);
         }
+
+        if (data.type === 'ai_response_created' && data.attemptId === attemptId) {
+          // Nova resposta da AI criada - adicionar ao chat
+          console.log('🤖 Nova resposta da AI recebida em tempo real:', data);
+          
+          const aiMessage = {
+            id: `ai-${data.aiResponseId}`,
+            text: data.aiResponse,
+            timestamp: new Date().toLocaleTimeString('pt-BR', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            isBot: true
+          };
+
+          setMessages(prev => [...prev, aiMessage]);
+        }
       } catch (error) {
         console.error('Erro ao processar mensagem WebSocket:', error);
       }
@@ -262,6 +279,73 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       disconnectWebSocket();
     };
   }, [disconnectWebSocket]);
+
+  // Carregar mensagens de uma tentativa
+  const loadAttemptMessages = useCallback(async (attemptId: string) => {
+    try {
+      console.log('📝 Carregando mensagens da tentativa:', attemptId);
+      
+      // Carregar mensagens do usuário
+      const userMessages = await apiService.getAttemptMessages(attemptId);
+      
+      // Carregar respostas da AI
+      const aiResponses = await apiService.getAttemptAiResponses(attemptId);
+      
+      // Combinar e ordenar todas as mensagens por timestamp
+      const allMessages: ChatMessage[] = [];
+      
+      // Adicionar mensagens do usuário
+      userMessages.forEach(msg => {
+        allMessages.push({
+          id: `user-${msg.id}`,
+          text: msg.message,
+          timestamp: new Date(msg.created_at).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isBot: false
+        });
+      });
+      
+      // Adicionar respostas da AI
+      aiResponses.forEach(response => {
+        allMessages.push({
+          id: `ai-${response.id}`,
+          text: response.ai_response,
+          timestamp: new Date(response.created_at).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isBot: true
+        });
+      });
+      
+      // Ordenar por timestamp
+      allMessages.sort((a, b) => {
+        const timeA = new Date(`2024-01-01 ${a.timestamp}`).getTime();
+        const timeB = new Date(`2024-01-01 ${b.timestamp}`).getTime();
+        return timeA - timeB;
+      });
+      
+      console.log('📝 Mensagens carregadas:', allMessages.length);
+      setMessages(allMessages);
+      
+    } catch (error) {
+      console.error('Erro ao carregar mensagens da tentativa:', error);
+      // Manter mensagem inicial se não conseguir carregar
+      setMessages([
+        {
+          id: "initial-1",
+          text: "Tentativa retomada! Continue tentando me convencer!",
+          timestamp: new Date().toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isBot: true
+        }
+      ]);
+    }
+  }, []);
 
   // ==== FUNÇÕES PRINCIPAIS DO FLUXOGRAMA ====
 
@@ -738,24 +822,13 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           const botResponseText = generateBotResponse(convincementChange, newLevel);
 
           // Gerar resposta da AI através da API
-          const response = await apiService.createAIResponse(
+          // A resposta será adicionada automaticamente via realtime WebSocket
+          await apiService.createAIResponse(
             currentAttempt.id, 
             savedMessage.id, 
             botResponseText,
             newLevel
           );
-
-          const botResponse = {
-            id: `ai-${response.id}`,
-            text: botResponseText,
-            timestamp: new Date().toLocaleTimeString('pt-BR', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            }),
-            isBot: true
-          };
-
-          setMessages(prev => [...prev, botResponse]);
 
           // Verificar se usuário ganhou (score >= 90)
           if (newLevel >= 90) {

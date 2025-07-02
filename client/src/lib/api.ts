@@ -268,6 +268,15 @@ class ApiService {
     });
   }
 
+  async getAttemptAiResponses(attemptId: string): Promise<AIResponse[]> {
+    const token = this.getAuthToken();
+    return this.fetchJson(`/attempts/${attemptId}/ai-responses`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
   // Criar mensagem
   async createMessage(attemptId: string, message: string): Promise<Message> {
     console.log('=== DEBUG CREATE MESSAGE CLIENT ===');
