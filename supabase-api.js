@@ -1057,7 +1057,13 @@ app.get('/api/recent-attempts', async (req, res) => {
   try {
     console.log('🔍 Buscando tentativas recentes...');
     
-    // Use direct table query with join to get convincer names
+    // Get all attempts with their real chronological index
+    // First get the total count to calculate real indexes
+    const { count: totalAttempts } = await supabase
+      .from('attempts')
+      .select('*', { count: 'exact', head: true });
+
+    // Then get the recent attempts with convincer names
     const { data, error } = await supabase
       .from('attempts')
       .select(`
@@ -1074,13 +1080,30 @@ app.get('/api/recent-attempts', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao buscar tentativas recentes' });
     }
 
-    // Transform data to match expected format
-    const transformedData = data?.map((attempt, index) => ({
+    // Get all attempts to calculate proper indexing
+    const { data: allAttempts, error: allError } = await supabase
+      .from('attempts')
+      .select('id, created_at')
+      .order('created_at', { ascending: true }); // Order by oldest first to get proper index
+
+    if (allError) {
+      console.error('Error fetching all attempts for indexing:', allError);
+      return res.status(500).json({ error: 'Erro ao calcular índices das tentativas' });
+    }
+
+    // Create a map of attempt_id -> real_index
+    const attemptIndexMap = new Map();
+    allAttempts?.forEach((attempt, index) => {
+      attemptIndexMap.set(attempt.id, index + 1); // 1-based indexing
+    });
+
+    // Transform data using real attempt indexes
+    const transformedData = data?.map((attempt) => ({
       id: attempt.id,
       convincer_name: attempt.convincers?.name || 'Usuário',
       status: attempt.status,
       created_at: attempt.created_at,
-      attempt_number: data.length - index
+      attempt_number: attemptIndexMap.get(attempt.id) || 'N/A'
     }));
 
     console.log('✅ Tentativas recentes encontradas:', transformedData?.length || 0);
