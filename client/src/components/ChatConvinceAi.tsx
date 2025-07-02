@@ -95,7 +95,7 @@ const ConvincementMeter = ({ level, isAnimating }) => {
 };
 
 // Componente para o timer
-const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime, pendingSync = 0 }) => {
+const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -111,12 +111,6 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime, pendi
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <span className="text-xs text-violet-300/70">Tempo restante</span>
-          {pendingSync > 0 && (
-            <div className="flex items-center space-x-1" title={`${pendingSync}s aguardando sincronização`}>
-              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-              <span className="text-xs text-yellow-300">{pendingSync}s</span>
-            </div>
-          )}
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -1046,7 +1040,6 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           isBlinking={isBlinking}
           onStopAttempt={handleStopAttempt}
           totalTime={initialTime}
-          pendingSync={localTimeSpent}
         />
       </div>
 
