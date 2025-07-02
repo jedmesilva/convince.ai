@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
@@ -164,6 +165,7 @@ const Message = ({ message }) => (
 
 export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   
   // Estados principais do sistema
   const [chatState, setChatState] = useState<ChatState>('user_not_authenticated');
@@ -911,6 +913,12 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     setShowPaymentDialog(false);
   }, []);
 
+  // Função para navegar para o histórico ao clicar no email
+  const handleEmailClick = useCallback(() => {
+    console.log('Navegando para histórico de tentativas...');
+    navigate('/history');
+  }, [navigate]);
+
   const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey && chatState === 'attempt_active') {
       e.preventDefault();
@@ -1098,7 +1106,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
               <UserEmail 
                 email={user?.email || "user@email.com"} 
                 compact={true}
-                onClick={() => console.log('Clicou no email do usuário')}
+                onClick={handleEmailClick}
               />
               <button
                 onClick={handleSendMessage}
