@@ -1057,53 +1057,30 @@ app.get('/api/recent-attempts', async (req, res) => {
   try {
     console.log('🔍 Buscando tentativas recentes...');
     
-    // Get all attempts with their real chronological index
-    // First get the total count to calculate real indexes
-    const { count: totalAttempts } = await supabase
-      .from('attempts')
-      .select('*', { count: 'exact', head: true });
-
-    // Then get the recent attempts with convincer names
+    // Use the view directly with the existing attempt_index field
     const { data, error } = await supabase
-      .from('attempts')
+      .from('view_attempts_with_prizes')
       .select(`
-        id,
-        status,
-        created_at,
-        convincers!inner(name)
+        convincer_name,
+        attempt_index,
+        attempt_status,
+        attempt_timestamp
       `)
-      .order('created_at', { ascending: false })
+      .order('attempt_timestamp', { ascending: false })
       .limit(10);
 
     if (error) {
-      console.error('Error fetching recent attempts:', error);
+      console.error('Error fetching recent attempts from view:', error);
       return res.status(500).json({ error: 'Erro ao buscar tentativas recentes' });
     }
 
-    // Get all attempts to calculate proper indexing
-    const { data: allAttempts, error: allError } = await supabase
-      .from('attempts')
-      .select('id, created_at')
-      .order('created_at', { ascending: true }); // Order by oldest first to get proper index
-
-    if (allError) {
-      console.error('Error fetching all attempts for indexing:', allError);
-      return res.status(500).json({ error: 'Erro ao calcular índices das tentativas' });
-    }
-
-    // Create a map of attempt_id -> real_index
-    const attemptIndexMap = new Map();
-    allAttempts?.forEach((attempt, index) => {
-      attemptIndexMap.set(attempt.id, index + 1); // 1-based indexing
-    });
-
-    // Transform data using real attempt indexes
+    // Transform data using the existing attempt_index from the view
     const transformedData = data?.map((attempt) => ({
-      id: attempt.id,
-      convincer_name: attempt.convincers?.name || 'Usuário',
-      status: attempt.status,
-      created_at: attempt.created_at,
-      attempt_number: attemptIndexMap.get(attempt.id) || 'N/A'
+      id: `attempt_${attempt.attempt_index}`, // Generate a unique ID
+      convincer_name: attempt.convincer_name || 'Usuário',
+      status: attempt.attempt_status,
+      created_at: attempt.attempt_timestamp,
+      attempt_number: attempt.attempt_index
     }));
 
     console.log('✅ Tentativas recentes encontradas:', transformedData?.length || 0);

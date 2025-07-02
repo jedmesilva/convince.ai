@@ -107,6 +107,11 @@ Changelog:
   * Backend configurado para escutar mudanças na tabela attempts do Supabase via realtime
   * Frontend conecta ao WebSocket durante tentativas ativas e recebe atualizações automáticas
   * Corrigido valor inicial do convincing_score de 15 para 0 (tanto frontend quanto backend)
+- July 2, 2025. Corrigido sistema de índices das tentativas para usar dados reais:
+  * API `/api/recent-attempts` agora usa diretamente a view `view_attempts_with_prizes`
+  * Utiliza o campo `attempt_index` que já existe no banco em vez de recalcular
+  * Solução mais robusta e eficiente, evitando vulnerabilidades de recálculo
+  * Frontend agora mostra os índices reais das tentativas (30ª, 29ª, etc.)
 
 # User Preferences
 
