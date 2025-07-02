@@ -102,6 +102,11 @@ Changelog:
   * Implementados endpoints para consultar e atualizar saldo em tempo real
   * Timer do chat agora decrementa saldo real do banco de dados a cada segundo
   * Sistema de pagamento agora acumula tempo no saldo existente do usuário
+- July 2, 2025. Implementado sistema de atualização em tempo real do convincing_score:
+  * Configurado WebSocket entre frontend e backend para comunicação em tempo real
+  * Backend configurado para escutar mudanças na tabela attempts do Supabase via realtime
+  * Frontend conecta ao WebSocket durante tentativas ativas e recebe atualizações automáticas
+  * Corrigido valor inicial do convincing_score de 15 para 0 (tanto frontend quanto backend)
 
 # User Preferences
 

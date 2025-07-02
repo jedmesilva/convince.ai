@@ -625,7 +625,7 @@ app.post('/api/attempts', async (req, res) => {
         convincer_id: user.user.id,
         status: 'active',
         available_time_seconds,
-        convincing_score: 15
+        convincing_score: 0
       })
       .select()
       .single();

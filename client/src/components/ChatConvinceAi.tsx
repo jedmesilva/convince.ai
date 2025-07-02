@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, type TimeBalance, type Attempt, type Message, type AIResponse } from '../lib/api';
 
-const INITIAL_CONVINCEMENT = 15;
+const INITIAL_CONVINCEMENT = 0;
 
 // Interface para mensagens do chat
 interface ChatMessage {
