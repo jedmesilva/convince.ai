@@ -95,7 +95,7 @@ const ConvincementMeter = ({ level, isAnimating }) => {
 };
 
 // Componente para o timer
-const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime }) => {
+const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime, pendingSync = 0 }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -109,7 +109,15 @@ const Timer = ({ timeLeft, isActive, isBlinking, onStopAttempt, totalTime }) => 
   return (
     <div className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs text-violet-300/70">Tempo restante</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-violet-300/70">Tempo restante</span>
+          {pendingSync > 0 && (
+            <div className="flex items-center space-x-1" title={`${pendingSync}s aguardando sincronização`}>
+              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+              <span className="text-xs text-yellow-300">{pendingSync}s</span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={onStopAttempt}
@@ -468,44 +476,86 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
   // ==== SISTEMA DE TIMER ====
   
-  // Hook para gerenciar o timer baseado no saldo real
+  // Estado para rastrear tempo local vs tempo sincronizado
+  const [localTimeSpent, setLocalTimeSpent] = useState(0);
+  const [lastSyncTime, setLastSyncTime] = useState(Date.now());
+  const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Timer local otimizado - sem requisições HTTP
   useEffect(() => {
     let interval = null;
 
     if (chatState === 'attempt_active' && timeLeft > 0) {
-      interval = setInterval(async () => {
-        try {
-          // Decrementar 1 segundo no banco de dados
-          if (user?.id) {
-            await apiService.updateTimeBalance(user.id, 1);
+      interval = setInterval(() => {
+        setTimeLeft(time => {
+          if (time <= 1) {
+            // Timer zerou - trigger do fluxograma
+            handleTimerZero();
+            return 0;
           }
-          
-          setTimeLeft(time => {
-            if (time <= 1) {
-              // Timer zerou - trigger do fluxograma
-              handleTimerZero();
-              return 0;
-            }
-            return time - 1;
-          });
-        } catch (error) {
-          console.error('Erro ao atualizar saldo de tempo:', error);
-          // Se falhar, ainda decrementar localmente
-          setTimeLeft(time => {
-            if (time <= 1) {
-              handleTimerZero();
-              return 0;
-            }
-            return time - 1;
-          });
-        }
+          return time - 1;
+        });
+
+        // Incrementar tempo local gasto
+        setLocalTimeSpent(spent => spent + 1);
       }, 1000);
+
+      // Sincronização periódica (a cada 15 segundos)
+      syncIntervalRef.current = setInterval(async () => {
+        await syncTimeWithServer();
+      }, 15000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
     };
-  }, [chatState, timeLeft, user?.id]);
+  }, [chatState, timeLeft]);
+
+  // Função para sincronizar tempo com servidor
+  const syncTimeWithServer = useCallback(async () => {
+    if (!user?.id || localTimeSpent <= 0) return;
+
+    try {
+      console.log(`🔄 Sincronizando ${localTimeSpent}s com servidor...`);
+      
+      await apiService.updateTimeBalance(user.id, localTimeSpent);
+      
+      // Reset do contador local após sincronização
+      setLocalTimeSpent(0);
+      setLastSyncTime(Date.now());
+      
+      console.log(`✅ Sincronização concluída`);
+    } catch (error) {
+      console.error('❌ Erro na sincronização:', error);
+      // Manter localTimeSpent para tentar novamente na próxima sincronização
+    }
+  }, [user?.id, localTimeSpent]);
+
+  // Sincronização final ao sair da página ou mudar estado
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (localTimeSpent > 0 && user?.id) {
+        // Sincronização síncrona ao sair da página usando sendBeacon
+        const url = `http://localhost:3001/api/time-balance/${user.id}`;
+        const data = new Blob([JSON.stringify({ seconds_to_subtract: localTimeSpent })], {
+          type: 'application/json'
+        });
+        navigator.sendBeacon(url, data);
+        console.log(`📡 SendBeacon: ${localTimeSpent}s enviados`);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Sincronizar ao desmontar componente
+      if (localTimeSpent > 0) {
+        syncTimeWithServer();
+      }
+    };
+  }, [localTimeSpent, user?.id, syncTimeWithServer]);
 
   // Efeito para piscar quando tempo <= 10 segundos
   useEffect(() => {
@@ -530,7 +580,10 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const handleTimerZero = useCallback(async () => {
     console.log('⏰ TRIGGER: Timer zerou!');
     
-    // Verificar saldo de tempo do usuário
+    // Sincronizar tempo pendente antes de verificar saldo
+    await syncTimeWithServer();
+    
+    // Verificar saldo de tempo do usuário (buscar dados atualizados)
     const remainingBalance = await checkUserTimeBalance();
     
     if (remainingBalance > 0) {
@@ -558,7 +611,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         console.log('✅ Tentativa expirada, exibindo botão para comprar mais tempo');
       }
     }
-  }, [checkUserTimeBalance, updateTimer, currentAttempt, updateAttemptStatus, blockChat]);
+  }, [syncTimeWithServer, checkUserTimeBalance, updateTimer, currentAttempt, updateAttemptStatus, blockChat]);
 
   // Handler para botão "Parar tentativa"
   const handleStopAttempt = useCallback(async () => {
@@ -993,6 +1046,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           isBlinking={isBlinking}
           onStopAttempt={handleStopAttempt}
           totalTime={initialTime}
+          pendingSync={localTimeSpent}
         />
       </div>
 

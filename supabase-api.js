@@ -519,6 +519,8 @@ app.put('/api/time-balance/:convincer_id', async (req, res) => {
       return res.status(400).json({ error: 'Tempo a subtrair deve ser maior que zero' });
     }
 
+    console.log(`⏱️ Atualizando saldo: -${seconds_to_subtract}s para ${convincer_id}`);
+
     // Get current balance
     const { data: currentBalance, error: fetchError } = await supabase
       .from('time_balances')

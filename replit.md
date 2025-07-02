@@ -112,6 +112,12 @@ Changelog:
   * Utiliza o campo `attempt_index` que já existe no banco em vez de recalcular
   * Solução mais robusta e eficiente, evitando vulnerabilidades de recálculo
   * Frontend agora mostra os índices reais das tentativas (30ª, 29ª, etc.)
+- July 2, 2025. Otimização crítica do sistema de timer para eliminar travamentos:
+  * Implementado timer local que conta sem requisições HTTP (elimina 3.600 requisições/hora)
+  * Sistema de sincronização inteligente: salva no banco a cada 15 segundos em lotes
+  * Backup com sendBeacon para sincronização ao sair da página
+  * Indicador visual de sincronização pendente no timer
+  * Performance drasticamente melhorada: timer fluido sem travamentos
 
 # User Preferences
 
