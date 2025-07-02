@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Trophy, Users, Clock, Zap, Brain } from 'lucide-react';
+import { apiService } from '../lib/api';
 
 interface Attempt {
-  id: number;
-  name: string;
-  time: string;
-  status: 'fracassou' | 'sucesso';
-  avatar?: string;
+  id: string;
+  convincer_name: string;
+  status: string;
+  created_at: string;
+  prize_amount?: number;
+  prize_id?: string;
+  attempt_number?: number;
 }
 
 interface PrizeDisplayProps {
@@ -134,9 +137,32 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
   );
 };
 
+// Função para calcular tempo relativo
+const getTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'agora mesmo';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `há ${minutes} min`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `há ${hours}h`;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `há ${days}d`;
+  }
+};
+
 // Componente de tentativa individual melhorado
 const AttemptCard: React.FC<{ attempt: Attempt; index: number }> = ({ attempt, index }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const isSuccess = attempt.status === 'successful';
+  const timeAgo = getTimeAgo(attempt.created_at);
+  const attemptNumber = attempt.attempt_number || (index + 1);
   
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 100);
@@ -149,17 +175,38 @@ const AttemptCard: React.FC<{ attempt: Attempt; index: number }> = ({ attempt, i
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
     >
-      <div className="bg-slate-700 rounded-lg p-4 border-l-4 border-violet-500 hover:bg-slate-600 transition-all duration-300 flex items-center">
+      <div className={`bg-slate-700 rounded-lg p-4 border-l-4 ${
+        isSuccess ? 'border-green-500' : 'border-violet-500'
+      } hover:bg-slate-600 transition-all duration-300 flex items-center`}>
         {/* Número da tentativa */}
-        <div className="bg-violet-500/20 rounded-lg px-3 py-2 mr-4 flex-shrink-0">
-          <span className="text-violet-200 font-bold text-lg">{attempt.id}°</span>
+        <div className={`${
+          isSuccess ? 'bg-green-500/20' : 'bg-violet-500/20'
+        } rounded-lg px-3 py-2 mr-4 flex-shrink-0`}>
+          <span className={`${
+            isSuccess ? 'text-green-200' : 'text-violet-200'
+          } font-bold text-lg`}>{attemptNumber}°</span>
         </div>
         
         {/* Informações da tentativa */}
         <div className="flex-1 min-w-0">
           <p className="text-slate-300">
-            <span className="font-semibold text-white">{attempt.name}</span> tentou {attempt.time}, mas <span className="text-red-400">fracassou!</span>
+            <span className="font-semibold text-white">{attempt.convincer_name}</span> tentou {timeAgo}, {
+              isSuccess ? (
+                <span className="text-green-400 font-bold">e ganhou!</span>
+              ) : (
+                <>mas <span className="text-red-400">fracassou!</span></>
+              )
+            }
           </p>
+        </div>
+        
+        {/* Ícone de status */}
+        <div className="flex-shrink-0 ml-4">
+          {isSuccess ? (
+            <Trophy className="h-5 w-5 text-green-400" />
+          ) : (
+            <Zap className="h-5 w-5 text-red-400" />
+          )}
         </div>
       </div>
     </div>
@@ -176,21 +223,31 @@ const PrizeDisplayComponent: React.FC<PrizeDisplayProps> = ({
 }) => {
   const [currentPrize, setCurrentPrize] = useState(prizeAmount);
   const [attempts, setAttempts] = useState(failedAttempts);
-  
-  const recentAttempts: Attempt[] = [
-    { id: 540, name: "Lucas", time: "agora mesmo", status: "fracassou" },
-    { id: 539, name: "Maria", time: "há 1 min", status: "fracassou" },
-    { id: 538, name: "João", time: "há 3 min", status: "fracassou" },
-    { id: 537, name: "Ana", time: "há 5 min", status: "fracassou" },
-    { id: 536, name: "Pedro", time: "há 8 min", status: "fracassou" },
-    { id: 535, name: "Carlos", time: "há 10 min", status: "fracassou" },
-    { id: 534, name: "Sofia", time: "há 12 min", status: "fracassou" },
-    { id: 533, name: "Rafael", time: "há 15 min", status: "fracassou" },
-    { id: 532, name: "Julia", time: "há 18 min", status: "fracassou" },
-    { id: 531, name: "Diego", time: "há 20 min", status: "fracassou" },
-    { id: 530, name: "Amanda", time: "há 22 min", status: "fracassou" },
-    { id: 529, name: "Thiago", time: "há 25 min", status: "fracassou" }
-  ];
+  const [recentAttempts, setRecentAttempts] = useState<Attempt[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Buscar tentativas recentes da API
+  const loadRecentAttempts = async () => {
+    try {
+      console.log('🔍 Buscando tentativas recentes...');
+      const attempts = await apiService.getRecentAttempts();
+      console.log('✅ Tentativas carregadas:', attempts);
+      setRecentAttempts(attempts);
+    } catch (error) {
+      console.error('Erro ao carregar tentativas recentes:', error);
+      setRecentAttempts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRecentAttempts();
+    
+    // Recarregar tentativas a cada 30 segundos para mantê-las atualizadas
+    const interval = setInterval(loadRecentAttempts, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Simula atualizações em tempo real
   useEffect(() => {
@@ -227,9 +284,19 @@ const PrizeDisplayComponent: React.FC<PrizeDisplayProps> = ({
           </h2>
           
           <div className="space-y-3 py-4">
-            {recentAttempts.map((attempt, index) => (
-              <AttemptCard key={attempt.id} attempt={attempt} index={index} />
-            ))}
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-violet-300">Carregando tentativas recentes...</div>
+              </div>
+            ) : recentAttempts.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-violet-300">Nenhuma tentativa recente encontrada.</div>
+              </div>
+            ) : (
+              recentAttempts.map((attempt, index) => (
+                <AttemptCard key={attempt.id} attempt={attempt} index={index} />
+              ))
+            )}
           </div>
         </div>
       </div>

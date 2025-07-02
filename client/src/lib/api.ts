@@ -277,6 +277,10 @@ class ApiService {
     });
   }
 
+  async getRecentAttempts(): Promise<any[]> {
+    return this.fetchJson('/recent-attempts');
+  }
+
   // Criar mensagem
   async createMessage(attemptId: string, message: string): Promise<Message> {
     console.log('=== DEBUG CREATE MESSAGE CLIENT ===');

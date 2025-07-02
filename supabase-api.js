@@ -1052,6 +1052,48 @@ app.get('/', (req, res) => {
   });
 });
 
+// Get recent attempts for prize display (public endpoint)
+app.get('/api/recent-attempts', async (req, res) => {
+  try {
+    console.log('🔍 Buscando tentativas recentes...');
+    
+    // Use direct table query with join to get convincer names
+    const { data, error } = await supabase
+      .from('attempts')
+      .select(`
+        id,
+        status,
+        created_at,
+        convincers!inner(name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching recent attempts:', error);
+      return res.status(500).json({ error: 'Erro ao buscar tentativas recentes' });
+    }
+
+    // Transform data to match expected format
+    const transformedData = data?.map((attempt, index) => ({
+      id: attempt.id,
+      convincer_name: attempt.convincers?.name || 'Usuário',
+      status: attempt.status,
+      created_at: attempt.created_at,
+      attempt_number: data.length - index
+    }));
+
+    console.log('✅ Tentativas recentes encontradas:', transformedData?.length || 0);
+    if (transformedData && transformedData.length > 0) {
+      console.log('📝 Primeira tentativa:', transformedData[0]);
+    }
+    res.json(transformedData || []);
+  } catch (error) {
+    console.error('Get recent attempts error:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
