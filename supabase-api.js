@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
+import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
 
 const app = express();
 const PORT = 3001;
@@ -1007,7 +1009,99 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+// Create HTTP server
+const server = createServer(app);
+
+// Create WebSocket server
+const wss = new WebSocketServer({ server });
+
+// Store connected clients and their subscriptions
+const clients = new Map();
+
+// WebSocket connection handler
+wss.on('connection', (ws) => {
+  console.log('🔌 Nova conexão WebSocket estabelecida');
+  
+  const clientId = Date.now().toString();
+  clients.set(clientId, { ws, subscriptions: new Set() });
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      console.log('📨 Mensagem WebSocket recebida:', data);
+
+      if (data.type === 'subscribe_attempt' && data.attemptId) {
+        // Registrar cliente para receber atualizações desta tentativa
+        const client = clients.get(clientId);
+        if (client) {
+          client.subscriptions.add(data.attemptId);
+          console.log(`✅ Cliente ${clientId} registrado para tentativa ${data.attemptId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao processar mensagem WebSocket:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log(`🔌 Conexão WebSocket ${clientId} fechada`);
+    clients.delete(clientId);
+  });
+
+  ws.on('error', (error) => {
+    console.error(`❌ Erro WebSocket ${clientId}:`, error);
+    clients.delete(clientId);
+  });
+});
+
+// Função para enviar atualizações para clientes específicos
+const notifyAttemptUpdate = (attemptId, attemptData) => {
+  console.log(`📢 Notificando atualização da tentativa ${attemptId}:`, attemptData);
+  
+  clients.forEach((client, clientId) => {
+    if (client.subscriptions.has(attemptId) && client.ws.readyState === 1) {
+      try {
+        client.ws.send(JSON.stringify({
+          type: 'attempt_updated',
+          attemptId: attemptId,
+          convincing_score: attemptData.convincing_score,
+          status: attemptData.status,
+          updated_at: attemptData.updated_at
+        }));
+        console.log(`✅ Notificação enviada para cliente ${clientId}`);
+      } catch (error) {
+        console.error(`❌ Erro ao enviar notificação para cliente ${clientId}:`, error);
+      }
+    }
+  });
+};
+
+// Configurar realtime do Supabase para escutar mudanças na tabela attempts
+const channel = supabase
+  .channel('attempts-realtime')
+  .on(
+    'postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'attempts'
+    },
+    (payload) => {
+      console.log('🔄 Mudança detectada na tabela attempts:', payload);
+      
+      if (payload.new && payload.new.id) {
+        notifyAttemptUpdate(payload.new.id, payload.new);
+      }
+    }
+  )
+  .subscribe((status) => {
+    console.log('📡 Status da subscrição Supabase realtime:', status);
+  });
+
+// Iniciar servidor
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 API Server with Supabase running on http://localhost:${PORT}`);
   console.log(`✅ Supabase URL: ${supabaseUrl}`);
+  console.log(`🔌 WebSocket server running on ws://localhost:${PORT}`);
+  console.log(`📡 Supabase realtime configured for attempts table`);
 });

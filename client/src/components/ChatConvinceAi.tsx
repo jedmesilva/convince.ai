@@ -187,8 +187,81 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const [isBlinking, setIsBlinking] = useState(false);
   const [initialTime, setInitialTime] = useState(0);
 
+  // WebSocket para receber atualizações em tempo real
+  const [websocket, setWebsocket] = useState<WebSocket | null>(null);
+
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // ==== WEBSOCKET PARA TEMPO REAL ====
+  
+  // Conectar ao WebSocket quando há uma tentativa ativa
+  const connectWebSocket = useCallback((attemptId: string) => {
+    if (websocket) {
+      websocket.close();
+    }
+
+    const wsUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+      ? 'ws://localhost:3001' 
+      : `wss://${window.location.hostname}:3001`;
+
+    console.log('🔌 Conectando ao WebSocket:', wsUrl);
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('✅ WebSocket conectado');
+      // Registrar para receber atualizações desta tentativa
+      ws.send(JSON.stringify({
+        type: 'subscribe_attempt',
+        attemptId: attemptId
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('📨 Mensagem WebSocket recebida:', data);
+
+        if (data.type === 'attempt_updated' && data.attemptId === attemptId) {
+          // Atualizar o convincing_score em tempo real
+          const newScore = data.convincing_score;
+          console.log('🎯 Atualizando convincing_score em tempo real:', newScore);
+          
+          setConvincementLevel(newScore);
+          setIsConvincementAnimating(true);
+          setTimeout(() => setIsConvincementAnimating(false), 1000);
+        }
+      } catch (error) {
+        console.error('Erro ao processar mensagem WebSocket:', error);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('🔌 WebSocket desconectado');
+    };
+
+    ws.onerror = (error) => {
+      console.error('❌ Erro no WebSocket:', error);
+    };
+
+    setWebsocket(ws);
+  }, [websocket]);
+
+  // Desconectar WebSocket
+  const disconnectWebSocket = useCallback(() => {
+    if (websocket) {
+      console.log('🔌 Fechando conexão WebSocket');
+      websocket.close();
+      setWebsocket(null);
+    }
+  }, [websocket]);
+
+  // Cleanup WebSocket ao desmontar componente
+  useEffect(() => {
+    return () => {
+      disconnectWebSocket();
+    };
+  }, [disconnectWebSocket]);
 
   // ==== FUNÇÕES PRINCIPAIS DO FLUXOGRAMA ====
 
@@ -391,6 +464,9 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         // Limpar tentativa atual
         setCurrentAttempt(null);
         
+        // Desconectar WebSocket
+        disconnectWebSocket();
+        
         // Atualizar estado para mostrar botão de comprar mais tempo
         setChatState('user_authenticated_no_balance');
         blockChat();
@@ -410,6 +486,9 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       
       // Limpar tentativa atual
       setCurrentAttempt(null);
+      
+      // Desconectar WebSocket
+      disconnectWebSocket();
       
       // Verificar saldo para definir estado correto
       const timeBalance = await checkUserTimeBalance();
@@ -486,12 +565,18 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         setInitialTime(existingAttempt.available_time_seconds);
         setConvincementLevel(existingAttempt.convincing_score);
         setChatState('attempt_active');
+        
+        // Conectar WebSocket para receber atualizações em tempo real
+        connectWebSocket(existingAttempt.id);
       } else {
         // Criar nova tentativa
         const newAttempt = await createAttempt();
         if (newAttempt) {
           console.log('✅ Nova tentativa criada com sucesso!');
           setChatState('attempt_active');
+          
+          // Conectar WebSocket para receber atualizações em tempo real
+          connectWebSocket(newAttempt.id);
         } else {
           console.error('❌ Falha ao criar tentativa');
         }
@@ -534,6 +619,9 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         setInitialTime(attempt.available_time_seconds);
         setConvincementLevel(attempt.convincing_score);
         setChatState('attempt_active');
+        
+        // Conectar WebSocket para receber atualizações em tempo real
+        connectWebSocket(attempt.id);
       } else {
         setChatState('user_authenticated_has_balance');
       }
@@ -672,6 +760,10 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           // Verificar se usuário ganhou (score >= 90)
           if (newLevel >= 90) {
             await updateAttemptStatus('completed');
+            
+            // Desconectar WebSocket
+            disconnectWebSocket();
+            
             setChatState('user_authenticated_has_balance');
             // Aqui poderia mostrar tela de prêmio
           }
