@@ -363,16 +363,10 @@ const UserAttemptsHistoryDemo: React.FC = () => {
   };
 
   const handleLogout = () => {
-    const confirmLogout = confirm('Tem certeza que deseja sair do sistema?');
-    
-    if (confirmLogout) {
-      console.log('Usuário confirmou logout');
-      // Emitir evento para página pai processar logout
-      const event = new CustomEvent('logoutRequested');
-      window.dispatchEvent(event);
-    } else {
-      console.log('Usuário cancelou logout');
-    }
+    console.log('Solicitando logout');
+    // Emitir evento para página pai processar logout
+    const event = new CustomEvent('logoutRequested');
+    window.dispatchEvent(event);
   };
 
   const handleUpdateData = () => {

@@ -70,6 +70,9 @@ const AttemptHistoryPage: React.FC = () => {
   // Estado para tentativas (pode ser atualizado via API)
   const [attempts, setAttempts] = useState(MOCK_ATTEMPTS);
 
+  // Estado para modal de logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   // Listeners para eventos customizados do componente demo
   useEffect(() => {
     const handleUpdateDataRequest = () => {
@@ -121,20 +124,19 @@ const AttemptHistoryPage: React.FC = () => {
 
   // Função para processar logout
   const handleLogout = () => {
-    const confirmLogout = confirm('Tem certeza que deseja sair do sistema?');
+    setShowLogoutModal(true);
+  };
+
+  // Função para confirmar logout
+  const handleConfirmLogout = () => {
+    console.log('Usuário confirmou logout');
     
-    if (confirmLogout) {
-      console.log('Usuário confirmou logout');
-      
-      // Limpar dados locais se houver
-      localStorage.removeItem('user_data');
-      localStorage.removeItem('user_session');
-      
-      // Redirecionar para página inicial
-      window.location.href = '/';
-    } else {
-      console.log('Usuário cancelou logout');
-    }
+    // Limpar dados locais se houver
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('user_session');
+    
+    // Redirecionar para página inicial
+    window.location.href = '/';
   };
 
   // Função para solicitar prêmio
@@ -188,6 +190,43 @@ const AttemptHistoryPage: React.FC = () => {
           className="w-full"
         />
       </div>
+
+      {/* Modal de Confirmação de Logout */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-violet-500/30">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-6 w-6 text-violet-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16,17 21,12 16,7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-violet-400">Sair do Sistema</h3>
+            </div>
+            
+            <p className="text-slate-300 mb-6">
+              Tem certeza que deseja sair? Você será redirecionado para a página inicial.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 bg-slate-600 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmLogout}
+                className="flex-1 bg-violet-500 hover:bg-violet-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
