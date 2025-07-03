@@ -179,8 +179,4 @@ const AttemptHistoryPage: React.FC = () => {
   );
 };
 
-export default AttemptHistoryPage;v>
-  );
-};
-
 export default AttemptHistoryPage;
