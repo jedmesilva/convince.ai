@@ -140,18 +140,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
               {/* Botão Atualizar Dados à esquerda */}
               {onUpdateData && (
                 <button
-                  onClick={() => {
-                    console.log('🔄 Botão Atualizar Dados clicado');
-                    console.log('🔍 onUpdateData existe?', !!onUpdateData);
-                    console.log('🔍 Tipo da função onUpdateData:', typeof onUpdateData);
-                    if (onUpdateData) {
-                      console.log('🚀 Chamando onUpdateData...');
-                      onUpdateData();
-                      console.log('✅ onUpdateData chamado com sucesso');
-                    } else {
-                      console.log('⚠️ Função onUpdateData não definida');
-                    }
-                  }}
+                  onClick={onUpdateData}
                   className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400 text-violet-400 hover:text-violet-300 font-medium py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
                 >
                   <Settings className="h-4 w-4" />
