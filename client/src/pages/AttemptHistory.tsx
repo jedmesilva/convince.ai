@@ -203,11 +203,11 @@ const AttemptHistoryPage: React.FC = () => {
                   <line x1="21" y1="12" x2="9" y2="12"/>
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-violet-400">Sair do Sistema</h3>
+              <h3 className="text-xl font-bold text-violet-400">Sair da Conta</h3>
             </div>
             
             <p className="text-slate-300 mb-6">
-              Tem certeza que deseja sair? Você será redirecionado para a página inicial.
+              Tem certeza que deseja sair de sua conta?
             </p>
             
             <div className="flex gap-3">

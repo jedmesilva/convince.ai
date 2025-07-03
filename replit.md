@@ -122,6 +122,12 @@ Changelog:
   * Problema: página importava componente demo com função vazia em vez do componente funcional
   * Solução: implementado comunicação via eventos customizados entre componente e página
   * Botão agora funciona corretamente e navega para tela de atualização de dados
+- July 3, 2025. Implementado sistema completo de navegação e logout:
+  * Adicionado botão "Voltar" na tela de histórico que retorna à página anterior
+  * Adicionado botão "Voltar" na tela de atualização que retorna ao histórico
+  * Implementado modal personalizado de logout em substituição ao confirm nativo
+  * Modal de logout segue padrão visual consistente com resto da aplicação
+  * Texto do logout ajustado para "Sair da Conta" com pergunta mais natural
 
 # User Preferences
 
