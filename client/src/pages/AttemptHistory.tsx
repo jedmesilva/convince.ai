@@ -70,32 +70,14 @@ const AttemptHistoryPage: React.FC = () => {
   // Estado para tentativas (pode ser atualizado via API)
   const [attempts, setAttempts] = useState(MOCK_ATTEMPTS);
 
-  // Chave para localStorage
-  const STORAGE_KEY = 'attemptHistory_currentScreen';
-
-  // Carregar estado salvo do localStorage ao montar o componente
-  useEffect(() => {
-    const savedScreen = localStorage.getItem(STORAGE_KEY);
-    console.log('🔍 Estado salvo no localStorage:', savedScreen);
-    // Temporariamente desabilitado para testar
-    // if (savedScreen && (savedScreen === 'history' || savedScreen === 'update-data')) {
-    //   console.log('📥 Carregando estado do localStorage:', savedScreen);
-    //   setCurrentScreen(savedScreen as ScreenType);
-    // }
-  }, []);
-
-  // Salvar estado no localStorage sempre que mudar
-  useEffect(() => {
-    console.log('📝 Estado currentScreen mudou para:', currentScreen);
-    localStorage.setItem(STORAGE_KEY, currentScreen);
-  }, [currentScreen]);
+  // Removendo localStorage temporariamente para debug
+  console.log('🎯 Estado atual do currentScreen no render:', currentScreen);
 
   // Função para navegar para a tela de atualização de dados
   const handleUpdateData = () => {
-    console.log('🔄 Navegando para tela de atualização de dados...');
-    console.log('🔍 Estado atual do currentScreen:', currentScreen);
+    console.log('🔄 INICIO handleUpdateData - Estado atual:', currentScreen);
     setCurrentScreen('update-data');
-    console.log('✅ setCurrentScreen chamado com "update-data"');
+    console.log('✅ FIM handleUpdateData - setCurrentScreen chamado');
   };
 
   // Função para voltar para o histórico
@@ -107,9 +89,6 @@ const AttemptHistoryPage: React.FC = () => {
   // Função para processar logout (você pode implementar sua lógica aqui)
   const handleLogout = () => {
     if (confirm('Tem certeza que deseja sair?')) {
-      // Limpar cache da tela atual
-      localStorage.removeItem(STORAGE_KEY);
-      
       // Aqui você implementaria sua lógica de logout
       console.log('Usuário saiu do sistema');
       
@@ -144,9 +123,6 @@ const AttemptHistoryPage: React.FC = () => {
 
   // Função para deletar conta
   const handleDeleteAccount = () => {
-    // Limpar cache
-    localStorage.removeItem(STORAGE_KEY);
-    
     // Aqui você implementaria a lógica real de deleção de conta
     console.log('Conta deletada');
     
