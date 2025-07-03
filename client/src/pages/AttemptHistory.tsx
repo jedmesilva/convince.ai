@@ -83,13 +83,16 @@ const AttemptHistoryPage: React.FC = () => {
 
   // Salvar estado no localStorage sempre que mudar
   useEffect(() => {
+    console.log('📝 Estado currentScreen mudou para:', currentScreen);
     localStorage.setItem(STORAGE_KEY, currentScreen);
   }, [currentScreen]);
 
   // Função para navegar para a tela de atualização de dados
   const handleUpdateData = () => {
     console.log('🔄 Navegando para tela de atualização de dados...');
+    console.log('🔍 Estado atual do currentScreen:', currentScreen);
     setCurrentScreen('update-data');
+    console.log('✅ setCurrentScreen chamado com "update-data"');
   };
 
   // Função para voltar para o histórico
@@ -148,32 +151,40 @@ const AttemptHistoryPage: React.FC = () => {
     // window.location.href = '/';
   };
 
+  console.log('🎯 Renderizando com currentScreen:', currentScreen);
+  
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Tela de Histórico de Tentativas */}
       {currentScreen === 'history' && (
-        <UserAttemptsHistory
-          userName={userData.name}
-          userEmail={userData.email}
-          attempts={attempts}
-          onClaimPrize={handleClaimPrize}
-          onLogout={handleLogout}
-          onGoBack={undefined}
-          onUpdateData={handleUpdateData}
-          className="w-full"
-        />
+        <>
+          {console.log('📋 Renderizando tela de histórico')}
+          <UserAttemptsHistory
+            userName={userData.name}
+            userEmail={userData.email}
+            attempts={attempts}
+            onClaimPrize={handleClaimPrize}
+            onLogout={handleLogout}
+            onGoBack={undefined}
+            onUpdateData={handleUpdateData}
+            className="w-full"
+          />
+        </>
       )}
 
       {/* Tela de Atualização de Dados */}
       {currentScreen === 'update-data' && (
-        <UserDataUpdate
-          userName={userData.name}
-          userEmail={userData.email}
-          onGoBack={handleGoBack}
-          onUpdateData={handleUserDataUpdate}
-          onDeleteAccount={handleDeleteAccount}
-          className="w-full"
-        />
+        <>
+          {console.log('⚙️ Renderizando tela de atualização de dados')}
+          <UserDataUpdate
+            userName={userData.name}
+            userEmail={userData.email}
+            onGoBack={handleGoBack}
+            onUpdateData={handleUserDataUpdate}
+            onDeleteAccount={handleDeleteAccount}
+            className="w-full"
+          />
+        </>
       )}
     </div>
   );
