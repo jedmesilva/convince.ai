@@ -150,128 +150,124 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
           </div>
 
           <div className="space-y-4">
-            {attempts.map((attempt) => {
+            {attempts.map((attempt, index) => {
               const statusInfo = getStatusText(attempt.status);
               const prizeStatusInfo = attempt.prizeStatus ? getPrizeStatusText(attempt.prizeStatus) : null;
+              const isSuccess = attempt.status === 'convinced';
+              const attemptNumber = attempt.attemptNumber || attempt.id;
 
               return (
                 <div
                   key={attempt.id}
-                  className="bg-slate-800/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 hover:border-violet-500/30 transition-all duration-300 group"
+                  className={`transform transition-all duration-500 ${
+                    index < 10 ? 'translate-x-0 opacity-100' : 'translate-x-0 opacity-100'
+                  }`}
                 >
-                  <div className="p-6">
-                    {/* Header da tentativa */}
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
-                      <div className="flex-1">
+                  <div className={`bg-slate-700 rounded-lg p-4 border-l-4 ${
+                    isSuccess ? 'border-violet-500' : attempt.status === 'abandoned' ? 'border-slate-500' : 'border-red-500'
+                  } hover:bg-slate-600 transition-all duration-300`}>
+                    
+                    <div className="flex items-center justify-between">
+                      {/* Lado esquerdo - Info principal */}
+                      <div className="flex items-center gap-4 flex-1">
                         {/* Número da tentativa */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="bg-violet-500/20 rounded-lg px-3 py-1.5 border border-violet-500/30">
-                            <span className="text-violet-300 font-semibold text-sm">
-                              Tentativa #{attempt.attemptNumber || attempt.id}
-                            </span>
+                        <div className={`${
+                          isSuccess ? 'bg-violet-500/20' : attempt.status === 'abandoned' ? 'bg-slate-500/20' : 'bg-red-500/20'
+                        } rounded-lg px-3 py-2 flex-shrink-0`}>
+                          <span className={`${
+                            isSuccess ? 'text-violet-200' : attempt.status === 'abandoned' ? 'text-slate-200' : 'text-red-200'
+                          } font-bold text-lg`}>{attemptNumber}°</span>
+                        </div>
+                        
+                        {/* Informações da tentativa */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-white font-semibold">Você</span>
+                            <span className="text-slate-400">tentou em {attempt.date} às {attempt.time},</span>
+                            {isSuccess ? (
+                              <span className="text-violet-400 font-bold">e convenceu!</span>
+                            ) : attempt.status === 'abandoned' ? (
+                              <span className="text-slate-400">mas abandonou!</span>
+                            ) : (
+                              <span className="text-red-400">mas fracassou!</span>
+                            )}
                           </div>
                           
-                          {attempt.status === 'convinced' && attempt.prizeNumber && (
-                            <div className="bg-amber-500/20 rounded-lg px-3 py-1.5 border border-amber-500/30">
-                              <span className="text-amber-300 font-semibold text-sm">
+                          {/* Informações extras */}
+                          <div className="flex items-center gap-3 text-sm text-slate-400">
+                            {attempt.duration && (
+                              <span className="flex items-center gap-1">
+                                <Timer className="h-3 w-3" />
+                                {attempt.duration}
+                              </span>
+                            )}
+                            
+                            {attempt.prizeNumber && isSuccess && (
+                              <span className="flex items-center gap-1 text-amber-400">
+                                <Trophy className="h-3 w-3" />
                                 Prêmio #{attempt.prizeNumber}
                               </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Data e hora */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <Calendar className="h-4 w-4 text-violet-400/70" />
-                          <span className="text-sm font-medium text-violet-300">{attempt.date}</span>
-                          <span className="text-violet-500/50">•</span>
-                          <span className="text-sm text-slate-400">{attempt.time}</span>
-                          
-                          {attempt.duration && (
-                            <>
-                              <span className="text-violet-500/50">•</span>
-                              <div className="flex items-center gap-1.5">
-                                <Timer className="h-3.5 w-3.5 text-slate-500" />
-                                <span className="text-sm text-slate-400">{attempt.duration}</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Status badge */}
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusInfo.bgColor} border border-current/20`}>
-                            <div className={`w-2 h-2 rounded-full ${statusInfo.color.replace('text-', 'bg-')}`}></div>
-                            <span className={`text-sm font-medium ${statusInfo.color}`}>
-                              {statusInfo.text}
-                            </span>
+                            )}
+                            
+                            {attempt.certificateNumber && (
+                              <span className="flex items-center gap-1 text-violet-400">
+                                <div className="w-3 h-3 bg-violet-400 rounded-full"></div>
+                                {attempt.certificateNumber}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
-
-                      {/* Certificado (se existir) */}
-                      {attempt.certificateNumber && (
-                        <div className="flex-shrink-0 bg-slate-700/40 rounded-xl px-4 py-2.5 border border-slate-600/30">
-                          <div className="text-xs text-slate-400 mb-1">Certificado</div>
-                          <div className="text-sm font-mono text-violet-300">{attempt.certificateNumber}</div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Informações do prêmio */}
-                    {attempt.prizeAmount && (
-                      <div className="bg-slate-700/20 rounded-xl p-4 border border-slate-600/20">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <Trophy className="h-5 w-5 text-violet-400" />
-                            <div>
-                              <div className="text-sm text-slate-400 mb-1">
-                                {attempt.prizeNumber ? `Prêmio #${attempt.prizeNumber} Conquistado` : 'Valor do Prêmio'}
-                              </div>
-                              <div className="text-xl font-bold text-violet-400">
-                                {formatPrize(attempt.prizeAmount)}
-                              </div>
-                              {attempt.prizeNumber && (
-                                <div className="text-xs text-amber-400 mt-1">
-                                  Conquistado na tentativa #{attempt.attemptNumber || attempt.id}
-                                </div>
-                              )}
+                      
+                      {/* Lado direito - Ícone e prêmio */}
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        {/* Valor do prêmio se houver */}
+                        {attempt.prizeAmount && (
+                          <div className="text-right">
+                            <div className="text-violet-400 font-bold text-lg">
+                              {formatPrize(attempt.prizeAmount)}
                             </div>
-                          </div>
-
-                          <div className="flex flex-col sm:items-end gap-3">
                             {prizeStatusInfo && prizeStatusInfo.text && (
-                              <div className="text-right">
-                                <div className="text-xs text-slate-500 mb-1">Status do Prêmio</div>
-                                <span className={`text-sm font-medium ${prizeStatusInfo.color}`}>
-                                  {prizeStatusInfo.text}
-                                </span>
+                              <div className={`text-xs ${prizeStatusInfo.color}`}>
+                                {prizeStatusInfo.text}
                               </div>
                             )}
-
-                            {attempt.prizeStatus === 'claimable' && onClaimPrize && (
-                              <button
-                                onClick={() => handleClaimPrize(attempt.id)}
-                                disabled={claimingPrize === attempt.id}
-                                className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400/50 text-violet-400 hover:text-violet-300 font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] justify-center"
-                              >
-                                {claimingPrize === attempt.id ? (
-                                  <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-400"></div>
-                                    <span>Solicitando...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Trophy className="h-4 w-4" />
-                                    <span>Solicitar</span>
-                                  </>
-                                )}
-                              </button>
-                            )}
                           </div>
+                        )}
+                        
+                        {/* Botão de solicitar prêmio se aplicável */}
+                        {attempt.prizeStatus === 'claimable' && onClaimPrize && (
+                          <button
+                            onClick={() => handleClaimPrize(attempt.id)}
+                            disabled={claimingPrize === attempt.id}
+                            className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400/50 text-violet-400 hover:text-violet-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {claimingPrize === attempt.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-400"></div>
+                                <span className="hidden sm:inline">Solicitando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Trophy className="h-4 w-4" />
+                                <span className="hidden sm:inline">Solicitar</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {/* Ícone de status */}
+                        <div className="flex-shrink-0">
+                          {isSuccess ? (
+                            <Trophy className="h-5 w-5 text-violet-400" />
+                          ) : attempt.status === 'abandoned' ? (
+                            <div className="h-5 w-5 rounded-full bg-slate-400"></div>
+                          ) : (
+                            <div className="h-5 w-5 text-red-400">⚡</div>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               );
