@@ -76,9 +76,12 @@ const AttemptHistoryPage: React.FC = () => {
   // Carregar estado salvo do localStorage ao montar o componente
   useEffect(() => {
     const savedScreen = localStorage.getItem(STORAGE_KEY);
-    if (savedScreen && (savedScreen === 'history' || savedScreen === 'update-data')) {
-      setCurrentScreen(savedScreen as ScreenType);
-    }
+    console.log('🔍 Estado salvo no localStorage:', savedScreen);
+    // Temporariamente desabilitado para testar
+    // if (savedScreen && (savedScreen === 'history' || savedScreen === 'update-data')) {
+    //   console.log('📥 Carregando estado do localStorage:', savedScreen);
+    //   setCurrentScreen(savedScreen as ScreenType);
+    // }
   }, []);
 
   // Salvar estado no localStorage sempre que mudar
