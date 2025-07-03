@@ -202,13 +202,6 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                               </span>
                             )}
                             
-                            {attempt.prizeNumber && isSuccess && (
-                              <span className="flex items-center gap-1 text-amber-400">
-                                <Trophy className="h-3 w-3" />
-                                Prêmio #{attempt.prizeNumber}
-                              </span>
-                            )}
-                            
                             {attempt.certificateNumber && (
                               <span className="flex items-center gap-1 text-violet-400">
                                 <div className="w-3 h-3 bg-violet-400 rounded-full"></div>
@@ -219,43 +212,8 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                         </div>
                       </div>
                       
-                      {/* Lado direito - Ícone e prêmio */}
+                      {/* Lado direito - Ícone de status */}
                       <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Valor do prêmio se houver */}
-                        {attempt.prizeAmount && (
-                          <div className="text-right">
-                            <div className="text-violet-400 font-bold text-lg">
-                              {formatPrize(attempt.prizeAmount)}
-                            </div>
-                            {prizeStatusInfo && prizeStatusInfo.text && (
-                              <div className={`text-xs ${prizeStatusInfo.color}`}>
-                                {prizeStatusInfo.text}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Botão de solicitar prêmio se aplicável */}
-                        {attempt.prizeStatus === 'claimable' && onClaimPrize && (
-                          <button
-                            onClick={() => handleClaimPrize(attempt.id)}
-                            disabled={claimingPrize === attempt.id}
-                            className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400/50 text-violet-400 hover:text-violet-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {claimingPrize === attempt.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-400"></div>
-                                <span className="hidden sm:inline">Solicitando...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Trophy className="h-4 w-4" />
-                                <span className="hidden sm:inline">Solicitar</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                        
                         {/* Ícone de status */}
                         <div className="flex-shrink-0">
                           {isSuccess ? (
@@ -268,6 +226,56 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Card do Prêmio - Destacado */}
+                    {attempt.prizeAmount && isSuccess && (
+                      <div className="mt-4 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-violet-500/10 rounded-xl p-4 border border-violet-500/20">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-violet-500/20 rounded-lg p-2">
+                              <Trophy className="h-5 w-5 text-violet-400" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-violet-300 font-semibold text-sm">
+                                  {attempt.prizeNumber ? `${attempt.prizeNumber}° Prêmio Conquistado` : 'Prêmio Conquistado'}
+                                </span>
+                              </div>
+                              <div className="text-violet-100 text-xl font-bold">
+                                {formatPrize(attempt.prizeAmount)}
+                              </div>
+                              {prizeStatusInfo && prizeStatusInfo.text && (
+                                <div className={`text-xs ${prizeStatusInfo.color} mt-1`}>
+                                  {prizeStatusInfo.text}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Botão de solicitar prêmio se aplicável */}
+                          {attempt.prizeStatus === 'claimable' && onClaimPrize && (
+                            <button
+                              onClick={() => handleClaimPrize(attempt.id)}
+                              disabled={claimingPrize === attempt.id}
+                              className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400/50 text-violet-400 hover:text-violet-300 font-semibold py-2.5 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {claimingPrize === attempt.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-400"></div>
+                                  <span className="hidden sm:inline">Solicitando...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Trophy className="h-4 w-4" />
+                                  <span className="hidden sm:inline">Solicitar Prêmio</span>
+                                  <span className="sm:hidden">Solicitar</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
