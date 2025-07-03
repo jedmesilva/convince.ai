@@ -369,7 +369,9 @@ const UserAttemptsHistoryDemo: React.FC = () => {
 
   const handleUpdateData = () => {
     console.log('Navegando para tela de atualização de dados');
-    // Aqui você implementaria a navegação para a tela de atualização de dados
+    // Simular mudança de estado na página pai
+    const event = new CustomEvent('updateDataRequested');
+    window.dispatchEvent(event);
   };
 
   return (
@@ -385,4 +387,5 @@ const UserAttemptsHistoryDemo: React.FC = () => {
   );
 };
 
+export { UserAttemptsHistory };
 export default UserAttemptsHistoryDemo;

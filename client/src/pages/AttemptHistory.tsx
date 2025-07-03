@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import UserAttemptsHistory from '../components/AttemptHistory';
+import UserAttemptsHistoryDemo from '../components/AttemptHistory';
 import UserDataUpdate from '../components/UserDataUpdate';
 
 // Tipos para as telas disponíveis
@@ -70,7 +70,17 @@ const AttemptHistoryPage: React.FC = () => {
   // Estado para tentativas (pode ser atualizado via API)
   const [attempts, setAttempts] = useState(MOCK_ATTEMPTS);
 
-  // Removendo localStorage temporariamente para debug
+  // Listener para evento customizado do componente demo
+  useEffect(() => {
+    const handleUpdateDataRequest = () => {
+      console.log('🔄 Evento customizado recebido - mudando para update-data');
+      setCurrentScreen('update-data');
+    };
+
+    window.addEventListener('updateDataRequested', handleUpdateDataRequest);
+    return () => window.removeEventListener('updateDataRequested', handleUpdateDataRequest);
+  }, []);
+
   console.log('🎯 Estado atual do currentScreen no render:', currentScreen);
 
   // Função para navegar para a tela de atualização de dados
@@ -134,16 +144,7 @@ const AttemptHistoryPage: React.FC = () => {
     <div className="min-h-screen bg-gray-900">
       {/* Tela de Histórico de Tentativas */}
       <div className={currentScreen === 'history' ? 'block' : 'hidden'}>
-        <UserAttemptsHistory
-          userName={userData.name}
-          userEmail={userData.email}
-          attempts={attempts}
-          onClaimPrize={handleClaimPrize}
-          onLogout={handleLogout}
-          onGoBack={undefined}
-          onUpdateData={handleUpdateData}
-          className="w-full"
-        />
+        <UserAttemptsHistoryDemo />
       </div>
 
       {/* Tela de Atualização de Dados */}
