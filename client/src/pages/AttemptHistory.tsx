@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import UserAttemptsHistoryDemo from '../components/AttemptHistory';
-import UserDataUpdate from '../components/UserDataUpdate';
+import { UserDataUpdate } from '../components/UserDataUpdate';
 
 // Tipos para as telas disponíveis
 type ScreenType = 'history' | 'update-data';
@@ -70,15 +70,32 @@ const AttemptHistoryPage: React.FC = () => {
   // Estado para tentativas (pode ser atualizado via API)
   const [attempts, setAttempts] = useState(MOCK_ATTEMPTS);
 
-  // Listener para evento customizado do componente demo
+  // Listeners para eventos customizados do componente demo
   useEffect(() => {
     const handleUpdateDataRequest = () => {
       console.log('🔄 Evento customizado recebido - mudando para update-data');
       setCurrentScreen('update-data');
     };
 
+    const handleGoBackRequest = () => {
+      console.log('🔙 Evento customizado recebido - voltando para página anterior');
+      handleGoBackToPrevious();
+    };
+
+    const handleLogoutRequest = () => {
+      console.log('🚪 Evento customizado recebido - processando logout');
+      handleLogout();
+    };
+
     window.addEventListener('updateDataRequested', handleUpdateDataRequest);
-    return () => window.removeEventListener('updateDataRequested', handleUpdateDataRequest);
+    window.addEventListener('goBackRequested', handleGoBackRequest);
+    window.addEventListener('logoutRequested', handleLogoutRequest);
+    
+    return () => {
+      window.removeEventListener('updateDataRequested', handleUpdateDataRequest);
+      window.removeEventListener('goBackRequested', handleGoBackRequest);
+      window.removeEventListener('logoutRequested', handleLogoutRequest);
+    };
   }, []);
 
   console.log('🎯 Estado atual do currentScreen no render:', currentScreen);
@@ -96,14 +113,27 @@ const AttemptHistoryPage: React.FC = () => {
     setCurrentScreen('history');
   };
 
-  // Função para processar logout (você pode implementar sua lógica aqui)
+  // Função para voltar para página anterior (do histórico)
+  const handleGoBackToPrevious = () => {
+    console.log('🔙 Voltando para página anterior');
+    window.history.back();
+  };
+
+  // Função para processar logout
   const handleLogout = () => {
-    if (confirm('Tem certeza que deseja sair?')) {
-      // Aqui você implementaria sua lógica de logout
-      console.log('Usuário saiu do sistema');
+    const confirmLogout = confirm('Tem certeza que deseja sair do sistema?');
+    
+    if (confirmLogout) {
+      console.log('Usuário confirmou logout');
       
-      // Exemplo: redirecionar para login ou página inicial
-      // window.location.href = '/login';
+      // Limpar dados locais se houver
+      localStorage.removeItem('user_data');
+      localStorage.removeItem('user_session');
+      
+      // Redirecionar para página inicial
+      window.location.href = '/';
+    } else {
+      console.log('Usuário cancelou logout');
     }
   };
 

@@ -409,4 +409,5 @@ const UserDataUpdateDemo: React.FC = () => {
   );
 };
 
+export { UserDataUpdate };
 export default UserDataUpdateDemo;

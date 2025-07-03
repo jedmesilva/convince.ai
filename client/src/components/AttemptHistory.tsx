@@ -357,13 +357,21 @@ const UserAttemptsHistoryDemo: React.FC = () => {
 
   const handleGoBack = () => {
     console.log('Voltando para página anterior');
-    // Aqui você implementaria a navegação real (ex: router.back(), navigate(-1), etc.)
+    // Emitir evento para página pai navegar para página anterior
+    const event = new CustomEvent('goBackRequested');
+    window.dispatchEvent(event);
   };
 
   const handleLogout = () => {
-    if (confirm('Tem certeza que deseja sair?')) {
-      console.log('Usuário saiu do sistema');
-      // Aqui você implementaria a lógica real de logout
+    const confirmLogout = confirm('Tem certeza que deseja sair do sistema?');
+    
+    if (confirmLogout) {
+      console.log('Usuário confirmou logout');
+      // Emitir evento para página pai processar logout
+      const event = new CustomEvent('logoutRequested');
+      window.dispatchEvent(event);
+    } else {
+      console.log('Usuário cancelou logout');
     }
   };
 
