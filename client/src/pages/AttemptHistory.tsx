@@ -130,41 +130,33 @@ const AttemptHistoryPage: React.FC = () => {
     // window.location.href = '/';
   };
 
-  console.log('🎯 Renderizando com currentScreen:', currentScreen);
-  
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Tela de Histórico de Tentativas */}
-      {currentScreen === 'history' && (
-        <>
-          {console.log('📋 Renderizando tela de histórico')}
-          <UserAttemptsHistory
-            userName={userData.name}
-            userEmail={userData.email}
-            attempts={attempts}
-            onClaimPrize={handleClaimPrize}
-            onLogout={handleLogout}
-            onGoBack={undefined}
-            onUpdateData={handleUpdateData}
-            className="w-full"
-          />
-        </>
-      )}
+      <div className={currentScreen === 'history' ? 'block' : 'hidden'}>
+        <UserAttemptsHistory
+          userName={userData.name}
+          userEmail={userData.email}
+          attempts={attempts}
+          onClaimPrize={handleClaimPrize}
+          onLogout={handleLogout}
+          onGoBack={undefined}
+          onUpdateData={handleUpdateData}
+          className="w-full"
+        />
+      </div>
 
       {/* Tela de Atualização de Dados */}
-      {currentScreen === 'update-data' && (
-        <>
-          {console.log('⚙️ Renderizando tela de atualização de dados')}
-          <UserDataUpdate
-            userName={userData.name}
-            userEmail={userData.email}
-            onGoBack={handleGoBack}
-            onUpdateData={handleUserDataUpdate}
-            onDeleteAccount={handleDeleteAccount}
-            className="w-full"
-          />
-        </>
-      )}
+      <div className={currentScreen === 'update-data' ? 'block' : 'hidden'}>
+        <UserDataUpdate
+          userName={userData.name}
+          userEmail={userData.email}
+          onGoBack={handleGoBack}
+          onUpdateData={handleUserDataUpdate}
+          onDeleteAccount={handleDeleteAccount}
+          className="w-full"
+        />
+      </div>
     </div>
   );
 };
