@@ -88,11 +88,13 @@ const AttemptHistoryPage: React.FC = () => {
 
   // Função para navegar para a tela de atualização de dados
   const handleUpdateData = () => {
+    console.log('🔄 Navegando para tela de atualização de dados...');
     setCurrentScreen('update-data');
   };
 
   // Função para voltar para o histórico
   const handleGoBack = () => {
+    console.log('🔙 Voltando para histórico...');
     setCurrentScreen('history');
   };
 
@@ -156,6 +158,7 @@ const AttemptHistoryPage: React.FC = () => {
           attempts={attempts}
           onClaimPrize={handleClaimPrize}
           onLogout={handleLogout}
+          onGoBack={undefined}
           onUpdateData={handleUpdateData}
           className="w-full"
         />
@@ -173,6 +176,10 @@ const AttemptHistoryPage: React.FC = () => {
         />
       )}
     </div>
+  );
+};
+
+export default AttemptHistoryPage;v>
   );
 };
 
