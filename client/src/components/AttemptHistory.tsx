@@ -38,11 +38,11 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'convinced':
-        return { text: 'Convencido', color: 'text-green-400' };
+        return { text: 'Convencido', color: 'text-violet-400' };
       case 'failed':
         return { text: 'Falhado', color: 'text-red-400' };
       case 'abandoned':
-        return { text: 'Abandonado', color: 'text-yellow-400' };
+        return { text: 'Abandonado', color: 'text-slate-400' };
       default:
         return { text: 'Desconhecido', color: 'text-violet-400' };
     }
@@ -51,13 +51,13 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
   const getPrizeStatusText = (status: string) => {
     switch (status) {
       case 'claimable':
-        return { text: 'Disponível para saque', color: 'text-green-400' };
+        return { text: 'Disponível para saque', color: 'text-violet-300' };
       case 'pending':
-        return { text: 'Solicitação pendente', color: 'text-yellow-400' };
+        return { text: 'Solicitação pendente', color: 'text-slate-400' };
       case 'processing':
-        return { text: 'Em andamento', color: 'text-blue-400' };
+        return { text: 'Em andamento', color: 'text-slate-400' };
       case 'received':
-        return { text: 'Recebido', color: 'text-green-400' };
+        return { text: 'Recebido', color: 'text-slate-400' };
       default:
         return { text: '', color: '' };
     }
@@ -184,9 +184,9 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
 
                       {attempt.prizeAmount && (
                         <div className="flex items-center gap-2 mb-2">
-                          <Trophy className="h-4 w-4 text-yellow-400" />
+                          <Trophy className="h-4 w-4 text-violet-400" />
                           <span className="text-slate-300 font-medium">Prêmio:</span>
-                          <span className="text-yellow-400 font-bold">
+                          <span className="text-violet-400 font-bold">
                             {formatPrize(attempt.prizeAmount)}
                           </span>
                         </div>
@@ -214,11 +214,11 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                         <button
                           onClick={() => handleClaimPrize(attempt.id)}
                           disabled={claimingPrize === attempt.id}
-                          className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-400 text-green-400 hover:text-green-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400 text-violet-400 hover:text-violet-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {claimingPrize === attempt.id ? (
                             <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-400"></div>
                               <span>Solicitando...</span>
                             </>
                           ) : (
