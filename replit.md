@@ -118,6 +118,10 @@ Changelog:
   * Backup com sendBeacon para sincronização ao sair da página
   * Indicador visual de sincronização pendente no timer
   * Performance drasticamente melhorada: timer fluido sem travamentos
+- July 3, 2025. Corrigido botão "Atualizar Dados" na página AttemptHistory:
+  * Problema: página importava componente demo com função vazia em vez do componente funcional
+  * Solução: implementado comunicação via eventos customizados entre componente e página
+  * Botão agora funciona corretamente e navega para tela de atualização de dados
 
 # User Preferences
 
