@@ -11,6 +11,8 @@ interface AttemptHistory {
   prizeStatus?: 'claimable' | 'pending' | 'processing' | 'received';
   duration?: string;
   certificateNumber?: string;
+  attemptNumber?: number;
+  prizeNumber?: number;
 }
 
 interface UserAttemptsHistoryProps {
@@ -161,6 +163,23 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                     {/* Header da tentativa */}
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
                       <div className="flex-1">
+                        {/* Número da tentativa */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="bg-violet-500/20 rounded-lg px-3 py-1.5 border border-violet-500/30">
+                            <span className="text-violet-300 font-semibold text-sm">
+                              Tentativa #{attempt.attemptNumber || attempt.id}
+                            </span>
+                          </div>
+                          
+                          {attempt.status === 'convinced' && attempt.prizeNumber && (
+                            <div className="bg-amber-500/20 rounded-lg px-3 py-1.5 border border-amber-500/30">
+                              <span className="text-amber-300 font-semibold text-sm">
+                                Prêmio #{attempt.prizeNumber}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Data e hora */}
                         <div className="flex items-center gap-3 mb-3">
                           <Calendar className="h-4 w-4 text-violet-400/70" />
@@ -206,10 +225,17 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                           <div className="flex items-center gap-3">
                             <Trophy className="h-5 w-5 text-violet-400" />
                             <div>
-                              <div className="text-sm text-slate-400 mb-1">Valor do Prêmio</div>
+                              <div className="text-sm text-slate-400 mb-1">
+                                {attempt.prizeNumber ? `Prêmio #${attempt.prizeNumber} Conquistado` : 'Valor do Prêmio'}
+                              </div>
                               <div className="text-xl font-bold text-violet-400">
                                 {formatPrize(attempt.prizeAmount)}
                               </div>
+                              {attempt.prizeNumber && (
+                                <div className="text-xs text-amber-400 mt-1">
+                                  Conquistado na tentativa #{attempt.attemptNumber || attempt.id}
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -282,14 +308,17 @@ const UserAttemptsHistoryDemo: React.FC = () => {
       prizeAmount: 12750,
       prizeStatus: 'received',
       duration: '8m 45s',
-      certificateNumber: 'CERT-2024-001542'
+      certificateNumber: 'CERT-2024-001542',
+      attemptNumber: 250,
+      prizeNumber: 12
     },
     {
       id: 2,
       date: '14/12/2024',
       time: '09:15',
       status: 'failed',
-      duration: '15m 00s'
+      duration: '15m 00s',
+      attemptNumber: 249
     },
     {
       id: 3,
@@ -299,14 +328,17 @@ const UserAttemptsHistoryDemo: React.FC = () => {
       prizeAmount: 8500,
       prizeStatus: 'claimable',
       duration: '12m 30s',
-      certificateNumber: 'CERT-2024-001498'
+      certificateNumber: 'CERT-2024-001498',
+      attemptNumber: 248,
+      prizeNumber: 11
     },
     {
       id: 4,
       date: '12/12/2024',
       time: '11:08',
       status: 'abandoned',
-      duration: '3m 12s'
+      duration: '3m 12s',
+      attemptNumber: 247
     },
     {
       id: 5,
@@ -316,7 +348,9 @@ const UserAttemptsHistoryDemo: React.FC = () => {
       prizeAmount: 15200,
       prizeStatus: 'processing',
       duration: '6m 55s',
-      certificateNumber: 'CERT-2024-001401'
+      certificateNumber: 'CERT-2024-001401',
+      attemptNumber: 246,
+      prizeNumber: 10
     }
   ]);
 
