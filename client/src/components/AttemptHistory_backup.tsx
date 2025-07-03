@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, ArrowLeft, Clock, Trophy, Calendar, Timer, LogOut, Settings } from 'lucide-react';
+import { User, Mail, Clock, CheckCircle, XCircle, StopCircle, Gift, AlertCircle, Trophy, Calendar, LogOut, ArrowLeft, Settings } from 'lucide-react';
 
 interface AttemptHistory {
   id: number;
@@ -35,6 +35,19 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
 }) => {
   const [claimingPrize, setClaimingPrize] = useState<number | null>(null);
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'convinced':
+        return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case 'failed':
+        return <XCircle className="h-5 w-5 text-red-400" />;
+      case 'abandoned':
+        return <StopCircle className="h-5 w-5 text-yellow-400" />;
+      default:
+        return <Clock className="h-5 w-5 text-violet-400" />;
+    }
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'convinced':
@@ -66,7 +79,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
   const handleClaimPrize = async (attemptId: number) => {
     setClaimingPrize(attemptId);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simula API call
       onClaimPrize?.(attemptId);
     } finally {
       setClaimingPrize(null);
@@ -152,82 +165,100 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
               const prizeStatusInfo = attempt.prizeStatus ? getPrizeStatusText(attempt.prizeStatus) : null;
 
               return (
-                <div
-                  key={attempt.id}
-                  className="bg-slate-700/30 backdrop-blur-sm rounded-xl p-6 border border-violet-500/20 hover:border-violet-500/30 transition-all duration-300"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    {/* Informações principais */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className="flex items-center gap-2 text-violet-300">
-                          <Calendar className="h-4 w-4" />
-                          <span className="text-sm font-medium">{attempt.date}</span>
-                          <span className="text-violet-400">•</span>
-                          <span className="text-sm">{attempt.time}</span>
+                <div key={attempt.id} className="bg-slate-700/30 backdrop-blur-sm rounded-xl border border-violet-500/20 overflow-hidden">
+                  <div className="p-6">
+                    {/* Header da tentativa - Responsivo */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="bg-violet-500/20 rounded-lg px-3 py-2 flex-shrink-0">
+                          <span className="text-violet-200 font-bold">#{attempt.id}</span>
                         </div>
-                        
-                        {attempt.duration && (
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Timer className="h-4 w-4" />
-                            <span className="text-sm">{attempt.duration}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-violet-100 font-semibold">Tentativa {attempt.id}</p>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-violet-300">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 flex-shrink-0" />
+                              <span className="truncate">{attempt.date} às {attempt.time}</span>
+                            </div>
+                            {attempt.duration && (
+                              <div className="flex items-center gap-2">
+                                <span className="hidden sm:inline">•</span>
+                                <span className="truncate">Duração: {attempt.duration}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-slate-300 font-medium">Status:</span>
-                        <span className={`font-semibold ${statusInfo.color}`}>
+                      {/* Status da tentativa - Responsivo */}
+                      <div className="flex items-center justify-start sm:justify-end gap-2 flex-shrink-0">
+                        {getStatusIcon(attempt.status)}
+                        <span className={`font-semibold text-sm sm:text-base ${statusInfo.color}`}>
                           {statusInfo.text}
                         </span>
                       </div>
-
-                      {attempt.prizeAmount && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <Trophy className="h-4 w-4 text-yellow-400" />
-                          <span className="text-slate-300 font-medium">Prêmio:</span>
-                          <span className="text-yellow-400 font-bold">
-                            {formatPrize(attempt.prizeAmount)}
-                          </span>
-                        </div>
-                      )}
-
-                      {prizeStatusInfo && prizeStatusInfo.text && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-300 font-medium">Status do Prêmio:</span>
-                          <span className={`font-semibold ${prizeStatusInfo.color}`}>
-                            {prizeStatusInfo.text}
-                          </span>
-                        </div>
-                      )}
-
-                      {attempt.certificateNumber && (
-                        <div className="mt-2 text-sm text-slate-400">
-                          <span className="font-medium">Certificado:</span> {attempt.certificateNumber}
-                        </div>
-                      )}
                     </div>
 
-                    {/* Botões de ação */}
-                    {attempt.prizeStatus === 'claimable' && onClaimPrize && (
-                      <div className="flex-shrink-0">
-                        <button
-                          onClick={() => handleClaimPrize(attempt.id)}
-                          disabled={claimingPrize === attempt.id}
-                          className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-400 text-green-400 hover:text-green-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {claimingPrize === attempt.id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"></div>
-                              <span>Solicitando...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Trophy className="h-4 w-4" />
-                              <span>Solicitar Prêmio</span>
-                            </>
-                          )}
-                        </button>
+                    {/* Prêmio (se convencido) - Responsivo */}
+                    {attempt.status === 'convinced' && attempt.prizeAmount && (
+                      <div className="bg-slate-600/50 rounded-lg p-4 mt-4">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-green-500/20 rounded-lg p-2 flex-shrink-0">
+                              <Trophy className="h-5 w-5 text-green-400" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-green-400 font-semibold text-sm sm:text-base">
+                                {(() => {
+                                  // Calcula quantos prêmios foram conquistados até esta tentativa (incluindo ela)
+                                  const prizeNumber = attempts
+                                    .filter(a => a.status === 'convinced' && a.id <= attempt.id)
+                                    .length;
+                                  return `${prizeNumber}° Prêmio Conquistado`;
+                                })()}
+                              </p>
+                              <p className="text-violet-100 text-xl sm:text-2xl font-bold">
+                                {formatPrize(attempt.prizeAmount)}
+                              </p>
+                              {attempt.certificateNumber && (
+                                <p className="text-violet-300 text-xs sm:text-sm break-all">
+                                  Certificado: #{attempt.certificateNumber}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Status do prêmio e botão - Responsivo */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 lg:flex-col lg:items-end lg:text-right">
+                            {prizeStatusInfo && (
+                              <p className={`text-sm font-medium ${prizeStatusInfo.color} lg:mb-2`}>
+                                {prizeStatusInfo.text}
+                              </p>
+                            )}
+
+                            {attempt.prizeStatus === 'claimable' && (
+                              <button
+                                onClick={() => handleClaimPrize(attempt.id)}
+                                disabled={claimingPrize === attempt.id}
+                                className="bg-violet-400 hover:bg-violet-300 disabled:bg-violet-600 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto"
+                              >
+                                {claimingPrize === attempt.id ? (
+                                  <>
+                                    <AlertCircle className="h-4 w-4 animate-spin" />
+                                    <span className="hidden sm:inline">Solicitando...</span>
+                                    <span className="sm:hidden">...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Gift className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Solicitar Prêmio</span>
+                                    <span className="sm:hidden">Solicitar</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -236,14 +267,10 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
             })}
 
             {attempts.length === 0 && (
-              <div className="text-center py-12">
-                <Clock className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">
-                  Nenhuma tentativa encontrada
-                </h3>
-                <p className="text-slate-400">
-                  Suas tentativas de convencimento aparecerão aqui.
-                </p>
+              <div className="bg-slate-700/30 backdrop-blur-sm rounded-xl p-8 border border-violet-500/20 text-center">
+                <Clock className="h-12 w-12 text-violet-400 mx-auto mb-4" />
+                <p className="text-violet-100 text-lg font-semibold mb-2">Nenhuma tentativa ainda</p>
+                <p className="text-violet-300">Você ainda não fez nenhuma tentativa de convencer o Vince!</p>
               </div>
             )}
           </div>
@@ -315,18 +342,21 @@ const UserAttemptsHistoryDemo: React.FC = () => {
 
   const handleGoBack = () => {
     console.log('Voltando para página anterior');
+    // Emitir evento para página pai navegar para página anterior
     const event = new CustomEvent('goBackRequested');
     window.dispatchEvent(event);
   };
 
   const handleLogout = () => {
     console.log('Solicitando logout');
+    // Emitir evento para página pai processar logout
     const event = new CustomEvent('logoutRequested');
     window.dispatchEvent(event);
   };
 
   const handleUpdateData = () => {
     console.log('Navegando para tela de atualização de dados');
+    // Simular mudança de estado na página pai
     const event = new CustomEvent('updateDataRequested');
     window.dispatchEvent(event);
   };
