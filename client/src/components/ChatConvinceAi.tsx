@@ -693,14 +693,22 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       if (existingAttempt && existingAttempt.status === 'active') {
         // Continuar tentativa existente
         console.log('🔄 Continuando tentativa existente...');
+        
+        // Obter saldo real do usuário
+        const currentTimeBalance = await checkUserTimeBalance();
+        
         setCurrentAttempt(existingAttempt);
-        setTimeLeft(existingAttempt.available_time_seconds);
+        // CORREÇÃO: Usar saldo real do usuário, não o tempo inicial da tentativa
+        setTimeLeft(currentTimeBalance);
         setInitialTime(existingAttempt.available_time_seconds);
         setConvincementLevel(existingAttempt.convincing_score);
         setChatState('attempt_active');
         
         // Conectar WebSocket para receber atualizações em tempo real
         connectWebSocket(existingAttempt.id);
+        
+        // Carregar mensagens da tentativa existente
+        await loadAttemptMessages(existingAttempt.id);
       } else {
         // Criar nova tentativa
         const newAttempt = await createAttempt();
@@ -719,7 +727,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [checkAttemptStatus, createAttempt]);
+  }, [checkAttemptStatus, createAttempt, checkUserTimeBalance, loadAttemptMessages]);
 
   // ==== DEFINIR ESTADO INICIAL ====
   
@@ -748,20 +756,24 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       
       if (attempt && attempt.status === 'active') {
         setCurrentAttempt(attempt);
-        setTimeLeft(attempt.available_time_seconds);
+        // CORREÇÃO: Usar saldo real do usuário, não o tempo inicial da tentativa
+        setTimeLeft(timeBalance);
         setInitialTime(attempt.available_time_seconds);
         setConvincementLevel(attempt.convincing_score);
         setChatState('attempt_active');
         
         // Conectar WebSocket para receber atualizações em tempo real
         connectWebSocket(attempt.id);
+        
+        // Carregar mensagens da tentativa existente
+        await loadAttemptMessages(attempt.id);
       } else {
         setChatState('user_authenticated_has_balance');
       }
     };
 
     initializeAppState();
-  }, [checkUserAuthentication, checkUserTimeBalance, checkAttemptStatus]);
+  }, [checkUserAuthentication, checkUserTimeBalance, checkAttemptStatus, loadAttemptMessages]);
 
   // ==== ANÁLISE DE ARGUMENTOS E ENVIO DE MENSAGEM ====
   
