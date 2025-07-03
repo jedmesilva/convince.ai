@@ -111,12 +111,12 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                   <span className="hidden sm:inline">Voltar</span>
                 </button>
               )}
-              
+
               <h1 className="text-2xl md:text-3xl font-bold text-violet-100">
                 Meu Histórico de Tentativas
               </h1>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-violet-400" />
@@ -125,7 +125,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                   <p className="text-violet-100 font-semibold">{userName}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-violet-400" />
                 <div>
@@ -134,23 +134,30 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Botões de ação - Atualizar Dados à esquerda, Logout à direita */}
             <div className="mt-4 flex justify-between items-center">
               {/* Botão Atualizar Dados à esquerda */}
               {onUpdateData && (
                 <button
-                  onClick={onUpdateData}
+                  onClick={() => {
+                    console.log('🔄 Botão Atualizar Dados clicado');
+                    if (onUpdateData) {
+                      onUpdateData();
+                    } else {
+                      console.log('⚠️ Função onUpdateData não definida');
+                    }
+                  }}
                   className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400 text-violet-400 hover:text-violet-300 font-medium py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
                 >
                   <Settings className="h-4 w-4" />
                   <span>Atualizar Dados</span>
                 </button>
               )}
-              
+
               {/* Spacer se não tiver botão de atualizar dados */}
               {!onUpdateData && <div></div>}
-              
+
               {/* Botão Logout à direita */}
               {onLogout && (
                 <button
@@ -173,12 +180,12 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
             <Clock className="h-6 w-6 text-violet-400" />
             Minhas Tentativas ({attempts.length})
           </h2>
-          
+
           <div className="space-y-4">
             {attempts.map((attempt) => {
               const statusInfo = getStatusText(attempt.status);
               const prizeStatusInfo = attempt.prizeStatus ? getPrizeStatusText(attempt.prizeStatus) : null;
-              
+
               return (
                 <div key={attempt.id} className="bg-slate-700/30 backdrop-blur-sm rounded-xl border border-violet-500/20 overflow-hidden">
                   <div className="p-6">
@@ -204,7 +211,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Status da tentativa - Responsivo */}
                       <div className="flex items-center justify-start sm:justify-end gap-2 flex-shrink-0">
                         {getStatusIcon(attempt.status)}
@@ -242,7 +249,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Status do prêmio e botão - Responsivo */}
                           <div className="flex flex-col sm:flex-row sm:items-center gap-3 lg:flex-col lg:items-end lg:text-right">
                             {prizeStatusInfo && (
@@ -250,7 +257,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                                 {prizeStatusInfo.text}
                               </p>
                             )}
-                            
+
                             {attempt.prizeStatus === 'claimable' && (
                               <button
                                 onClick={() => handleClaimPrize(attempt.id)}
@@ -280,7 +287,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                 </div>
               );
             })}
-            
+
             {attempts.length === 0 && (
               <div className="bg-slate-700/30 backdrop-blur-sm rounded-xl p-8 border border-violet-500/20 text-center">
                 <Clock className="h-12 w-12 text-violet-400 mx-auto mb-4" />
