@@ -107,7 +107,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
 
           {/* User Info Card */}
           <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/10">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-center">
               <div className="flex flex-col gap-1">
                 <h2 className="text-xl font-bold text-violet-100">{userName}</h2>
                 <p className="text-violet-300/80 text-sm">{userEmail}</p>
