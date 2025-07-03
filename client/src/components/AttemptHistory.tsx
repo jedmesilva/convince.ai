@@ -142,8 +142,12 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                 <button
                   onClick={() => {
                     console.log('🔄 Botão Atualizar Dados clicado');
+                    console.log('🔍 onUpdateData existe?', !!onUpdateData);
+                    console.log('🔍 Tipo da função onUpdateData:', typeof onUpdateData);
                     if (onUpdateData) {
+                      console.log('🚀 Chamando onUpdateData...');
                       onUpdateData();
+                      console.log('✅ onUpdateData chamado com sucesso');
                     } else {
                       console.log('⚠️ Função onUpdateData não definida');
                     }
