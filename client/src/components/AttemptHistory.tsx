@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, Mail, ArrowLeft, Clock, Trophy, Calendar, Timer, ChevronRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AttemptHistory {
   id: number;
@@ -34,6 +35,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
   onUpdateData,
   className = ''
 }) => {
+  const { user } = useAuth();
   const [claimingPrize, setClaimingPrize] = useState<number | null>(null);
 
   const getStatusText = (status: string) => {
@@ -114,8 +116,8 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                   <User className="h-5 w-5 text-violet-400" />
                 </div>
                 <div className="flex flex-col gap-1 text-left">
-                  <h2 className="text-lg md:text-xl font-bold text-violet-100">{userName}</h2>
-                  <p className="text-violet-300/80 text-sm">{userEmail}</p>
+                  <h2 className="text-lg md:text-xl font-bold text-violet-100">{user?.name || 'Usuário'}</h2>
+                  <p className="text-violet-300/80 text-sm">{user?.email || ''}</p>
                 </div>
               </div>
               
@@ -290,71 +292,19 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
   );
 };
 
-// Componente de exemplo com dados mock
+// Componente que usa dados reais do usuário autenticado
 const UserAttemptsHistoryDemo: React.FC = () => {
-  const [attempts, setAttempts] = useState<AttemptHistory[]>([
-    {
-      id: 1,
-      date: '15/12/2024',
-      time: '14:30',
-      status: 'convinced',
-      prizeAmount: 12750,
-      prizeStatus: 'received',
-      duration: '8m 45s',
-      certificateNumber: 'CERT-2024-001542',
-      attemptNumber: 250,
-      prizeNumber: 12
-    },
-    {
-      id: 2,
-      date: '14/12/2024',
-      time: '09:15',
-      status: 'failed',
-      duration: '15m 00s',
-      attemptNumber: 249
-    },
-    {
-      id: 3,
-      date: '13/12/2024',
-      time: '16:22',
-      status: 'convinced',
-      prizeAmount: 8500,
-      prizeStatus: 'claimable',
-      duration: '12m 30s',
-      certificateNumber: 'CERT-2024-001498',
-      attemptNumber: 248,
-      prizeNumber: 11
-    },
-    {
-      id: 4,
-      date: '12/12/2024',
-      time: '11:08',
-      status: 'abandoned',
-      duration: '3m 12s',
-      attemptNumber: 247
-    },
-    {
-      id: 5,
-      date: '11/12/2024',
-      time: '20:45',
-      status: 'convinced',
-      prizeAmount: 15200,
-      prizeStatus: 'processing',
-      duration: '6m 55s',
-      certificateNumber: 'CERT-2024-001401',
-      attemptNumber: 246,
-      prizeNumber: 10
-    }
-  ]);
+  const { user, isAuthenticated } = useAuth();
+
+  // Se não estiver autenticado, não renderiza nada
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  // Para agora, usamos um array vazio até implementarmos a busca real de tentativas
+  const [attempts, setAttempts] = useState<AttemptHistory[]>([]);
 
   const handleClaimPrize = (attemptId: number) => {
-    setAttempts(prevAttempts =>
-      prevAttempts.map(attempt =>
-        attempt.id === attemptId
-          ? { ...attempt, prizeStatus: 'pending' as const }
-          : attempt
-      )
-    );
     console.log(`Solicitando prêmio da tentativa ${attemptId}`);
   };
 
@@ -364,8 +314,6 @@ const UserAttemptsHistoryDemo: React.FC = () => {
     window.dispatchEvent(event);
   };
 
-
-
   const handleUpdateData = () => {
     console.log('Navegando para tela de atualização de dados');
     const event = new CustomEvent('updateDataRequested');
@@ -374,8 +322,8 @@ const UserAttemptsHistoryDemo: React.FC = () => {
 
   return (
     <UserAttemptsHistory
-      userName="Maria Silva"
-      userEmail="maria.silva@email.com"
+      userName={user.name}
+      userEmail={user.email}
       attempts={attempts}
       onClaimPrize={handleClaimPrize}
       onGoBack={handleGoBack}

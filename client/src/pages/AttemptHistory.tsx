@@ -2,76 +2,49 @@
 import React, { useState, useEffect } from 'react';
 import UserAttemptsHistoryDemo from '../components/AttemptHistory';
 import { UserDataUpdate } from '../components/UserDataUpdate';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../lib/api';
 
 // Tipos para as telas disponíveis
 type ScreenType = 'history' | 'update-data';
 
-// Dados mock do usuário (você pode substituir pela sua lógica de autenticação)
-const MOCK_USER_DATA = {
-  name: 'Maria Silva',
-  email: 'maria.silva@email.com'
-};
-
-// Dados mock das tentativas (você pode substituir pela sua lógica de API)
-const MOCK_ATTEMPTS = [
-  {
-    id: 1,
-    date: '15/12/2024',
-    time: '14:30',
-    status: 'convinced' as const,
-    prizeAmount: 12750,
-    prizeStatus: 'received' as const,
-    duration: '8m 45s',
-    certificateNumber: 'CERT-2024-001542'
-  },
-  {
-    id: 2,
-    date: '14/12/2024',
-    time: '09:15',
-    status: 'failed' as const,
-    duration: '15m 00s'
-  },
-  {
-    id: 3,
-    date: '13/12/2024',
-    time: '16:22',
-    status: 'convinced' as const,
-    prizeAmount: 8500,
-    prizeStatus: 'claimable' as const,
-    duration: '12m 30s',
-    certificateNumber: 'CERT-2024-001498'
-  },
-  {
-    id: 4,
-    date: '12/12/2024',
-    time: '11:08',
-    status: 'abandoned' as const,
-    duration: '3m 12s'
-  },
-  {
-    id: 5,
-    date: '11/12/2024',
-    time: '20:45',
-    status: 'convinced' as const,
-    prizeAmount: 15200,
-    prizeStatus: 'processing' as const,
-    duration: '6m 55s',
-    certificateNumber: 'CERT-2024-001401'
-  }
-];
-
 const AttemptHistoryPage: React.FC = () => {
+  const { user, isAuthenticated, logout } = useAuth();
+  
   // Estado para controlar qual tela está ativa
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('history');
   
-  // Estado para dados do usuário (pode ser atualizado)
-  const [userData, setUserData] = useState(MOCK_USER_DATA);
+  // Estado para tentativas (será carregado via API)
+  const [attempts, setAttempts] = useState([]);
   
-  // Estado para tentativas (pode ser atualizado via API)
-  const [attempts, setAttempts] = useState(MOCK_ATTEMPTS);
+  // Estado para loading
+  const [isLoading, setIsLoading] = useState(true);
 
   // Estado para modal de logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Carregar dados do usuário e tentativas
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!isAuthenticated || !user) {
+        // Redirecionar para login se não estiver autenticado
+        window.location.href = '/';
+        return;
+      }
+
+      try {
+        // Para agora, vamos usar dados mockados até implementarmos a API de tentativas
+        // TODO: Implementar apiService.getConvincerAttempts quando disponível
+        setAttempts([]);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [isAuthenticated, user]);
 
   // Listeners para eventos customizados do componente demo
   useEffect(() => {
@@ -131,9 +104,8 @@ const AttemptHistoryPage: React.FC = () => {
   const handleConfirmLogout = () => {
     console.log('Usuário confirmou logout');
     
-    // Limpar dados locais se houver
-    localStorage.removeItem('user_data');
-    localStorage.removeItem('user_session');
+    // Usar a função logout do contexto de autenticação
+    logout();
     
     // Redirecionar para página inicial
     window.location.href = '/';
@@ -141,36 +113,51 @@ const AttemptHistoryPage: React.FC = () => {
 
   // Função para solicitar prêmio
   const handleClaimPrize = (attemptId: number) => {
-    setAttempts(prevAttempts =>
-      prevAttempts.map(attempt =>
-        attempt.id === attemptId
-          ? { ...attempt, prizeStatus: 'pending' as const }
-          : attempt
-      )
-    );
     console.log(`Solicitando prêmio da tentativa ${attemptId}`);
+    // Implementar lógica real de solicitação de prêmio
   };
 
   // Função para atualizar dados do usuário
-  const handleUserDataUpdate = (data: { name: string; password: string }) => {
-    // Atualizar dados do usuário
-    setUserData(prev => ({ ...prev, name: data.name }));
+  const handleUserDataUpdate = async (data: { name: string; password: string }) => {
+    if (!user) return;
     
-    // Aqui você faria a chamada para sua API
-    console.log('Dados atualizados:', data);
-    
-    // Opcional: voltar para a tela de histórico após atualizar
-    // setCurrentScreen('history');
+    try {
+      // TODO: Implementar atualização real via API quando disponível
+      console.log('Dados atualizados:', data);
+      
+      // Opcional: voltar para a tela de histórico após atualizar
+      // setCurrentScreen('history');
+    } catch (error) {
+      console.error('Erro ao atualizar dados do usuário:', error);
+    }
   };
 
   // Função para deletar conta
   const handleDeleteAccount = () => {
-    // Aqui você implementaria a lógica real de deleção de conta
+    // TODO: Implementar lógica real de deleção de conta
     console.log('Conta deletada');
     
     // Exemplo: redirecionar para página inicial
     // window.location.href = '/';
   };
+
+  // Mostrar loading enquanto carrega
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Carregando...</div>
+      </div>
+    );
+  }
+
+  // Mostrar erro se usuário não está autenticado
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Redirecionando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -182,11 +169,12 @@ const AttemptHistoryPage: React.FC = () => {
       {/* Tela de Atualização de Dados */}
       <div className={currentScreen === 'update-data' ? 'block' : 'hidden'}>
         <UserDataUpdate
-          userName={userData.name}
-          userEmail={userData.email}
+          userName={user.name}
+          userEmail={user.email}
           onGoBack={handleGoBack}
           onUpdateData={handleUserDataUpdate}
           onDeleteAccount={handleDeleteAccount}
+          onLogout={handleLogout}
           className="w-full"
         />
       </div>
