@@ -88,7 +88,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
     <div className={`min-h-screen bg-gray-900 ${className}`}>
       {/* Header */}
       <div className="w-full px-4 py-6 border-b border-slate-700/50">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             {onGoBack && (
               <button
@@ -100,16 +100,16 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
               </button>
             )}
 
-            <h1 className="text-2xl md:text-3xl font-bold text-violet-100">
+            <h1 className="text-xl md:text-2xl font-bold text-violet-100">
               Histórico de Tentativas
             </h1>
           </div>
 
           {/* User Info Card */}
-          <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/10">
-            <div className="flex justify-between items-center">
+          <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-violet-500/10">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-bold text-violet-100">{userName}</h2>
+                <h2 className="text-lg md:text-xl font-bold text-violet-100">{userName}</h2>
                 <p className="text-violet-300/80 text-sm">{userEmail}</p>
               </div>
 
@@ -117,20 +117,20 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                 {onUpdateData && (
                   <button
                     onClick={onUpdateData}
-                    className="bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/20 hover:border-violet-400/40 text-violet-400 hover:text-violet-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm"
+                    className="bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/20 hover:border-violet-400/40 text-violet-400 hover:text-violet-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
                   >
                     <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline">Atualizar</span>
+                    <span>Atualizar</span>
                   </button>
                 )}
 
                 {onLogout && (
                   <button
                     onClick={onLogout}
-                    className="bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 hover:border-red-400/40 text-red-400 hover:text-red-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm"
+                    className="bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 hover:border-red-400/40 text-red-400 hover:text-red-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span className="hidden sm:inline">Sair</span>
+                    <span>Sair</span>
                   </button>
                 )}
               </div>
@@ -141,7 +141,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
 
       {/* Attempts List */}
       <div className="w-full px-4 py-8">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-8">
             <Clock className="h-5 w-5 text-violet-400" />
             <h2 className="text-lg font-semibold text-violet-100">
@@ -149,7 +149,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
             </h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {attempts.map((attempt, index) => {
               const statusInfo = getStatusText(attempt.status);
               const prizeStatusInfo = attempt.prizeStatus ? getPrizeStatusText(attempt.prizeStatus) : null;
@@ -163,65 +163,67 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                     index < 10 ? 'translate-x-0 opacity-100' : 'translate-x-0 opacity-100'
                   }`}
                 >
-                  <div className={`bg-slate-700 rounded-lg p-4 border-l-4 ${
+                  <div className={`bg-slate-800/60 backdrop-blur-sm rounded-xl p-5 border-l-4 ${
                     isSuccess ? 'border-violet-500' : attempt.status === 'abandoned' ? 'border-slate-500' : 'border-red-500'
-                  } hover:bg-slate-600 transition-all duration-300`}>
+                  } hover:bg-slate-800/80 transition-all duration-300 border border-slate-700/30`}>
                     
-                    <div className="flex items-center justify-between">
-                      {/* Lado esquerdo - Info principal */}
-                      <div className="flex items-center gap-4 flex-1">
-                        {/* Número da tentativa */}
-                        <div className={`${
-                          isSuccess ? 'bg-violet-500/20' : attempt.status === 'abandoned' ? 'bg-slate-500/20' : 'bg-red-500/20'
-                        } rounded-lg px-3 py-2 flex-shrink-0`}>
-                          <span className={`${
-                            isSuccess ? 'text-violet-200' : attempt.status === 'abandoned' ? 'text-slate-200' : 'text-red-200'
-                          } font-bold text-lg`}>{attemptNumber}°</span>
-                        </div>
-                        
-                        {/* Informações da tentativa */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-white font-semibold">Você</span>
-                            <span className="text-slate-400">tentou em {attempt.date} às {attempt.time},</span>
-                            {isSuccess ? (
-                              <span className="text-violet-400 font-bold">e convenceu!</span>
-                            ) : attempt.status === 'abandoned' ? (
-                              <span className="text-slate-400">mas abandonou!</span>
-                            ) : (
-                              <span className="text-red-400">mas fracassou!</span>
-                            )}
+                    {/* Layout Mobile-First */}
+                    <div className="space-y-4">
+                      {/* Header - Número da tentativa e status */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`${
+                            isSuccess ? 'bg-violet-500/20' : attempt.status === 'abandoned' ? 'bg-slate-500/20' : 'bg-red-500/20'
+                          } rounded-xl px-3 py-2 flex-shrink-0`}>
+                            <span className={`${
+                              isSuccess ? 'text-violet-200' : attempt.status === 'abandoned' ? 'text-slate-200' : 'text-red-200'
+                            } font-bold text-base`}>{attemptNumber}°</span>
                           </div>
                           
-                          {/* Informações extras */}
-                          <div className="flex items-center gap-3 text-sm text-slate-400">
-                            {attempt.duration && (
-                              <span className="flex items-center gap-1">
-                                <Timer className="h-3 w-3" />
-                                {attempt.duration}
-                              </span>
-                            )}
-                            
-                            {attempt.certificateNumber && (
-                              <span className="flex items-center gap-1 text-violet-400">
-                                <div className="w-3 h-3 bg-violet-400 rounded-full"></div>
-                                {attempt.certificateNumber}
-                              </span>
-                            )}
+                          {/* Status visual */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex-shrink-0">
+                              {isSuccess ? (
+                                <Trophy className="h-4 w-4 text-violet-400" />
+                              ) : attempt.status === 'abandoned' ? (
+                                <div className="h-4 w-4 rounded-full bg-slate-400"></div>
+                              ) : (
+                                <div className="h-4 w-4 rounded-full bg-red-400"></div>
+                              )}
+                            </div>
+                            <span className={`font-semibold text-sm ${
+                              isSuccess ? 'text-violet-400' : attempt.status === 'abandoned' ? 'text-slate-400' : 'text-red-400'
+                            }`}>
+                              {isSuccess ? 'Convenceu!' : attempt.status === 'abandoned' ? 'Abandonou' : 'Fracassou'}
+                            </span>
                           </div>
                         </div>
                       </div>
                       
-                      {/* Lado direito - Ícone de status */}
-                      <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Ícone de status */}
-                        <div className="flex-shrink-0">
-                          {isSuccess ? (
-                            <Trophy className="h-5 w-5 text-violet-400" />
-                          ) : attempt.status === 'abandoned' ? (
-                            <div className="h-5 w-5 rounded-full bg-slate-400"></div>
-                          ) : (
-                            <div className="h-5 w-5 text-red-400">⚡</div>
+                      {/* Informações da tentativa */}
+                      <div className="space-y-3">
+                        {/* Data e hora */}
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <Calendar className="h-4 w-4 text-slate-400" />
+                          <span className="text-sm">
+                            {attempt.date} às {attempt.time}
+                          </span>
+                        </div>
+                        
+                        {/* Duração e certificado */}
+                        <div className="flex flex-wrap items-center gap-4 text-sm">
+                          {attempt.duration && (
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <Timer className="h-4 w-4" />
+                              <span>Duração: {attempt.duration}</span>
+                            </div>
+                          )}
+                          
+                          {attempt.certificateNumber && (
+                            <div className="flex items-center gap-2 text-violet-400">
+                              <div className="w-4 h-4 bg-violet-400 rounded-full"></div>
+                              <span className="text-xs font-mono">{attempt.certificateNumber}</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -230,16 +232,14 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                     {/* Card do Prêmio - Destacado */}
                     {attempt.prizeAmount && isSuccess && (
                       <div className="mt-4 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-violet-500/10 rounded-xl p-4 border border-violet-500/20">
-                        <div className="flex items-center justify-between">
+                        <div className="space-y-4">
                           <div className="flex items-center gap-3">
                             <div className="bg-violet-500/20 rounded-lg p-2">
                               <Trophy className="h-5 w-5 text-violet-400" />
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-violet-300 font-semibold text-sm">
-                                  {attempt.prizeNumber ? `${attempt.prizeNumber}° Prêmio Conquistado` : 'Prêmio Conquistado'}
-                                </span>
+                            <div className="flex-1">
+                              <div className="text-violet-300 font-semibold text-sm mb-1">
+                                {attempt.prizeNumber ? `${attempt.prizeNumber}° Prêmio Conquistado` : 'Prêmio Conquistado'}
                               </div>
                               <div className="text-violet-100 text-xl font-bold">
                                 {formatPrize(attempt.prizeAmount)}
@@ -257,18 +257,17 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
                             <button
                               onClick={() => handleClaimPrize(attempt.id)}
                               disabled={claimingPrize === attempt.id}
-                              className="bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400/50 text-violet-400 hover:text-violet-300 font-semibold py-2.5 px-4 rounded-lg transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-400/50 text-violet-400 hover:text-violet-300 font-semibold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {claimingPrize === attempt.id ? (
                                 <>
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-400"></div>
-                                  <span className="hidden sm:inline">Solicitando...</span>
+                                  <span>Solicitando...</span>
                                 </>
                               ) : (
                                 <>
                                   <Trophy className="h-4 w-4" />
-                                  <span className="hidden sm:inline">Solicitar Prêmio</span>
-                                  <span className="sm:hidden">Solicitar</span>
+                                  <span>Solicitar Prêmio</span>
                                 </>
                               )}
                             </button>
