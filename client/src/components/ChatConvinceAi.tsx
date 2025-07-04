@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
@@ -1040,13 +1040,22 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
               <h1 className="font-semibold text-lg leading-tight">Vince</h1>
             </div>
           </div>
-          <button
-            onClick={onShowPrize}
-            className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors duration-200"
-            title="Ver prêmios disponíveis"
-          >
-            <Trophy className="w-5 h-5 text-purple-400" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleEmailClick}
+              className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors duration-200"
+              title="Ver histórico de tentativas"
+            >
+              <History className="w-5 h-5 text-blue-400" />
+            </button>
+            <button
+              onClick={onShowPrize}
+              className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors duration-200"
+              title="Ver prêmios disponíveis"
+            >
+              <Trophy className="w-5 h-5 text-purple-400" />
+            </button>
+          </div>
         </div>
 
         <ConvincementMeter 
