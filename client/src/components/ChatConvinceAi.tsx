@@ -1151,15 +1151,15 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
             </Dialog>
           </>
         ) : (
-          
-              className="bg-slate-700 rounded-3xl p-4 cursor-text"
-              onClick={(e) => {
-                const target = e.target as HTMLElement;
-                if (!target?.closest || (!target.closest('[data-user-email]') && !target.closest('button'))) {
-                  textareaRef.current?.focus();
-                }
-              }}
-            >
+          <div 
+            className="bg-slate-700 rounded-3xl p-4 cursor-text"
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              if (!target?.closest || (!target.closest('[data-user-email]') && !target.closest('button'))) {
+                textareaRef.current?.focus();
+              }
+            }}
+          >
             <textarea
               ref={textareaRef}
               value={inputText}
@@ -1195,7 +1195,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
                 <div className="absolute inset-0 bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
             </div>
-          
+          </div>
         )}
       </div>
     </div>
