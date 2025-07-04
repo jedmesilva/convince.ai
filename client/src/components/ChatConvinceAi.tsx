@@ -1181,7 +1181,6 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setShowHelpModal(true)}
                   className="p-2 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors duration-200"
                   title="Ajuda sobre como usar a aplicação"
                 >
