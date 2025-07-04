@@ -9,7 +9,7 @@ import { apiService } from '../lib/api';
 type ScreenType = 'history' | 'update-data';
 
 const AttemptHistoryPage: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, loading: isLoading } = useAuth();
   
   // Estado para controlar qual tela está ativa
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('history');
@@ -26,9 +26,15 @@ const AttemptHistoryPage: React.FC = () => {
   // Carregar dados do usuário e tentativas
   useEffect(() => {
     const loadUserData = async () => {
-      if (!isAuthenticated || !user) {
+      // Aguardar o carregamento da autenticação antes de redirecionar
+      if (!isAuthenticated && !user && !isLoading) {
         // Redirecionar para login se não estiver autenticado
         window.location.href = '/';
+        return;
+      }
+      
+      // Se ainda está carregando, não fazer nada
+      if (isLoading) {
         return;
       }
 
@@ -44,7 +50,7 @@ const AttemptHistoryPage: React.FC = () => {
     };
 
     loadUserData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isLoading]);
 
   // Listeners para eventos customizados do componente demo
   useEffect(() => {
@@ -141,8 +147,8 @@ const AttemptHistoryPage: React.FC = () => {
     // window.location.href = '/';
   };
 
-  // Mostrar loading enquanto carrega
-  if (isLoading) {
+  // Mostrar loading enquanto carrega dados da página ou autenticação
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">Carregando...</div>
@@ -150,7 +156,7 @@ const AttemptHistoryPage: React.FC = () => {
     );
   }
 
-  // Mostrar erro se usuário não está autenticado
+  // Mostrar erro se usuário não está autenticado (após carregamento completo)
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
