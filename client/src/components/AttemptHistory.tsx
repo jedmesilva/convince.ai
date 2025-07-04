@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Mail, ArrowLeft, Clock, Trophy, Calendar, Timer, LogOut, Settings } from 'lucide-react';
+import { User, Mail, ArrowLeft, Clock, Trophy, Calendar, Timer, ChevronRight } from 'lucide-react';
 
 interface AttemptHistory {
   id: number;
@@ -121,7 +121,7 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
               
               <div className="flex-shrink-0">
                 <div className="bg-violet-500/20 rounded-lg p-2 group-hover:bg-violet-500/30 transition-all duration-300">
-                  <ArrowLeft className="h-4 w-4 text-violet-400 rotate-180" />
+                  <ChevronRight className="h-4 w-4 text-violet-400" />
                 </div>
               </div>
             </div>
