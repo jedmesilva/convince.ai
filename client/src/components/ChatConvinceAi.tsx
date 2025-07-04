@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History, HelpCircle, Plus } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History, HelpCircle, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
@@ -1191,10 +1191,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
                   className="p-2 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors duration-200"
                   title="Adicionar tempo para tentativas"
                 >
-                  <div className="relative">
-                    <Clock className="w-4 h-4 text-violet-400" />
-                    <Plus className="w-2 h-2 text-violet-400 absolute -top-0.5 -right-0.5" />
-                  </div>
+                  <Timer className="w-4 h-4 text-violet-400" />
                 </button>
               </div>
               <button
