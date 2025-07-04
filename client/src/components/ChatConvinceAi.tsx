@@ -1046,7 +1046,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
               className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors duration-200"
               title="Ver histórico de tentativas"
             >
-              <History className="w-5 h-5 text-blue-400" />
+              <History className="w-5 h-5 text-purple-400" />
             </button>
             <button
               onClick={onShowPrize}
