@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History, HelpCircle, Timer } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
@@ -165,7 +166,7 @@ const Message = ({ message }) => (
 export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-
+  
   // Estados principais do sistema
   const [chatState, setChatState] = useState<ChatState>('user_not_authenticated');
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -182,16 +183,13 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const [isConvincementAnimating, setIsConvincementAnimating] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  
   // Estados para gerenciamento de tentativas e tempo
   const [userTimeBalance, setUserTimeBalance] = useState<TimeBalance | null>(null);
   const [currentAttempt, setCurrentAttempt] = useState<Attempt | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isBlinking, setIsBlinking] = useState(false);
   const [initialTime, setInitialTime] = useState(0);
-
-  // Estado para modal de ajuda
-  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // WebSocket para receber atualizações em tempo real
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
@@ -200,7 +198,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const messagesEndRef = useRef(null);
 
   // ==== WEBSOCKET PARA TEMPO REAL ====
-
+  
   // Conectar ao WebSocket quando há uma tentativa ativa
   const connectWebSocket = useCallback((attemptId: string) => {
     if (websocket) {
@@ -232,7 +230,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           // Atualizar o convincing_score em tempo real
           const newScore = data.convincing_score;
           console.log('🎯 Atualizando convincing_score em tempo real:', newScore);
-
+          
           setConvincementLevel(newScore);
           setIsConvincementAnimating(true);
           setTimeout(() => setIsConvincementAnimating(false), 1000);
@@ -241,7 +239,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         if (data.type === 'ai_response_created' && data.attemptId === attemptId) {
           // Nova resposta da AI criada - adicionar ao chat
           console.log('🤖 Nova resposta da AI recebida em tempo real:', data);
-
+          
           const aiMessage = {
             id: `ai-${data.aiResponseId}`,
             text: data.aiResponse,
@@ -290,16 +288,16 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const loadAttemptMessages = useCallback(async (attemptId: string) => {
     try {
       console.log('📝 Carregando mensagens da tentativa:', attemptId);
-
+      
       // Carregar mensagens do usuário
       const userMessages = await apiService.getAttemptMessages(attemptId);
-
+      
       // Carregar respostas da AI
       const aiResponses = await apiService.getAttemptAiResponses(attemptId);
-
+      
       // Combinar e ordenar todas as mensagens por timestamp
       const allMessages: ChatMessage[] = [];
-
+      
       // Adicionar mensagens do usuário
       userMessages.forEach(msg => {
         allMessages.push({
@@ -312,7 +310,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           isBot: false
         });
       });
-
+      
       // Adicionar respostas da AI
       aiResponses.forEach(response => {
         allMessages.push({
@@ -325,17 +323,17 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           isBot: true
         });
       });
-
+      
       // Ordenar por timestamp
       allMessages.sort((a, b) => {
         const timeA = new Date(`2024-01-01 ${a.timestamp}`).getTime();
         const timeB = new Date(`2024-01-01 ${b.timestamp}`).getTime();
         return timeA - timeB;
       });
-
+      
       console.log('📝 Mensagens carregadas:', allMessages.length);
       setMessages(allMessages);
-
+      
     } catch (error) {
       console.error('Erro ao carregar mensagens da tentativa:', error);
       // Manter mensagem inicial se não conseguir carregar
@@ -375,7 +373,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   // 3. Verificar saldo de tempo do usuário
   const checkUserTimeBalance = useCallback(async () => {
     if (!user?.id) return 0;
-
+    
     try {
       console.log('⏱️ Verificando saldo de tempo do usuário...');
       const timeBalance = await apiService.getTimeBalance(user.id);
@@ -390,7 +388,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   // 4. Verificar status da tentativa atual
   const checkAttemptStatus = useCallback(async () => {
     if (!user?.id) return null;
-
+    
     try {
       console.log('🎯 Verificando status da tentativa...');
       const activeAttempt = await apiService.getActiveAttempt(user.id);
@@ -404,14 +402,14 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   // 5. Criar nova tentativa
   const createAttempt = useCallback(async () => {
     if (!user?.id || !userTimeBalance) return null;
-
+    
     try {
       console.log('🚀 Criando nova tentativa...');
       const newAttempt = await apiService.createAttempt(userTimeBalance.amount_time_seconds);
       setCurrentAttempt(newAttempt);
       setInitialTime(newAttempt.available_time_seconds);
       setTimeLeft(newAttempt.available_time_seconds);
-
+      
       // Limpar mensagens antigas e definir mensagem inicial da nova tentativa
       setMessages([
         {
@@ -424,7 +422,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           isBot: true
         }
       ]);
-
+      
       setConvincementLevel(INITIAL_CONVINCEMENT);
       return newAttempt;
     } catch (error) {
@@ -439,15 +437,15 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
       console.log('❌ Nenhuma tentativa ativa para atualizar');
       return;
     }
-
+    
     try {
       console.log(`📝 Atualizando status da tentativa para: ${status}`);
       console.log(`📝 ID da tentativa: ${currentAttempt.id}`);
       console.log(`📝 Dados a serem enviados:`, { status });
-
+      
       const result = await apiService.updateAttempt(currentAttempt.id, { status });
       console.log('✅ Status atualizado com sucesso:', result);
-
+      
       setCurrentAttempt(prev => prev ? { ...prev, status } : null);
     } catch (error) {
       console.error('❌ Erro ao atualizar status da tentativa:', error);
@@ -473,7 +471,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   }, []);
 
   // ==== SISTEMA DE TIMER ====
-
+  
   // Estado para rastrear tempo local vs tempo sincronizado
   const [localTimeSpent, setLocalTimeSpent] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState(Date.now());
@@ -516,13 +514,13 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
     try {
       console.log(`🔄 Sincronizando ${localTimeSpent}s com servidor...`);
-
+      
       await apiService.updateTimeBalance(user.id, localTimeSpent);
-
+      
       // Reset do contador local após sincronização
       setLocalTimeSpent(0);
       setLastSyncTime(Date.now());
-
+      
       console.log(`✅ Sincronização concluída`);
     } catch (error) {
       console.error('❌ Erro na sincronização:', error);
@@ -545,7 +543,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-
+    
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       // Sincronizar ao desmontar componente
@@ -577,13 +575,13 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   // Trigger acionado quando timer zera
   const handleTimerZero = useCallback(async () => {
     console.log('⏰ TRIGGER: Timer zerou!');
-
+    
     // Sincronizar tempo pendente antes de verificar saldo
     await syncTimeWithServer();
-
+    
     // Verificar saldo de tempo do usuário (buscar dados atualizados)
     const remainingBalance = await checkUserTimeBalance();
-
+    
     if (remainingBalance > 0) {
       // Se usuário possui saldo de tempo: atualizar timer
       console.log('✅ Usuário ainda tem saldo, atualizando timer...');
@@ -591,21 +589,21 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     } else {
       // Se usuário não tem saldo: verificar status da tentativa
       console.log('❌ Usuário sem saldo, verificando tentativa...');
-
+      
       if (currentAttempt?.status === 'active') {
         // Mudar status para "expired"
         await updateAttemptStatus('expired');
-
+        
         // Limpar tentativa atual
         setCurrentAttempt(null);
-
+        
         // Desconectar WebSocket
         disconnectWebSocket();
-
+        
         // Atualizar estado para mostrar botão de comprar mais tempo
         setChatState('user_authenticated_no_balance');
         blockChat();
-
+        
         console.log('✅ Tentativa expirada, exibindo botão para comprar mais tempo');
       }
     }
@@ -614,31 +612,31 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   // Handler para botão "Parar tentativa"
   const handleStopAttempt = useCallback(async () => {
     console.log('🛑 Usuário parou a tentativa');
-
+    
     if (currentAttempt?.status === 'active') {
       console.log('📝 Tentativa ativa encontrada, atualizando para abandoned...');
       await updateAttemptStatus('abandoned');
-
+      
       // Limpar tentativa atual
       setCurrentAttempt(null);
-
+      
       // Desconectar WebSocket
       disconnectWebSocket();
-
+      
       // Verificar saldo para definir estado correto
       const timeBalance = await checkUserTimeBalance();
-
+      
       if (timeBalance > 0) {
         setChatState('user_authenticated_has_balance');
       } else {
         setChatState('user_authenticated_no_balance');
       }
-
+      
       blockChat();
-
+      
       // Limpar timer
       setTimeLeft(0);
-
+      
       console.log('✅ Tentativa abandonada, exibindo botões apropriados');
     } else {
       console.log('⚠️ Nenhuma tentativa ativa para parar');
@@ -653,7 +651,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     try {
       // 1. Verificar se usuário está autenticado
       const authenticated = checkUserAuthentication();
-
+      
       if (!authenticated) {
         // Usuário não autenticado - abrir checkout para autenticação
         console.log('❌ Usuário não autenticado, abrindo checkout...');
@@ -663,7 +661,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
       // 2. Verificar saldo de tempo
       const timeBalance = await checkUserTimeBalance();
-
+      
       if (timeBalance <= 0) {
         // Usuário sem saldo - abrir checkout para compra
         console.log('💰 Usuário sem saldo, abrindo checkout...');
@@ -691,24 +689,24 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     try {
       // Verificar se já existe tentativa ativa
       const existingAttempt = await checkAttemptStatus();
-
+      
       if (existingAttempt && existingAttempt.status === 'active') {
         // Continuar tentativa existente
         console.log('🔄 Continuando tentativa existente...');
-
+        
         // Obter saldo real do usuário
         const currentTimeBalance = await checkUserTimeBalance();
-
+        
         setCurrentAttempt(existingAttempt);
         // CORREÇÃO: Usar saldo real do usuário, não o tempo inicial da tentativa
         setTimeLeft(currentTimeBalance);
         setInitialTime(existingAttempt.available_time_seconds);
         setConvincementLevel(existingAttempt.convincing_score);
         setChatState('attempt_active');
-
+        
         // Conectar WebSocket para receber atualizações em tempo real
         connectWebSocket(existingAttempt.id);
-
+        
         // Carregar mensagens da tentativa existente
         await loadAttemptMessages(existingAttempt.id);
       } else {
@@ -717,7 +715,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         if (newAttempt) {
           console.log('✅ Nova tentativa criada com sucesso!');
           setChatState('attempt_active');
-
+          
           // Conectar WebSocket para receber atualizações em tempo real
           connectWebSocket(newAttempt.id);
         } else {
@@ -732,14 +730,14 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   }, [checkAttemptStatus, createAttempt, checkUserTimeBalance, loadAttemptMessages]);
 
   // ==== DEFINIR ESTADO INICIAL ====
-
+  
   useEffect(() => {
     const initializeAppState = async () => {
       console.log('🚀 Inicializando estado da aplicação...');
-
+      
       // Verificar autenticação
       const authenticated = checkUserAuthentication();
-
+      
       if (!authenticated) {
         setChatState('user_not_authenticated');
         return;
@@ -747,7 +745,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
       // Verificar saldo de tempo
       const timeBalance = await checkUserTimeBalance();
-
+      
       if (timeBalance <= 0) {
         setChatState('user_authenticated_no_balance');
         return;
@@ -755,7 +753,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
 
       // Verificar tentativa ativa
       const attempt = await checkAttemptStatus();
-
+      
       if (attempt && attempt.status === 'active') {
         setCurrentAttempt(attempt);
         // CORREÇÃO: Usar saldo real do usuário, não o tempo inicial da tentativa
@@ -763,10 +761,10 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         setInitialTime(attempt.available_time_seconds);
         setConvincementLevel(attempt.convincing_score);
         setChatState('attempt_active');
-
+        
         // Conectar WebSocket para receber atualizações em tempo real
         connectWebSocket(attempt.id);
-
+        
         // Carregar mensagens da tentativa existente
         await loadAttemptMessages(attempt.id);
       } else {
@@ -778,7 +776,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   }, [checkUserAuthentication, checkUserTimeBalance, checkAttemptStatus, loadAttemptMessages]);
 
   // ==== ANÁLISE DE ARGUMENTOS E ENVIO DE MENSAGEM ====
-
+  
   const analyzeArgument = useCallback((text) => {
     const lowerText = text.toLowerCase();
     let change = 0;
@@ -856,7 +854,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
     try {
       // Salvar mensagem no banco de dados
       const savedMessage = await apiService.createMessage(currentAttempt.id, messageText);
-
+      
       // Adicionar mensagem do usuário ao chat
       const currentTime = new Date().toLocaleTimeString('pt-BR', { 
         hour: '2-digit', 
@@ -896,14 +894,14 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
           // Verificar se usuário ganhou (score >= 90)
           if (newLevel >= 90) {
             await updateAttemptStatus('completed');
-
+            
             // Desconectar WebSocket
             disconnectWebSocket();
-
+            
             setChatState('user_authenticated_has_balance');
             // Aqui poderia mostrar tela de prêmio
           }
-        } catch (error){
+        } catch (error) {
           console.error('Erro ao gerar resposta da AI:', error);
         }
       }, 1000);
@@ -914,7 +912,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   }, [inputText, chatState, currentAttempt, analyzeArgument, updateConvincementLevel, convincementLevel, generateBotResponse, updateAttemptStatus]);
 
   // ==== HANDLERS DE UI ====
-
+  
   const handlePaymentSuccess = useCallback(async () => {
     setShowPaymentDialog(false);
     // Recarregar saldo após pagamento bem-sucedido
@@ -950,7 +948,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   }, [messages, scrollToBottom]);
 
   // ==== RENDERIZAÇÃO BASEADA NO ESTADO ====
-
+  
   const renderMainButton = () => {
     switch (chatState) {
       case 'user_not_authenticated':
@@ -1087,7 +1085,7 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
         {isChatBlocked ? (
           <>
             {renderMainButton()}
-
+            
             <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
               <DialogContent className="!p-0 !m-0 !gap-0 w-[95vw] max-w-6xl h-auto min-h-[300px] max-h-[95dvh] sm:min-h-[400px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-transparent border-none !top-[50%] sm:!top-[50%] !rounded-2xl">
                 <DialogTitle className="sr-only">
@@ -1096,66 +1094,13 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
                 <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} onClose={handleClosePayment} />
               </DialogContent>
             </Dialog>
-
-            {/* Modal de Ajuda */}
-            <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
-              <DialogContent className="max-w-2xl bg-slate-800 border border-slate-700">
-                <DialogTitle className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <HelpCircle className="w-6 h-6 text-violet-400" />
-                  Como usar a aplicação
-                </DialogTitle>
-                <div className="space-y-4 text-slate-300">
-                  <div>
-                    <h3 className="font-semibold text-violet-300 mb-2">🎯 Objetivo</h3>
-                    <p>Seu objetivo é convencer o Vince através de argumentos persuasivos para ganhar o prêmio acumulado!</p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-violet-300 mb-2">⏱️ Como funciona</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Você compra tempo para conversar com o Vince</li>
-                      <li>Use argumentos convincentes para aumentar seu nível de convencimento</li>
-                      <li>Atingir 90% de convencimento = Você ganha o prêmio!</li>
-                      <li>O tempo pode ser pausado parando a tentativa</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-violet-300 mb-2">💡 Dicas para convencer</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Use evidências, fatos e dados concretos</li>
-                      <li>Mensagens mais longas e detalhadas são mais convincentes</li>
-                      <li>Evite opiniões vagas - seja específico!</li>
-                      <li>Inclua números e estatísticas quando possível</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-violet-300 mb-2">🏆 Navegação</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li><History className="w-4 h-4 inline mr-1" />Ícone de histórico: Ver suas tentativas anteriores</li>
-                      <li><Trophy className="w-4 h-4 inline mr-1" />Ícone de troféu: Ver prêmios disponíveis</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="flex justify-end mt-6">
-                  <button
-                    onClick={() => setShowHelpModal(false)}
-                    className="px-4 py-2 bg-violet-400 hover:bg-violet-300 text-white rounded-lg transition-colors"
-                  >
-                    Entendi!
-                  </button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </>
         ) : (
           <div 
             className="bg-slate-700 rounded-3xl p-4 cursor-text"
             onClick={(e) => {
               const target = e.target as HTMLElement;
-              if (!target?.closest || (!target.closest('[data-user-email]') && !target.closest('button'))) {
+              if (!target?.closest || !target.closest('[data-user-email]')) {
                 textareaRef.current?.focus();
               }
             }}
@@ -1179,21 +1124,11 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
               }}
             />
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <button
-                  className="p-2 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors duration-200"
-                  title="Ajuda sobre como usar a aplicação"
-                >
-                  <HelpCircle className="w-4 h-4 text-violet-400" />
-                </button>
-                <button
-                  onClick={() => setShowPaymentDialog(true)}
-                  className="p-2 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors duration-200"
-                  title="Adicionar tempo para tentativas"
-                >
-                  <Timer className="w-4 h-4 text-violet-400" />
-                </button>
-              </div>
+              <UserEmail 
+                email={user?.email || "user@email.com"} 
+                compact={true}
+                onClick={handleEmailClick}
+              />
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim()}
