@@ -20,7 +20,6 @@ interface UserAttemptsHistoryProps {
   userEmail: string;
   attempts: AttemptHistory[];
   onClaimPrize?: (attemptId: number) => void;
-  onLogout?: () => void;
   onGoBack?: () => void;
   onUpdateData?: () => void;
   className?: string;
@@ -31,7 +30,6 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
   userEmail,
   attempts,
   onClaimPrize,
-  onLogout,
   onGoBack,
   onUpdateData,
   className = ''
@@ -105,37 +103,29 @@ const UserAttemptsHistory: React.FC<UserAttemptsHistoryProps> = ({
             </h1>
           </div>
 
-          {/* User Info Card */}
-          <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-violet-500/10">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-lg md:text-xl font-bold text-violet-100">{userName}</h2>
-                <p className="text-violet-300/80 text-sm">{userEmail}</p>
+          {/* Card do usuário clicável */}
+          <button
+            onClick={onUpdateData}
+            className="w-full bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-violet-500/10 hover:bg-slate-800/60 hover:border-violet-500/20 transition-all duration-300 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-violet-500/20 rounded-xl p-3">
+                  <User className="h-5 w-5 text-violet-400" />
+                </div>
+                <div className="flex flex-col gap-1 text-left">
+                  <h2 className="text-lg md:text-xl font-bold text-violet-100">{userName}</h2>
+                  <p className="text-violet-300/80 text-sm">{userEmail}</p>
+                </div>
               </div>
-
-              <div className="flex gap-3">
-                {onUpdateData && (
-                  <button
-                    onClick={onUpdateData}
-                    className="bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/20 hover:border-violet-400/40 text-violet-400 hover:text-violet-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Atualizar</span>
-                  </button>
-                )}
-
-                {onLogout && (
-                  <button
-                    onClick={onLogout}
-                    className="bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 hover:border-red-400/40 text-red-400 hover:text-red-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Sair</span>
-                  </button>
-                )}
+              
+              <div className="flex-shrink-0">
+                <div className="bg-violet-500/20 rounded-lg p-2 group-hover:bg-violet-500/30 transition-all duration-300">
+                  <ArrowLeft className="h-4 w-4 text-violet-400 rotate-180" />
+                </div>
               </div>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -374,11 +364,7 @@ const UserAttemptsHistoryDemo: React.FC = () => {
     window.dispatchEvent(event);
   };
 
-  const handleLogout = () => {
-    console.log('Solicitando logout');
-    const event = new CustomEvent('logoutRequested');
-    window.dispatchEvent(event);
-  };
+
 
   const handleUpdateData = () => {
     console.log('Navegando para tela de atualização de dados');
@@ -392,7 +378,6 @@ const UserAttemptsHistoryDemo: React.FC = () => {
       userEmail="maria.silva@email.com"
       attempts={attempts}
       onClaimPrize={handleClaimPrize}
-      onLogout={handleLogout}
       onGoBack={handleGoBack}
       onUpdateData={handleUpdateData}
     />

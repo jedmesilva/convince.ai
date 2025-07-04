@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, Save, Trash2, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, Save, Trash2, AlertTriangle, CheckCircle, XCircle, LogOut, Settings } from 'lucide-react';
 
 interface UserDataUpdateProps {
   userName: string;
@@ -7,6 +7,7 @@ interface UserDataUpdateProps {
   onGoBack?: () => void;
   onUpdateData?: (data: { name: string; password: string }) => void;
   onDeleteAccount?: () => void;
+  onLogout?: () => void;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
   onGoBack,
   onUpdateData,
   onDeleteAccount,
+  onLogout,
   className = ''
 }) => {
   const [formData, setFormData] = useState({
@@ -34,6 +36,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | null;
     message: string;
@@ -100,6 +103,12 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
         confirmPassword: ''
       }));
       
+      // Fecha o modo de edição após sucesso
+      setTimeout(() => {
+        setIsEditing(false);
+        setFeedback({ type: null, message: '' });
+      }, 2000);
+      
     } catch (error) {
       setFeedback({ type: 'error', message: 'Erro ao atualizar dados. Tente novamente.' });
     } finally {
@@ -148,30 +157,44 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
             </h1>
           </div>
           
-          {/* Informações atuais - Dentro da seção */}
+          {/* Seção do usuário com botões de ação */}
           <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-violet-500/10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-violet-400" />
-                <div>
-                  <p className="text-violet-100/80 text-sm">Nome Atual</p>
-                  <p className="text-violet-100 font-semibold">{userName}</p>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-violet-500/20 rounded-xl p-3">
+                  <User className="h-5 w-5 text-violet-400" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-lg md:text-xl font-bold text-violet-100">{userName}</h2>
+                  <p className="text-violet-300/80 text-sm">{userEmail}</p>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-violet-400" />
-                <div>
-                  <p className="text-violet-100/80 text-sm">Email</p>
-                  <p className="text-violet-100 font-semibold">{userEmail}</p>
-                </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/20 hover:border-violet-400/40 text-violet-400 hover:text-violet-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Atualizar</span>
+                </button>
+
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 hover:border-red-400/40 text-red-400 hover:text-red-300 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Formulário */}
+      {/* Conteúdo dinâmico */}
       <div className="w-full px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Feedback */}
@@ -190,8 +213,9 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
             </div>
           )}
 
-          {/* Formulário de Atualização */}
-          <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-slate-700/30 mb-6">
+          {/* Formulário de Atualização - Só aparece quando isEditing é true */}
+          {isEditing && (
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-slate-700/30 mb-6">
             <h2 className="text-lg md:text-xl font-bold text-violet-100 mb-6 flex items-center gap-3">
               <User className="h-5 w-5 text-violet-400" />
               Atualizar Informações
@@ -287,28 +311,42 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                 </div>
               )}
 
-              {/* Botão Salvar */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-violet-600/50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Salvando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-5 w-5" />
-                    <span>Salvar Alterações</span>
-                  </>
-                )}
-              </button>
+              {/* Botões de ação */}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setFeedback({ type: null, message: '' });
+                  }}
+                  className="flex-1 bg-slate-600/50 hover:bg-slate-600/70 text-slate-300 hover:text-slate-200 font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+                >
+                  Cancelar
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 bg-violet-500 hover:bg-violet-600 disabled:bg-violet-600/50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-5 w-5" />
+                      <span>Salvar</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
+          )}
 
-          {/* Zona de Perigo */}
+          {/* Zona de Perigo - Sempre visível */}
           <div className="bg-red-500/5 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-red-500/20">
             <h2 className="text-lg md:text-xl font-bold text-red-400 mb-4 flex items-center gap-3">
               <AlertTriangle className="h-5 w-5" />
@@ -398,6 +436,12 @@ const UserDataUpdateDemo: React.FC = () => {
     // Aqui você faria a chamada para deletar a conta e redirecionar para login
   };
 
+  const handleLogout = () => {
+    console.log('Solicitando logout');
+    const event = new CustomEvent('logoutRequested');
+    window.dispatchEvent(event);
+  };
+
   return (
     <UserDataUpdate
       userName="Maria Silva"
@@ -405,6 +449,7 @@ const UserDataUpdateDemo: React.FC = () => {
       onGoBack={handleGoBack}
       onUpdateData={handleUpdateData}
       onDeleteAccount={handleDeleteAccount}
+      onLogout={handleLogout}
     />
   );
 };
