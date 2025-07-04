@@ -128,6 +128,14 @@ Changelog:
   * Implementado modal personalizado de logout em substituição ao confirm nativo
   * Modal de logout segue padrão visual consistente com resto da aplicação
   * Texto do logout ajustado para "Sair da Conta" com pergunta mais natural
+- July 4, 2025. Reformulação visual completa das telas AttemptHistory e UserDataUpdate:
+  * Removido emoji ⚡ desnecessário na lista de tentativas fracassadas
+  * Reorganizado layout da tela de histórico com estrutura mobile-first mais limpa
+  * Aumentado espaçamento entre cards de tentativas (space-y-4 para space-y-6)
+  * Melhorado hierarquia visual com informações organizadas em seções claras
+  * Corrigido layout da tela de atualização: título e botão voltar movidos para fora da seção
+  * Padronizado elementos visuais: bordas rounded-xl, cores slate-800/60, melhor responsividade
+  * Otimizado cards de prêmio com layout vertical e botão de solicitar em largura total
 
 # User Preferences
 

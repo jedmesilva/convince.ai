@@ -129,27 +129,27 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
   return (
     <div className={`min-h-screen bg-gray-900 ${className}`}>
       {/* Header */}
-      <div className="w-full px-4 py-6 border-b border-slate-700">
+      <div className="w-full px-4 py-6 border-b border-slate-700/50">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-slate-700/30 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/20">
-            {/* Botão de Voltar e Título */}
-            <div className="flex items-center gap-4 mb-4">
-              {onGoBack && (
-                <button
-                  onClick={onGoBack}
-                  className="bg-slate-600/50 hover:bg-slate-600/70 border border-slate-500/30 hover:border-slate-400 text-slate-300 hover:text-slate-200 font-medium py-2 px-3 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Voltar</span>
-                </button>
-              )}
-              
-              <h1 className="text-2xl md:text-3xl font-bold text-violet-100">
-                Atualizar Dados
-              </h1>
-            </div>
+          {/* Botão de Voltar e Título - Fora da seção */}
+          <div className="flex items-center gap-4 mb-6">
+            {onGoBack && (
+              <button
+                onClick={onGoBack}
+                className="bg-slate-600/40 hover:bg-slate-600/60 border border-slate-500/20 hover:border-slate-400/40 text-slate-300 hover:text-slate-200 font-medium py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Voltar</span>
+              </button>
+            )}
             
-            {/* Informações atuais */}
+            <h1 className="text-xl md:text-2xl font-bold text-violet-100">
+              Atualizar Dados
+            </h1>
+          </div>
+          
+          {/* Informações atuais - Dentro da seção */}
+          <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-violet-500/10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-violet-400" />
@@ -191,9 +191,9 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
           )}
 
           {/* Formulário de Atualização */}
-          <div className="bg-slate-700/30 backdrop-blur-sm rounded-2xl p-6 border border-violet-500/20 mb-6">
-            <h2 className="text-xl font-bold text-violet-100 mb-6 flex items-center gap-3">
-              <User className="h-6 w-6 text-violet-400" />
+          <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-slate-700/30 mb-6">
+            <h2 className="text-lg md:text-xl font-bold text-violet-100 mb-6 flex items-center gap-3">
+              <User className="h-5 w-5 text-violet-400" />
               Atualizar Informações
             </h2>
             
@@ -207,7 +207,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full bg-slate-600/50 border border-slate-500/30 rounded-lg px-4 py-3 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
+                  className="w-full bg-slate-700/50 border border-slate-600/30 rounded-xl px-4 py-3 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
                   placeholder="Digite seu nome completo"
                   required
                 />
@@ -223,7 +223,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                     type={showPasswords.current ? 'text' : 'password'}
                     value={formData.currentPassword}
                     onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                    className="w-full bg-slate-600/50 border border-slate-500/30 rounded-lg px-4 py-3 pr-12 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
+                    className="w-full bg-slate-700/50 border border-slate-600/30 rounded-xl px-4 py-3 pr-12 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
                     placeholder="Digite sua senha atual"
                     required
                   />
@@ -247,7 +247,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                     type={showPasswords.new ? 'text' : 'password'}
                     value={formData.newPassword}
                     onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                    className="w-full bg-slate-600/50 border border-slate-500/30 rounded-lg px-4 py-3 pr-12 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
+                    className="w-full bg-slate-700/50 border border-slate-600/30 rounded-xl px-4 py-3 pr-12 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
                     placeholder="Digite uma nova senha (opcional)"
                     minLength={6}
                   />
@@ -272,7 +272,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                       type={showPasswords.confirm ? 'text' : 'password'}
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      className="w-full bg-slate-600/50 border border-slate-500/30 rounded-lg px-4 py-3 pr-12 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
+                      className="w-full bg-slate-700/50 border border-slate-600/30 rounded-xl px-4 py-3 pr-12 text-violet-100 placeholder-violet-300/50 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 transition-all duration-300"
                       placeholder="Confirme sua nova senha"
                       required
                     />
@@ -291,7 +291,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-violet-600/50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full bg-violet-500 hover:bg-violet-600 disabled:bg-violet-600/50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -309,19 +309,19 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
           </div>
 
           {/* Zona de Perigo */}
-          <div className="bg-red-500/5 backdrop-blur-sm rounded-2xl p-6 border border-red-500/20">
-            <h2 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6" />
+          <div className="bg-red-500/5 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-red-500/20">
+            <h2 className="text-lg md:text-xl font-bold text-red-400 mb-4 flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5" />
               Zona de Perigo
             </h2>
             
-            <p className="text-red-300/80 mb-4 text-sm">
+            <p className="text-red-300/80 mb-6 text-sm leading-relaxed">
               Esta ação é irreversível. Todos os seus dados, histórico de tentativas e prêmios serão permanentemente deletados.
             </p>
             
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-400 text-red-400 hover:text-red-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center gap-2"
+              className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-400 text-red-400 hover:text-red-300 font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" />
               <span>Deletar Conta</span>
@@ -351,7 +351,7 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-100 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
+                className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
                 placeholder="DELETAR CONTA"
               />
             </div>
@@ -363,14 +363,14 @@ const UserDataUpdate: React.FC<UserDataUpdateProps> = ({
                   setDeleteConfirmText('');
                   setFeedback({ type: null, message: '' });
                 }}
-                className="flex-1 bg-slate-600 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                className="flex-1 bg-slate-600 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-all duration-300"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={isLoading || deleteConfirmText !== 'DELETAR CONTA'}
-                className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-600/50 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-600/50 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-4 rounded-xl transition-all duration-300"
               >
                 {isLoading ? 'Deletando...' : 'Deletar'}
               </button>
