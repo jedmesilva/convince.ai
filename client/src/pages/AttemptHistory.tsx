@@ -17,8 +17,8 @@ const AttemptHistoryPage: React.FC = () => {
   // Estado para tentativas (será carregado via API)
   const [attempts, setAttempts] = useState([]);
   
-  // Estado para loading
-  const [isLoading, setIsLoading] = useState(true);
+  // Estado para loading da página
+  const [loading, setLoading] = useState(true);
 
   // Estado para modal de logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -45,7 +45,7 @@ const AttemptHistoryPage: React.FC = () => {
       } catch (error) {
         console.error('Erro ao carregar dados do usuário:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
