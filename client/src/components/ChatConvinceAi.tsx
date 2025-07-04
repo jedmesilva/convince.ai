@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History } from 'lucide-react';
+import { ChevronDown, ArrowUp, Lock, Brain, Zap, Trophy, Square, Clock, History, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import UserEmail from './UserEmail';
 import PaymentCheckout from './PaymentCheckout';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
@@ -190,6 +189,9 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isBlinking, setIsBlinking] = useState(false);
   const [initialTime, setInitialTime] = useState(0);
+  
+  // Estado para modal de ajuda
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // WebSocket para receber atualizações em tempo real
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
@@ -1094,6 +1096,59 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
                 <PaymentCheckout onPaymentSuccess={handlePaymentSuccess} onClose={handleClosePayment} />
               </DialogContent>
             </Dialog>
+
+            {/* Modal de Ajuda */}
+            <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
+              <DialogContent className="max-w-2xl bg-slate-800 border border-slate-700">
+                <DialogTitle className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <HelpCircle className="w-6 h-6 text-violet-400" />
+                  Como usar a aplicação
+                </DialogTitle>
+                <div className="space-y-4 text-slate-300">
+                  <div>
+                    <h3 className="font-semibold text-violet-300 mb-2">🎯 Objetivo</h3>
+                    <p>Seu objetivo é convencer o Vince através de argumentos persuasivos para ganhar o prêmio acumulado!</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-violet-300 mb-2">⏱️ Como funciona</h3>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Você compra tempo para conversar com o Vince</li>
+                      <li>Use argumentos convincentes para aumentar seu nível de convencimento</li>
+                      <li>Atingir 90% de convencimento = Você ganha o prêmio!</li>
+                      <li>O tempo pode ser pausado parando a tentativa</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-violet-300 mb-2">💡 Dicas para convencer</h3>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Use evidências, fatos e dados concretos</li>
+                      <li>Mensagens mais longas e detalhadas são mais convincentes</li>
+                      <li>Evite opiniões vagas - seja específico!</li>
+                      <li>Inclua números e estatísticas quando possível</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-violet-300 mb-2">🏆 Navegação</h3>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li><History className="w-4 h-4 inline mr-1" />Ícone de histórico: Ver suas tentativas anteriores</li>
+                      <li><Trophy className="w-4 h-4 inline mr-1" />Ícone de troféu: Ver prêmios disponíveis</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={() => setShowHelpModal(false)}
+                    className="px-4 py-2 bg-violet-400 hover:bg-violet-300 text-white rounded-lg transition-colors"
+                  >
+                    Entendi!
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </>
         ) : (
           <div 
@@ -1124,11 +1179,13 @@ export default function ChatConvinceAi({ onShowPrize }: MobileChatProps = {}) {
               }}
             />
             <div className="flex justify-between items-center">
-              <UserEmail 
-                email={user?.email || "user@email.com"} 
-                compact={true}
-                onClick={handleEmailClick}
-              />
+              <button
+                onClick={() => setShowHelpModal(true)}
+                className="p-2 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors duration-200"
+                title="Ajuda sobre como usar a aplicação"
+              >
+                <HelpCircle className="w-4 h-4 text-violet-400" />
+              </button>
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim()}
